@@ -1,0 +1,7 @@
+<settings>
+    <category label="30700">
+    <!-- General -->
+        <setting label="30701" type="slider" id="history-size-limit" default="25" range="0,50" option="int"/>
+        <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
+    </category>
+</settings>

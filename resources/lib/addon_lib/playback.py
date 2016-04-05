@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+"""
+     
+    Copyright (C) 2016 anxdpanic
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import kodi
+import log_utils
+
+
+def play_this(item, title='', thumbnail=''):
+    from urlresolver import HostedMediaFile
+
+    log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
+    source = HostedMediaFile(url=item, title=title, include_disabled=True)
+    stream_url = source.resolve()
+
+    if not stream_url or not isinstance(stream_url, basestring):
+        log_utils.log('Unable to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
+        stream_url = item
+
+    if stream_url:
+        playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
+        playback_item.setProperty('IsPlayable', 'true')
+
+        from_addon = kodi.get_info_label('Container.PluginName') == kodi.get_id()
+        with_player = kodi.get_handle() == -1
+
+        if with_player or not from_addon:
+            log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+            kodi.Player().play(stream_url, playback_item)
+        else:
+            log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+            kodi.set_resolved_url(playback_item)
