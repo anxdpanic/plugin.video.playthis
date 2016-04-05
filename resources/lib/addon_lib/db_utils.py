@@ -20,13 +20,6 @@ import log_utils
 from sqlite3 import dbapi2 as sql
 
 
-def __enum(**enums):
-    return type('Enum', (), enums)
-
-
-DB_TYPES = __enum(SQLITE=0, MYSQL=1)
-
-
 class SQLite:
     BEFORE_COMMIT_SQL = ['PRAG']
     AFTER_COMMIT_SQL = ['VACU']
