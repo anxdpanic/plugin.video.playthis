@@ -31,8 +31,6 @@ DATABASE_FILE = kodi.translate_path('special://database/{0!s}{1!s}.db'.format(ko
 DATABASE = db_utils.SQLite(DATABASE_FILE)
 DISPATCHER = URL_Dispatcher()
 
-DB_TYPES = __enum(SQLITE=0, MYSQL=1)
-
 MODES = __enum(
     MAIN='main',
     PLAY='play',
