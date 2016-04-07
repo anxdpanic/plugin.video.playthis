@@ -1,1 +1,1 @@
-plugin.video.playthis
+PlayThis add-on for Kodi 14+
