@@ -1,2 +1,5 @@
+2.0.1
+- fix improper resolver issue
+
 2.0.0
 - re-write of smokdpi's PlayThis

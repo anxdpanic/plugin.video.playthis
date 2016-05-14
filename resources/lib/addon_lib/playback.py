@@ -25,7 +25,7 @@ def play_this(item, title='', thumbnail=''):
     from urlresolver import HostedMediaFile
 
     log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
-    source = HostedMediaFile(url=item, title=title, include_disabled=True)
+    source = HostedMediaFile(url=item, title=title, include_disabled=False)
     stream_url = source.resolve()
 
     if not stream_url or not isinstance(stream_url, basestring):
