@@ -30,14 +30,14 @@ play_history = PlayHistory()
 def main_route():
     playback_item = play_history.input()
     if playback_item:
-        play_this(unquote(playback_item))
+        play_this(unquote(playback_item), player=True)
     else:
         kodi.refresh_container()
 
 
-@DISPATCHER.register(MODES.PLAY, ['path'])
-def play(path):
-    play_this(unquote(path))
+@DISPATCHER.register(MODES.PLAY, ['path'], ['player'])
+def play(path, player=True):
+    play_this(unquote(path), player=player)
 
 
 @DISPATCHER.register(MODES.CLEARHISTORY)

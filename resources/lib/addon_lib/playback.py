@@ -21,7 +21,7 @@ import kodi
 import log_utils
 
 
-def play_this(item, title='', thumbnail=''):
+def play_this(item, title='', thumbnail='', player=True):
     from urlresolver import HostedMediaFile
 
     log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
@@ -36,10 +36,7 @@ def play_this(item, title='', thumbnail=''):
         playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
         playback_item.setProperty('IsPlayable', 'true')
 
-        from_addon = kodi.get_info_label('Container.PluginName') == kodi.get_id()
-        with_player = kodi.get_handle() == -1
-
-        if with_player or not from_addon:
+        if player:
             log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
             kodi.Player().play(stream_url, playback_item)
         else:
