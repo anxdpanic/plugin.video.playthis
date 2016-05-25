@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    Original Source can be found included in the original_sources/ directory and
-        https://github.com/tknorris/salts/tree/master/salts_lib
+    Original Source can be found included in the original_sources/ directory
 
 """
 

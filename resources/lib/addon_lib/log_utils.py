@@ -1,8 +1,8 @@
 """
-    Original Source can be found included in the original_sources/ directory and
-        https://github.com/tknorris/salts/tree/master/salts_lib
+    Original Source can be found included in the original_sources/ directory
 
 """
+
 import time
 import kodi
 from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGNOTICE, LOGSEVERE, LOGWARNING
