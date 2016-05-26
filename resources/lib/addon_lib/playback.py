@@ -35,6 +35,8 @@ def play_this(item, title='', thumbnail='', player=True):
     if stream_url:
         playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
         playback_item.setProperty('IsPlayable', 'true')
+        playback_item.setInfo('video', {'title': playback_item.getLabel()})
+        playback_item.addStreamInfo('video', {})
 
         if player:
             log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)

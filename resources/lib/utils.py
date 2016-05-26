@@ -19,7 +19,7 @@
 
 import re
 from addon_lib import kodi
-from addon_lib.constants import DATABASE
+from addon_lib.constants import DATABASE, MODES
 from urllib2 import quote, unquote
 
 
@@ -33,6 +33,13 @@ class PlayHistory:
     @staticmethod
     def size_limit():
         return int(kodi.get_setting('history-size-limit'))
+
+    @staticmethod
+    def use_directory():
+        if kodi.get_setting('history-list-type') == '1':
+            return True
+        else:
+            return False
 
     def add(self, url):
         execute = 'INSERT INTO {0!s} (addon_id, url) VALUES (?, ?)'.format(self.TABLE)
@@ -49,6 +56,16 @@ class PlayHistory:
                     if result == 0:
                         result = DATABASE.execute('DROP TABLE {0!s}'.format(self.TABLE))
                         self.create_table()
+                DATABASE.execute('VACUUM {0!s}'.format(self.TABLE))
+
+    def delete(self, url):
+        execute = 'DELETE FROM {0!s} WHERE url=? AND addon_id=?'.format(self.TABLE)
+        result = DATABASE.execute(execute, (url, self.ID))
+        if result == 1:
+            DATABASE.execute('VACUUM {0!s}'.format(self.TABLE))
+            kodi.refresh_container()
+        else:
+            kodi.notify(msg=kodi.i18n('delete_failed'), sound=False)
 
     def get(self):
         execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
@@ -59,7 +76,7 @@ class PlayHistory:
                 results.extend([unquote(query)])
             return results
         else:
-            return False
+            return []
 
     def clear(self):
         result = DATABASE.execute('DROP TABLE {0!s}'.format(self.TABLE), '')
@@ -69,22 +86,7 @@ class PlayHistory:
         else:
             kodi.notify(msg=kodi.i18n('fail_history_clear'), sound=False)
 
-    def input(self):
-        if self.size_limit() != 0:
-            queries = self.get()
-            if queries:
-                if len(queries) > 0:
-                    queries.insert(0, '[B]{0!s}[/B]'.format(kodi.i18n('new_')))
-                    queries.insert(1, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')))
-                    index = kodi.Dialog().select(kodi.i18n('choose_playback'), queries)
-                    if index > -1:
-                        if index == 1:
-                            self.clear()
-                            return ''
-                        elif index > 1:
-                            return queries[index]
-                    else:
-                        return ''
+    def get_input(self):
         got_input = kodi.Dialog().input(kodi.i18n('enter_for_playback'))
         got_input = got_input.strip()
         if got_input:
@@ -92,6 +94,47 @@ class PlayHistory:
             self.add(got_input)
             return got_input
         return ''
+
+    def history_dialog(self):
+        if self.size_limit() != 0:
+            queries = self.get()
+            if len(queries) > 0:
+                queries.insert(0, '[B]{0!s}[/B]'.format(kodi.i18n('new_')))
+                queries.insert(1, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')))
+                index = kodi.Dialog().select(kodi.i18n('choose_playback'), queries)
+                if index > -1:
+                    if index == 1:
+                        self.clear()
+                        return ''
+                    elif index > 1:
+                        return queries[index]
+                else:
+                    return ''
+        return self.get_input()
+
+    def history_directory(self):
+        icon_path = kodi.get_icon()
+        fanart_path = kodi.get_fanart()
+        total_items = None
+        if self.size_limit() != 0:
+            queries = self.get()
+            if len(queries) > 0:
+                total_items = len(queries) + 2
+                kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, '[B]{0!s}[/B]'.format(kodi.i18n('new_')),
+                                 thumb=icon_path, fanart=fanart_path, is_folder=False, is_playable=False,
+                                 total_items=total_items)
+                kodi.create_item({'mode': MODES.CLEARHISTORY}, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
+                                 thumb=icon_path, fanart=fanart_path, total_items=total_items)
+                for item in queries:
+                    menu_items = [(kodi.i18n('delete_url'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'path': quote(item)})))]
+                    kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},
+                                     item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
+                                     is_playable=True, total_items=total_items, menu_items=menu_items)
+        if not total_items:
+            kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
+                             fanart=fanart_path, is_folder=False, is_playable=False)
+        kodi.end_of_directory(cache_to_disc=False)
 
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '

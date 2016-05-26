@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="2.0.2"
+       version="2.1.0"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
@@ -11,9 +11,8 @@
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
-        <summary lang="en">Play URL/File</summary>
-        <description lang="en">Will attempt to resolve and play the provided url/file location.[CR][CR]Artwork by @konsumer420
-        </description>
+        <summary lang="en">Resolve and play url/file</summary>
+        <description lang="en">Will attempt to resolve and play the provided url/file location. Keeps a history of played urls for future use.[CR][CR]Artwork by @konsumer420</description>
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
     </extension>

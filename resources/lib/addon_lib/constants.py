@@ -34,4 +34,6 @@ DISPATCHER = URL_Dispatcher()
 MODES = __enum(
     MAIN='main',
     PLAY='play',
-    CLEARHISTORY='clearhistory')
+    CLEARHISTORY='clearhistory',
+    NEW='new',
+    DELETE='delete')

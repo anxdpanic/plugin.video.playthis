@@ -24,6 +24,8 @@ STRINGS = {
     'history_cleared': 30103,
     'choose_playback': 30104,
     'fail_history_clear': 30105,
+    'delete_failed': 30106,
+    'delete_url': 30107,
     'general': 30700,
     'history_size_limit': 30701
 }

@@ -18,25 +18,44 @@
 """
 
 from utils import PlayHistory
-from addon_lib import kodi
 from addon_lib.constants import DISPATCHER, MODES
 from addon_lib.playback import play_this
-from urllib2 import unquote
+from urllib2 import unquote, quote
 
 play_history = PlayHistory()
 
 
 @DISPATCHER.register(MODES.MAIN)
 def main_route():
-    playback_item = play_history.input()
-    if playback_item:
-        play_this(unquote(playback_item), player=True)
+    if play_history.use_directory():
+        play_history.history_directory()
     else:
-        kodi.refresh_container()
+        playback_item = play_history.history_dialog()
+        if playback_item:
+            play_this(unquote(playback_item), player=True)
 
 
-@DISPATCHER.register(MODES.PLAY, ['path'], ['player'])
-def play(path, player=True):
+@DISPATCHER.register(MODES.NEW, kwargs=['player'])
+def get_new_item(player=True):
+    playback_item = play_history.get_input()
+    if playback_item:
+        play_this(unquote(playback_item), title=unquote(playback_item), player=player)
+
+
+@DISPATCHER.register(MODES.DELETE, ['path'])
+def delete_url(path):
+    if '%' not in path:
+        path = quote(path)
+    play_history.delete(path)
+
+
+@DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])
+def play(path, player=True, history=True):
+    if history:
+        history = path
+        if '%' not in history:
+            history = quote(history)
+        play_history.add(history)
     play_this(unquote(path), player=player)
 
 

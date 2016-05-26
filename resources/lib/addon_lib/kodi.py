@@ -86,6 +86,14 @@ def get_name():
     return addon.getAddonInfo('name')
 
 
+def get_icon():
+    return os.path.join(get_path(), 'icon.png')
+
+
+def get_fanart():
+    return os.path.join(get_path(), 'fanart.png')
+
+
 def get_plugin_url(queries):
     try:
         query = urllib.urlencode(queries)

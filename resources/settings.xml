@@ -3,5 +3,6 @@
     <!-- General -->
         <setting label="30701" type="slider" id="history-size-limit" default="25" range="0,50" option="int"/>
         <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
+        <setting label="30702" id="history-list-type" type="enum" lvalues="30703|30704" default="1"/>
     </category>
 </settings>

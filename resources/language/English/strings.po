@@ -1,6 +1,6 @@
 # Addon Name: PlayThis
 # Addon id: plugin.video.playthis
-# Addon Provider:
+# Addon Provider: anxdpanic
 
 msgid ""
 msgstr ""
@@ -39,10 +39,30 @@ msgctxt "#30105"
 msgid "Failed to clear history"
 msgstr ""
 
+msgctxt "#30106"
+msgid "Failed to delete url"
+msgstr ""
+
+msgctxt "#30107"
+msgid "Delete from history"
+msgstr ""
+
 msgctxt "#30700"
 msgid "General"
 msgstr ""
 
 msgctxt "#30701"
 msgid "History size limit (items)"
+msgstr ""
+
+msgctxt "#30702"
+msgid "History selection type"
+msgstr ""
+
+msgctxt "#30703"
+msgid "Dialog"
+msgstr ""
+
+msgctxt "#30704"
+msgid "Directory"
 msgstr ""
