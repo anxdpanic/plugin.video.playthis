@@ -31,4 +31,4 @@ Keeps a history of played urls for future use.
 
 ---
 
-Special thanks to **@konsumer420** for the icons/artwork
+Special thanks to [@konsumer420](https://twitter.com/konsumer420) for the icons/artwork
