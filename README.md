@@ -2,6 +2,7 @@
 #PlayThis
 
 The PlayThis add-on will attempt to resolve a provided url with UrlResolver and start playback if possible.
+Keeps a history of played urls for future use.
 
 - Requirements
     -
@@ -16,13 +17,6 @@ The PlayThis add-on will attempt to resolve a provided url with UrlResolver and 
     _**example.strm**_
     ```
     plugin://plugin.video.playthis/?mode=play&player=false&path=http%3A%2F%2Fwww.dailymotion.com%2Fvideo%2Fx3ol7gj_incredible-freefall-skydiving-over-rio-de-janeiro_sport
-    ```
-    _**[userdata](http://kodi.wiki/view/userdata)/favorites.xml**_
-    ```
-    <favourites>
-        <favourite name="Example ActivateWindow">ActivateWindow(10025,&quot;plugin://plugin.video.playthis/?mode=play&amp;player=true&amp;path=http%3A%2F%2Fwww.dailymotion.com%2Fvideo%2Fx3ol7gj_incredible-freefall-skydiving-over-rio-de-janeiro_sport&quot;,return)</favourite>
-        <favourite name="Example PlayMedia">PlayMedia(&quot;plugin://plugin.video.playthis/?mode=play&amp;player=false&amp;path=http%3A%2F%2Fwww.dailymotion.com%2Fvideo%2Fx3ol7gj_incredible-freefall-skydiving-over-rio-de-janeiro_sport&quot;)</favourite>
-    </favourites>
     ```
 
     _**Google Chrome Context Menu**_
