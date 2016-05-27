@@ -1,3 +1,7 @@
+2.1.1
+- add URLResolver Settings action to Settings
+- add twitch resolver, resolve twitch urls and play using plugin.video.twitch
+
 2.1.0
 - add directory listing of history
 - add 'Delete from history' context menu for directory listing
