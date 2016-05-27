@@ -4,9 +4,10 @@
 The PlayThis add-on will attempt to resolve a provided url with UrlResolver and start playback if possible.
 Keeps a history of played urls for future use.
 
-- Requirements
+
+- Repository
     -
-    - Kodi 14+
+    - [repository.anxdpanic](https://raw.githubusercontent.com/anxdpanic/_repository/master/zips/repository.anxdpanic/repository.anxdpanic-0.9.0.zip)
 
 - Usage
     -
