@@ -18,6 +18,7 @@
 """
 
 from utils import PlayHistory
+from addon_lib.kodi import Addon
 from addon_lib.constants import DISPATCHER, MODES
 from addon_lib.playback import play_this
 from urllib2 import unquote, quote
@@ -62,3 +63,8 @@ def play(path, player=True, history=True):
 @DISPATCHER.register(MODES.CLEARHISTORY)
 def clear_history():
     play_history.clear()
+
+
+@DISPATCHER.register(MODES.URLRESOLVER)
+def urlresolver_settings():
+    Addon(id='script.module.urlresolver').openSettings()

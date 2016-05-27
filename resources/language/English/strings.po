@@ -66,3 +66,7 @@ msgstr ""
 msgctxt "#30704"
 msgid "Directory"
 msgstr ""
+
+msgctxt "#30705"
+msgid "URLResolver Settings"
+msgstr ""

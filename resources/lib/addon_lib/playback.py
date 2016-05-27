@@ -19,13 +19,20 @@
 
 import kodi
 import log_utils
+from constants import RESOLVER_DIR
+
+RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 
 
 def play_this(item, title='', thumbnail='', player=True):
-    from urlresolver import HostedMediaFile
+    import urlresolver
+    from resolvers.playthis_twitch import PlayThisTwitchResolver
+
+    urlresolver.add_plugin_dirs(RESOLVER_DIR)
+    PlayThisTwitchResolver().set_setting('enabled', 'true')
 
     log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
-    source = HostedMediaFile(url=item, title=title, include_disabled=False)
+    source = urlresolver.HostedMediaFile(url=item, title=title, include_disabled=False)
     stream_url = source.resolve()
 
     if not stream_url or not isinstance(stream_url, basestring):
@@ -33,14 +40,18 @@ def play_this(item, title='', thumbnail='', player=True):
         stream_url = item
 
     if stream_url:
-        playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
-        playback_item.setProperty('IsPlayable', 'true')
-        playback_item.setInfo('video', {'title': playback_item.getLabel()})
-        playback_item.addStreamInfo('video', {})
-
-        if player:
-            log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-            kodi.Player().play(stream_url, playback_item)
+        if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
+            log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+            kodi.execute_builtin('RunPlugin(%s)' % stream_url)
         else:
-            log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-            kodi.set_resolved_url(playback_item)
+            playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
+            playback_item.setProperty('IsPlayable', 'true')
+            playback_item.setInfo('video', {'title': playback_item.getLabel()})
+            playback_item.addStreamInfo('video', {})
+
+            if player:
+                log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                kodi.Player().play(stream_url, playback_item)
+            else:
+                log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                kodi.set_resolved_url(playback_item)

@@ -16,27 +16,3 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
-
-import kodi
-import db_utils
-from url_dispatcher import URL_Dispatcher
-
-
-def __enum(**enums):
-    return type('Enum', (), enums)
-
-
-DATABASE_VERSION = 1
-DATABASE_FILE = kodi.translate_path('special://database/{0!s}{1!s}.db'.format(kodi.get_name(), str(DATABASE_VERSION)))
-DATABASE = db_utils.SQLite(DATABASE_FILE)
-DISPATCHER = URL_Dispatcher()
-
-RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
-
-MODES = __enum(
-    MAIN='main',
-    PLAY='play',
-    CLEARHISTORY='clearhistory',
-    NEW='new',
-    DELETE='delete',
-    URLRESOLVER='urlresolver')

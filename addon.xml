@@ -16,4 +16,6 @@
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
     </extension>
+    <website>https://github.com/anxdpanic/plugin.video.playthis</website>
+    <source>https://github.com/anxdpanic/plugin.video.playthis</source>
 </addon>
