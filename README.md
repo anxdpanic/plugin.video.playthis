@@ -30,6 +30,11 @@ Keeps a history of played urls for future use.
     - Download extension: https://addons.mozilla.org/en-US/firefox/addon/playthis/
     - GitHub: https://github.com/anxdpanic/PlayThis-Extension/tree/firefox
 
+- Support
+    -
+
+    Post an [Issue](https://github.com/anxdpanic/plugin.video.playthis/issues) , or visit [#the_projects on Snoonet](https://kiwiirc.com/client/irc.snoonet.org/The_Projects)
+
 ---
 
 Special thanks to [@konsumer420](https://twitter.com/konsumer420) for the icons/artwork
