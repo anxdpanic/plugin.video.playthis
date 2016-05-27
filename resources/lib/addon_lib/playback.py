@@ -26,10 +26,8 @@ RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 
 def play_this(item, title='', thumbnail='', player=True):
     import urlresolver
-    from resolvers.playthis_twitch import PlayThisTwitchResolver
 
     urlresolver.add_plugin_dirs(RESOLVER_DIR)
-    PlayThisTwitchResolver().set_setting('enabled', 'true')
 
     log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
     source = urlresolver.HostedMediaFile(url=item, title=title, include_disabled=False)

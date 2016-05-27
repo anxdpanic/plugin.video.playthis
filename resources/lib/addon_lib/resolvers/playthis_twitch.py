@@ -22,10 +22,17 @@ from xbmc import getCondVisibility
 from urlresolver.resolver import UrlResolver, ResolverError
 
 
+def _has_addon(addon_id):
+    return getCondVisibility('System.HasAddon(%s)' % addon_id) == 1
+
+
 class PlayThisTwitchResolver(UrlResolver):
     name = 'twitch'
     domains = ['twitch.tv']
     pattern = 'https?://(?:www\.)?(twitch\.tv)/(.+?)(?:\?|$)'
+    exclusion_pattern = '^https?://(?:www\.)?twitch\.tv/' \
+                        '(?:directory|user|p|jobs|store|login|products|search|.+?/profile)' \
+                        '(?:[?/].*)?$'
 
     def get_media_url(self, host, media_id):
         is_live = True if media_id.count('/') == 0 else False
@@ -34,12 +41,12 @@ class PlayThisTwitchResolver(UrlResolver):
         else:
             if media_id.count('/') == 2:
                 media_id_parts = media_id.split('/')
-                media_id = media_id_parts[1] + media_id_parts[2]
-                return 'plugin://plugin.video.twitch/playVideo/%s/-2/' % media_id
+                if re.match('[a-z]', media_id_parts[1]) and re.match('[0-9]{6,}', media_id_parts[2]):
+                    return 'plugin://plugin.video.twitch/playVideo/%s/-2/' % (media_id_parts[1] + media_id_parts[2])
         raise ResolverError('No streamer name or VOD ID found')
 
     def get_url(self, host, media_id):
-        return media_id
+        return 'https://%s/%s' % (host, media_id)
 
     def get_host_and_id(self, url):
         r = re.search(self.pattern, url, re.I)
@@ -48,10 +55,15 @@ class PlayThisTwitchResolver(UrlResolver):
         else:
             return False
 
+    @classmethod
+    def _is_enabled(cls):
+        return _has_addon('plugin.video.twitch')
+
     def valid_url(self, url, host):
-        if getCondVisibility('System.HasAddon(%s)' % 'plugin.video.twitch') == 0:
-            return False
-        return re.search(self.pattern, url, re.I) or self.name in host
+        if _has_addon('plugin.video.twitch'):
+            if re.search(self.pattern, url, re.I):
+                return not re.match(self.exclusion_pattern, url, re.I) or self.name in host
+        return False
 
     @classmethod
     def get_settings_xml(cls):
