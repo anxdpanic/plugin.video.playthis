@@ -1,3 +1,6 @@
+2.1.2
+- twitch resolver updates
+
 2.1.1
 - add URLResolver Settings action to Settings
 - add twitch resolver, resolve twitch urls and play using plugin.video.twitch
