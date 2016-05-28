@@ -5,9 +5,12 @@ The PlayThis add-on will attempt to resolve a provided url with UrlResolver and 
 Keeps a history of played urls for future use.
 
 
-- Repository
+- Installation
     -
-    - [repository.anxdpanic](https://raw.githubusercontent.com/anxdpanic/_repository/master/zips/repository.anxdpanic/repository.anxdpanic-0.9.0.zip)
+    * Kodi 17+: Enable - `Settings -> System -> Add-ons -> Unknown Sources`
+    1. Download repository: [repository.anxdpanic-x.x.x.zip](https://raw.githubusercontent.com/anxdpanic/_repository/master/zips/repository.anxdpanic/repository.anxdpanic-0.9.0.zip)
+    2. [Install from zip file](http://kodi.wiki/view/Add-on_manager#How_to_install_from_a_ZIP_file) (repository.anxdpanic-x.x.x.zip)
+    3. [Install from repository](http://kodi.wiki/view/add-on_manager#How_to_install_add-ons_from_a_repository) (anxdpanic Add-on Repository)
 
 - Usage
     -
@@ -22,13 +25,13 @@ Keeps a history of played urls for future use.
 
     _**Google Chrome Context Menu**_
 
-    - Download extension: https://chrome.google.com/webstore/detail/playthis/adddkaonokkecefokdanjpaamfajogel
-    - GitHub: https://github.com/anxdpanic/PlayThis-Extension/tree/chrome
+    - Download extension from [Chrome Web Store](https://chrome.google.com/webstore/detail/playthis/adddkaonokkecefokdanjpaamfajogel)
+    - GitHub: [PlayThis \(Google Chrome\)](https://github.com/anxdpanic/PlayThis-Extension/tree/chrome#playthis-google-chrome)
 
     _**Firefox 47+ Context Menu**_
 
-    - Download extension: https://addons.mozilla.org/en-US/firefox/addon/playthis/
-    - GitHub: https://github.com/anxdpanic/PlayThis-Extension/tree/firefox
+    - Download extension from [AMO Gallery](https://addons.mozilla.org/en-US/firefox/addon/playthis/)
+    - GitHub: [PlayThis \(Firefox\)](https://github.com/anxdpanic/PlayThis-Extension/tree/firefox#playthis-firefox)
 
 - Support
     -
