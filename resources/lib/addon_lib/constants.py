@@ -38,5 +38,6 @@ MODES = __enum(
     PLAY='play',
     CLEARHISTORY='clearhistory',
     NEW='new',
+    ADD='add',
     DELETE='delete',
     URLRESOLVER='urlresolver')

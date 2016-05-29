@@ -43,6 +43,13 @@ def get_new_item(player=True):
         play_this(unquote(playback_item), title=unquote(playback_item), player=player)
 
 
+@DISPATCHER.register(MODES.ADD, ['path'])
+def add_url(path):
+    if '%' not in path:
+        path = quote(path)
+    play_history.add(path)
+
+
 @DISPATCHER.register(MODES.DELETE, ['path'])
 def delete_url(path):
     if '%' not in path:
