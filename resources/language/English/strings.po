@@ -48,23 +48,23 @@ msgid "Delete"
 msgstr ""
 
 msgctxt "#30108"
-msgid "No items in list for export to M3U"
+msgid "No items in list for export to .m3u"
 msgstr ""
 
 msgctxt "#30109"
-msgid "Items exported to M3U successfully"
+msgid "Items exported to .m3u successfully"
 msgstr ""
 
 msgctxt "#30110"
-msgid "M3U Filename"
+msgid ".m3u Filename"
 msgstr ""
 
 msgctxt "#30111"
-msgid "Export list to M3U"
+msgid "Export list to .m3u"
 msgstr ""
 
 msgctxt "#30112"
-msgid "Failed to export items to M3U"
+msgid "Failed to export items to .m3u"
 msgstr ""
 
 msgctxt "#30700"
