@@ -19,7 +19,9 @@
 
 import re
 from addon_lib import kodi
+from addon_lib import log_utils
 from addon_lib.constants import DATABASE, MODES
+from addon_lib.playback import resolve
 from urllib2 import quote, unquote
 
 
@@ -127,7 +129,9 @@ class PlayHistory:
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
                 for item in queries:
                     menu_items = [(kodi.i18n('delete_url'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'path': quote(item)})))]
+                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'path': quote(item)}))),
+                                  (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U})))]
                     kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},
                                      item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items)
@@ -139,3 +143,52 @@ class PlayHistory:
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '
                          'addon_id, url, CONSTRAINT unq UNIQUE (addon_id, url))'.format(self.TABLE), '')
+
+
+class M3UUtils:
+
+    def __init__(self, filename, from_list='history'):
+        if not from_list:
+            from_list = 'history'
+        self.from_list = from_list
+        self.filename = filename
+
+    def _get(self):
+        log_utils.log('M3UUtils._get from_list: |{0!s}|'.format(self.from_list), log_utils.LOGDEBUG)
+        if self.from_list == 'history':
+            return PlayHistory().get()
+        else:
+            return []
+
+    def export(self):
+        items = self._get()
+        if items:
+            _m3u = '#EXTM3U\n'
+            m3u = _m3u
+            for item in items:
+                resolved = resolve(item)
+                title = item
+                if resolved:
+                    log_utils.log('M3UUtils.export adding resolved item: |{0!s}| as |{1!s}|'.format(resolved, title),
+                                  log_utils.LOGDEBUG)
+                    m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, resolved)
+                else:
+                    log_utils.log('M3UUtils.export adding unresolved item: |{0!s}| as |{1!s}|'.format(item, title),
+                                  log_utils.LOGDEBUG)
+                    m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, item)
+
+            if m3u != _m3u:
+                m3u_file = self.filename if self.filename.endswith('.m3u') else self.filename + '.m3u'
+                log_utils.log('M3UUtils.export writing .m3u: |{0!s}|'.format(m3u_file), log_utils.LOGDEBUG)
+                try:
+                    with open(m3u_file, 'w+') as f:
+                        f.write(m3u)
+                    log_utils.log('M3UUtils.export writing .m3u completed.', log_utils.LOGDEBUG)
+                    kodi.notify(msg=kodi.i18n('export_success'), sound=False)
+                    return
+                except:
+                    log_utils.log('M3UUtils.export failed to write .m3u', log_utils.LOGDEBUG)
+                    kodi.notify(msg=kodi.i18n('export_fail'), sound=False)
+                    return
+        log_utils.log('M3UUtils.export no items for export to .m3u', log_utils.LOGDEBUG)
+        kodi.notify(msg=kodi.i18n('no_items_export'), sound=False)

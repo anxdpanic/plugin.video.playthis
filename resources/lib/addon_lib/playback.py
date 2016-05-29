@@ -24,17 +24,30 @@ from constants import RESOLVER_DIR
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 
 
-def play_this(item, title='', thumbnail='', player=True):
+def resolve(url, title=''):
     import urlresolver
-
     urlresolver.add_plugin_dirs(RESOLVER_DIR)
+    log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+    source = urlresolver.HostedMediaFile(url=url, title=title, include_disabled=False)
+    if not source:
+        log_utils.log('Not supported by URLResolver: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+        return None
+    try:
+        resolved = source.resolve()
+    except:
+        resolved = None
+    if not resolved or not isinstance(resolved, basestring):
+        log_utils.log('Unable to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+        return None
+    else:
+        return resolved
 
-    log_utils.log('Attempting to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
-    source = urlresolver.HostedMediaFile(url=item, title=title, include_disabled=False)
-    stream_url = source.resolve()
 
-    if not stream_url or not isinstance(stream_url, basestring):
-        log_utils.log('Unable to resolve: |{0!s}|'.format(item), log_utils.LOGDEBUG)
+def play_this(item, title='', thumbnail='', player=True):
+
+    stream_url = resolve(item, title=title)
+
+    if not stream_url:
         stream_url = item
 
     if stream_url:

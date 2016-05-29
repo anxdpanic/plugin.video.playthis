@@ -26,6 +26,12 @@ STRINGS = {
     'fail_history_clear': 30105,
     'delete_failed': 30106,
     'delete_url': 30107,
+    'no_items_export': 30108,
+    'export_success': 30109,
+    'm3u_filename': 30110,
+    'export_list_m3u': 30111,
+    'export_fail': 30112,
     'general': 30700,
-    'history_size_limit': 30701
+    'history_size_limit': 30701,
+    'export_path': 30706
 }

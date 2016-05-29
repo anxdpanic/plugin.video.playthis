@@ -47,6 +47,26 @@ msgctxt "#30107"
 msgid "Delete from history"
 msgstr ""
 
+msgctxt "#30108"
+msgid "No items in list for export to M3U"
+msgstr ""
+
+msgctxt "#30109"
+msgid "Items exported to M3U successfully"
+msgstr ""
+
+msgctxt "#30110"
+msgid "M3U Filename"
+msgstr ""
+
+msgctxt "#30111"
+msgid "Export list to M3U"
+msgstr ""
+
+msgctxt "#30112"
+msgid "Failed to export items to M3U"
+msgstr ""
+
 msgctxt "#30700"
 msgid "General"
 msgstr ""
@@ -69,4 +89,8 @@ msgstr ""
 
 msgctxt "#30705"
 msgid "URLResolver Settings"
+msgstr ""
+
+msgctxt "#30706"
+msgid "M3U Export Path"
 msgstr ""

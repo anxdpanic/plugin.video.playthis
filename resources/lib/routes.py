@@ -17,9 +17,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from utils import PlayHistory
-from addon_lib.kodi import Addon
-from addon_lib.constants import DISPATCHER, MODES
+from utils import PlayHistory, M3UUtils
+from addon_lib import kodi
+from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR
 from addon_lib.playback import play_this
 from urllib2 import unquote, quote
 
@@ -67,6 +67,25 @@ def play(path, player=True, history=True):
     play_this(unquote(path), player=player)
 
 
+@DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list'])
+def export_m3u(export_path=None, from_list='history'):
+    if export_path is None:
+        export_path = kodi.get_setting('export_path')
+        if not export_path:
+            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path'), 'video', '', False, False, ADDON_DATA_DIR)
+            kodi.set_setting('export_path', export_path)
+    if export_path:
+        m3u_name = kodi.get_keyboard(kodi.i18n('m3u_filename'), '')
+        if m3u_name:
+            if export_path.startswith('special://'):
+                if not export_path.endswith('/'):
+                    export_path += '/'
+                m3u_file = kodi.translate_path(export_path + m3u_name)
+            else:
+                m3u_file = export_path + m3u_name
+            M3UUtils(m3u_file, from_list).export()
+
+
 @DISPATCHER.register(MODES.CLEARHISTORY)
 def clear_history():
     play_history.clear()
@@ -74,4 +93,4 @@ def clear_history():
 
 @DISPATCHER.register(MODES.URLRESOLVER)
 def urlresolver_settings():
-    Addon(id='script.module.urlresolver').openSettings()
+    kodi.Addon(id='script.module.urlresolver').openSettings()

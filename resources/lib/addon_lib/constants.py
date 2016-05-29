@@ -31,6 +31,7 @@ DATABASE_FILE = kodi.translate_path('special://database/{0!s}{1!s}.db'.format(ko
 DATABASE = db_utils.SQLite(DATABASE_FILE)
 DISPATCHER = URL_Dispatcher()
 
+ADDON_DATA_DIR = kodi.translate_path('special://home/userdata/addon_data/%s/' % kodi.get_id())
 RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
 
 MODES = __enum(
@@ -40,4 +41,5 @@ MODES = __enum(
     NEW='new',
     ADD='add',
     DELETE='delete',
-    URLRESOLVER='urlresolver')
+    URLRESOLVER='urlresolver',
+    EXPORT_M3U='export_m3u')
