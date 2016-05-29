@@ -17,6 +17,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 from utils import PlayHistory, M3UUtils
 from addon_lib import kodi
 from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR
@@ -50,11 +51,11 @@ def add_url(path):
     play_history.add(path)
 
 
-@DISPATCHER.register(MODES.DELETE, ['path'])
-def delete_url(path):
-    if '%' not in path:
-        path = quote(path)
-    play_history.delete(path)
+@DISPATCHER.register(MODES.DELETE, ['row_id'], ['refresh'])
+def delete_url(row_id, refresh=True):
+    result, rowcount = play_history.delete_row_id(row_id)
+    if (result, rowcount) == (1, 1) and refresh:
+        kodi.refresh_container()
 
 
 @DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])
@@ -80,9 +81,10 @@ def export_m3u(export_path=None, from_list='history'):
             if export_path.startswith('special://'):
                 if not export_path.endswith('/'):
                     export_path += '/'
+                    kodi.set_setting('export_path', export_path)
                 m3u_file = kodi.translate_path(export_path + m3u_name)
             else:
-                m3u_file = export_path + m3u_name
+                m3u_file = os.path.join(export_path, m3u_name)
             M3UUtils(m3u_file, from_list).export()
 
 

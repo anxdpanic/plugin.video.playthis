@@ -45,6 +45,42 @@ class SQLite:
         finally:
             return connection
 
+    def execute_w_rowcount(self, sql_statement, sql_params=None):
+        """
+        wrapper for cursor.execute
+        :param sql_statement: str: sql_statement may be parameterized (i. e. placeholders instead of SQL literals)
+        :param sql_params: tuple, dict: sql_params supports two kinds of placeholders;
+                                        tuple:  question marks (qmark style)
+                                        dict:   named placeholders (named style).
+        :return: tuple: int:   0: on error
+                               1: sql_statement successfully executed, committed
+                               2: duplicate record on insert
+                        int:   rows affected
+
+        """
+        if not sql_params: sql_params = ''
+        connection = self.__db_connect_()
+        if not connection: return 0
+        connection.text_factory = str
+        cursor = connection.cursor()
+        result = 0
+        rowcount = -1
+        try:
+            cursor.execute(sql_statement, sql_params)
+            connection.commit()
+            result = 1
+        except sql.IntegrityError:
+            result = 2
+        except sql.Error as e:
+            connection.rollback()
+            log_utils.log(str(e), log_utils.LOGERROR)
+            result = 0
+        finally:
+            rowcount = cursor.rowcount
+            cursor.close()
+            connection.close()
+            return result, rowcount
+
     def execute(self, sql_statement, sql_params=None):
         """
         wrapper for cursor.execute

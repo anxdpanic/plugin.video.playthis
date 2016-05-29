@@ -43,6 +43,11 @@ class PlayHistory:
         else:
             return False
 
+    def vacuum(self, table=None):
+        if table is None:
+            table = self.TABLE
+        DATABASE.execute('VACUUM {0!s}'.format(table))
+
     def add(self, url):
         execute = 'INSERT INTO {0!s} (addon_id, url) VALUES (?, ?)'.format(self.TABLE)
         inserted = DATABASE.execute(execute, (self.ID, str(url)))
@@ -51,31 +56,43 @@ class PlayHistory:
             result = int(DATABASE.fetch(execute, (self.ID,))[0][0])
             if result > self.size_limit():
                 execute = 'DELETE FROM {0!s} WHERE ROWID = (SELECT MIN(ROWID) FROM {0!s}) AND addon_id=?'.format(self.TABLE)
-                result = DATABASE.execute(execute, (self.ID,))
-                if result == 0:
+                result, rowcount = DATABASE.execute_w_rowcount(execute, (self.ID,))
+                if rowcount < 1:
                     execute = 'DELETE * FROM {0!s} WHERE addon_id=?'.format(self.TABLE)
-                    result = DATABASE.execute(execute, (self.ID,))
-                    if result == 0:
+                    result, rowcount = DATABASE.execute_w_rowcount(execute, (self.ID,))
+                    if rowcount < 1:
                         result = DATABASE.execute('DROP TABLE {0!s}'.format(self.TABLE))
+                        self.vacuum()
                         self.create_table()
-                DATABASE.execute('VACUUM {0!s}'.format(self.TABLE))
+                if rowcount > 0:
+                    self.vacuum()
 
-    def delete(self, url):
+    def delete_url(self, url):
         execute = 'DELETE FROM {0!s} WHERE url=? AND addon_id=?'.format(self.TABLE)
-        result = DATABASE.execute(execute, (url, self.ID))
-        if result == 1:
-            DATABASE.execute('VACUUM {0!s}'.format(self.TABLE))
-            kodi.refresh_container()
-        else:
+        result, rowcount = DATABASE.execute_w_rowcount(execute, (url, self.ID))
+        if result != 1:
             kodi.notify(msg=kodi.i18n('delete_failed'), sound=False)
+        if rowcount > 0:
+            self.vacuum()
+        return result, rowcount
 
-    def get(self):
+    def delete_row_id(self, row_id):
+        execute = 'DELETE FROM {0!s} WHERE id=? AND addon_id=?'.format(self.TABLE)
+        result, rowcount = DATABASE.execute_w_rowcount(execute, (row_id, self.ID))
+        if result != 1:
+            kodi.notify(msg=kodi.i18n('delete_failed'), sound=False)
+        return result, rowcount
+
+    def get(self, include_ids=False):
         execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
         selected = DATABASE.fetch(execute, (self.ID,))
         results = []
         if selected:
             for id_key, addon_id, query in selected:
-                results.extend([unquote(query)])
+                if not include_ids:
+                    results.extend([unquote(query)])
+                else:
+                    results.extend([(id_key, unquote(query))])
             return results
         else:
             return []
@@ -83,13 +100,13 @@ class PlayHistory:
     def clear(self):
         result = DATABASE.execute('DROP TABLE {0!s}'.format(self.TABLE), '')
         if result == 1:
-            DATABASE.execute('VACUUM {0!s}'.format(self.TABLE))
+            self.vacuum()
             kodi.notify(msg=kodi.i18n('history_cleared'), sound=False)
         else:
             kodi.notify(msg=kodi.i18n('fail_history_clear'), sound=False)
 
     def get_input(self):
-        got_input = kodi.Dialog().input(kodi.i18n('enter_for_playback'))
+        got_input = kodi.get_keyboard(kodi.i18n('enter_for_playback'), '')
         got_input = got_input.strip()
         if got_input:
             got_input = quote(re.sub(r'\s+', ' ', got_input))
@@ -119,7 +136,7 @@ class PlayHistory:
         fanart_path = kodi.get_fanart()
         total_items = None
         if self.size_limit() != 0:
-            queries = self.get()
+            queries = self.get(include_ids=True)
             if len(queries) > 0:
                 total_items = len(queries) + 2
                 kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, '[B]{0!s}[/B]'.format(kodi.i18n('new_')),
@@ -127,9 +144,9 @@ class PlayHistory:
                                  total_items=total_items)
                 kodi.create_item({'mode': MODES.CLEARHISTORY}, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
-                for item in queries:
+                for row_id, item in queries:
                     menu_items = [(kodi.i18n('delete_url'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'path': quote(item)}))),
+                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U})))]
                     kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},

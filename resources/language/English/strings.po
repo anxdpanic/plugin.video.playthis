@@ -44,7 +44,7 @@ msgid "Failed to delete url"
 msgstr ""
 
 msgctxt "#30107"
-msgid "Delete from history"
+msgid "Delete"
 msgstr ""
 
 msgctxt "#30108"
