@@ -107,9 +107,8 @@ class PlayHistory:
 
     def get_input(self):
         got_input = kodi.get_keyboard(kodi.i18n('enter_for_playback'), '')
-        if got_input is not None:
-            got_input = got_input.strip()
         if got_input:
+            got_input = got_input.strip()
             got_input = quote(re.sub(r'\s+', ' ', got_input))
             self.add(got_input)
             return got_input
