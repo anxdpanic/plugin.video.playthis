@@ -1,3 +1,4 @@
+2.2.2
 - add 'Add to history on play' to Settings
 - reorganize Settings menu
 
