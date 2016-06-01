@@ -59,7 +59,9 @@ def delete_url(row_id, refresh=True):
 
 
 @DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])
-def play(path, player=True, history=True):
+def play(path, player=True, history=None):
+    if history is None:
+        history = kodi.get_setting('history-add-on-play') == "true"
     if history:
         history = path
         if '%' not in history:

@@ -68,7 +68,7 @@ msgid "Failed to export items to .m3u"
 msgstr ""
 
 msgctxt "#30700"
-msgid "General"
+msgid "History"
 msgstr ""
 
 msgctxt "#30701"
@@ -88,9 +88,21 @@ msgid "Directory"
 msgstr ""
 
 msgctxt "#30705"
-msgid "URLResolver Settings"
+msgid "URLResolver settings"
 msgstr ""
 
 msgctxt "#30706"
-msgid "M3U Export Path"
+msgid "M3U export path"
+msgstr ""
+
+msgctxt "#30707"
+msgid "Add to history on play"
+msgstr ""
+
+msgctxt "#30708"
+msgid "M3U"
+msgstr ""
+
+msgctxt "#30709"
+msgid "URLResolver"
 msgstr ""

@@ -1,3 +1,6 @@
+- add 'Add to history on play' to Settings
+- reorganize Settings menu
+
 2.2.1
 - fix error on 'New ...' if no input
 
