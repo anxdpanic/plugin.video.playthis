@@ -1,3 +1,8 @@
+2.2.3
+- external resolver updates
+	+ ol, use api until updated in urlresolver
+	- twitch, included in urlresolver
+
 2.2.2
 - add 'Add to history on play' to Settings
 - reorganize Settings menu
