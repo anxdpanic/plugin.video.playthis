@@ -177,22 +177,32 @@ class M3UUtils:
         else:
             return []
 
-    def export(self):
+    def export(self, results='playthis'):
         items = self._get()
         if items:
             _m3u = '#EXTM3U\n'
             m3u = _m3u
             for item in items:
-                resolved = resolve(item)
                 title = item
+                if results == 'resolved':
+                    resolved = resolve(item)
+                else:
+                    resolved = None
                 if resolved:
                     log_utils.log('M3UUtils.export adding resolved item: |{0!s}| as |{1!s}|'.format(resolved, title),
                                   log_utils.LOGDEBUG)
                     m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, resolved)
                 else:
-                    log_utils.log('M3UUtils.export adding unresolved item: |{0!s}| as |{1!s}|'.format(item, title),
-                                  log_utils.LOGDEBUG)
-                    m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, item)
+                    if results == 'playthis':
+                        pt_url = \
+                            'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}'.format(quote(item))
+                        log_utils.log('M3UUtils.export adding PlayThis item: |{0!s}| as |{1!s}|'.format(pt_url, title),
+                                      log_utils.LOGDEBUG)
+                        m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, pt_url)
+                    else:
+                        log_utils.log('M3UUtils.export adding unresolved item: |{0!s}| as |{1!s}|'.format(item, title),
+                                      log_utils.LOGDEBUG)
+                        m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, item)
 
             if m3u != _m3u:
                 m3u_file = self.filename if self.filename.endswith('.m3u') else self.filename + '.m3u'
