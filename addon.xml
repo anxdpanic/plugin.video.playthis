@@ -15,7 +15,7 @@
         <description lang="en">Will attempt to resolve and play the provided url/file location. Keeps a history of played urls for future use.[CR][CR]Artwork by @konsumer420</description>
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
-    </extension>
-    <website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
-    <source>https://github.com/anxdpanic/plugin.video.playthis</source>
+		<website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
+		<source>https://github.com/anxdpanic/plugin.video.playthis</source>
+	</extension>
 </addon>
