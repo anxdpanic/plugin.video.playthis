@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="2.2.5"
+       version="2.2.6~alpha1"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
-        <import addon="script.module.urlresolver" version="3.0.0"/>
+        <import addon="script.module.urlresolver" version="3.0.22"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>video</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
+        <news>
+- add generalized scraping for sources as fallback if url does not resolve
+        </news>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.jpg</fanart>
+        </assets>
         <summary lang="en">Resolve and play url/file</summary>
         <description lang="en">Will attempt to resolve and play the provided url/file location. Keeps a history of played urls for future use.[CR][CR]Artwork by @konsumer420</description>
         <platform>all</platform>

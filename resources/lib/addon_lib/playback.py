@@ -17,6 +17,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import re
+import urlparse
 import kodi
 import log_utils
 from constants import RESOLVER_DIR
@@ -43,9 +45,62 @@ def resolve(url, title=''):
         return resolved
 
 
-def play_this(item, title='', thumbnail='', player=True):
+def scrape(url, title=''):
+    from urlresolver import common, scrape_supported, choose_source, HostedMediaFile
+    from urlresolver.plugins.lib.helpers import pick_source
 
+    net = common.Net()
+    headers = {'User-Agent': common.FF_USER_AGENT}
+    log_utils.log('Attempting to scrape sources: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+    try:
+        response = net.http_HEAD(url, headers=headers)
+        response_headers = response.get_headers(as_dict=True)
+        if response_headers.get('Content-Type', '') == 'text/html':
+            set_cookie = response_headers.get('Set-Cookie', None)
+            if set_cookie:
+                cookie = {'Cookie': set_cookie}
+                headers.update(cookie)
+        response = net.http_GET(url, headers=headers)
+        html = response.content
+    except:
+        return None
+
+    def _parse_to_list(html, regex):
+        matches = []
+        for i in re.finditer(regex, html, re.DOTALL):
+            match = i.group(1)
+            parsed_match = urlparse.urlparse(match)
+            matches.append(('%s[%s]' % (parsed_match.hostname, parsed_match.path), match))
+        return matches
+
+    unresolved_source_list = scrape_supported(html)
+    unresolved_source_list.extend(scrape_supported(html, regex='''iframe.*?src\s*=\s*['"]([^'"]+)'''))
+    unresolved_source_list.extend(scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]+)'''))
+    hmf_list = []
+    for source in unresolved_source_list:
+        host = urlparse.urlparse(source).hostname
+        hmf_list.append(HostedMediaFile(source, title=host))
+    if hmf_list:
+        chosen = choose_source(hmf_list)
+        if chosen:
+            return resolve(chosen.get_url(), title=title)
+        else:
+            return None
+    else:
+        source_list = []
+        source_list.extend(_parse_to_list(html, '''source\s+src\s*=\s*['"]([^'"]+)'''))
+        source_list.extend(_parse_to_list(html, '''["']?\s*file\s*["']?\s*[:=]\s*["']([^"']+)'''))
+        if source_list:
+            return pick_source(source_list)
+        else:
+            return None
+
+
+def play_this(item, title='', thumbnail='', player=True):
     stream_url = resolve(item, title=title)
+
+    if not stream_url:
+        stream_url = scrape(item, title=title)
 
     if not stream_url:
         stream_url = item

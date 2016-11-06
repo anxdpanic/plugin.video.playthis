@@ -1,3 +1,6 @@
+2.2.6
+- add generalized scraping for sources as fallback if url does not resolve
+
 2.2.5
 - export to .m3u now exports PlayThis plugin url instead of resolved url
     allows resolution at playback, resolves expired session/token/ip issues, m3u only usable in Kodi w/ PlayThis
