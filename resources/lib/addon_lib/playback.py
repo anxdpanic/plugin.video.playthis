@@ -47,35 +47,47 @@ def resolve(url, title=''):
 
 def scrape(url, title=''):
     from urlresolver import common, scrape_supported, choose_source, HostedMediaFile
-    from urlresolver.plugins.lib.helpers import pick_source
+    from urlresolver.plugins.lib import jsunpack
+    from urlresolver.plugins.lib.helpers import pick_source, append_headers
 
     net = common.Net()
-    headers = {'User-Agent': common.FF_USER_AGENT}
+    parsed_url = urlparse.urlparse(url)
+    headers = {'User-Agent': common.FF_USER_AGENT,
+               'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
     log_utils.log('Attempting to scrape sources: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+
+    def _update_cookie(_headers):
+        set_cookie = _headers.get('Set-Cookie', None)
+        if set_cookie:
+            cookie = {'Cookie': set_cookie}
+            headers.update(cookie)
+
     try:
         response = net.http_HEAD(url, headers=headers)
         response_headers = response.get_headers(as_dict=True)
-        if response_headers.get('Content-Type', '') == 'text/html':
-            set_cookie = response_headers.get('Set-Cookie', None)
-            if set_cookie:
-                cookie = {'Cookie': set_cookie}
-                headers.update(cookie)
-        response = net.http_GET(url, headers=headers)
-        html = response.content
+        if 'text/html' in response_headers.get('Content-Type', ''):
+            _update_cookie(response_headers)
+            response = net.http_GET(url, headers=headers)
+            _update_cookie(response.get_headers(as_dict=True))
+            html = response.content
+        else:
+            raise Exception
     except:
         return None
 
-    def _parse_to_list(html, regex):
+    def _parse_to_list(_html, regex):
         matches = []
-        for i in re.finditer(regex, html, re.DOTALL):
+        for i in re.finditer(regex, _html, re.DOTALL):
             match = i.group(1)
             parsed_match = urlparse.urlparse(match)
-            matches.append(('%s[%s]' % (parsed_match.hostname, parsed_match.path), match))
+            sub_label = parsed_match.path.split('.')[-1]
+            matches.append(('%s[%s]' % (parsed_match.hostname, sub_label), match))
         return matches
 
     unresolved_source_list = scrape_supported(html)
-    unresolved_source_list.extend(scrape_supported(html, regex='''iframe.*?src\s*=\s*['"]([^'"]+)'''))
+    unresolved_source_list.extend(scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]+)'''))
     unresolved_source_list.extend(scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]+)'''))
+    unresolved_source_list.extend(scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]+)'''))
     hmf_list = []
     for source in unresolved_source_list:
         host = urlparse.urlparse(source).hostname
@@ -87,11 +99,27 @@ def scrape(url, title=''):
         else:
             return None
     else:
+        unpacked = ''
+        for packed in re.finditer('(eval\(function.*?)</script>', html, re.DOTALL):
+            try:
+                unpacked_data = jsunpack.unpack(packed.group(1))
+                unpacked_data = unpacked_data.replace('\\\'', '\'')
+                unpacked += unpacked_data
+            except:
+                pass
+
+        html += unpacked
         source_list = []
+        source_list.extend(_parse_to_list(html, '''video\s+src\s*=\s*['"]([^'"]+)'''))
         source_list.extend(_parse_to_list(html, '''source\s+src\s*=\s*['"]([^'"]+)'''))
         source_list.extend(_parse_to_list(html, '''["']?\s*file\s*["']?\s*[:=]\s*["']([^"']+)'''))
+        source_list.extend(_parse_to_list(html, '''["']?\s*url\s*["']?\s*[:=]\s*["']([^"']+)'''))
+
         if source_list:
-            return pick_source(source_list)
+            source = pick_source(source_list)
+            if source:
+                source += append_headers(headers)
+            return source
         else:
             return None
 
