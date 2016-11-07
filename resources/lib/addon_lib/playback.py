@@ -85,9 +85,9 @@ def scrape(url, title=''):
         return matches
 
     unresolved_source_list = scrape_supported(html)
-    unresolved_source_list.extend(scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]+)'''))
-    unresolved_source_list.extend(scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]+)'''))
-    unresolved_source_list.extend(scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]+)'''))
+    unresolved_source_list += scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]+)''')
+    unresolved_source_list += scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]+)''')
+    unresolved_source_list += scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]+)''')
     hmf_list = []
     for source in unresolved_source_list:
         host = urlparse.urlparse(source).hostname
@@ -109,11 +109,10 @@ def scrape(url, title=''):
                 pass
 
         html += unpacked
-        source_list = []
-        source_list.extend(_parse_to_list(html, '''video\s+src\s*=\s*['"]([^'"]+)'''))
-        source_list.extend(_parse_to_list(html, '''source\s+src\s*=\s*['"]([^'"]+)'''))
-        source_list.extend(_parse_to_list(html, '''["']?\s*file\s*["']?\s*[:=]\s*["']([^"']+)'''))
-        source_list.extend(_parse_to_list(html, '''["']?\s*url\s*["']?\s*[:=]\s*["']([^"']+)'''))
+        source_list = _parse_to_list(html, '''video\s+src\s*=\s*['"]([^'"]+)''')
+        source_list += _parse_to_list(html, '''source\s+src\s*=\s*['"]([^'"]+)''')
+        source_list += _parse_to_list(html, '''["']?\s*file\s*["']?\s*[:=]\s*["']([^"']+)''')
+        source_list += _parse_to_list(html, '''["']?\s*url\s*["']?\s*[:=]\s*["']([^"']+)''')
 
         if source_list:
             source = pick_source(source_list)
