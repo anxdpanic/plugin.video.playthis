@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="2.2.6~alpha2"
+       version="2.2.6~alpha3"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
-        <import addon="script.module.urlresolver" version="3.0.22"/>
+        <import addon="script.module.urlresolver" version="3.0.23"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>video</provides>
@@ -13,6 +13,8 @@
     <extension point="xbmc.addon.metadata">
         <news>
 - add generalized scraping for sources as fallback if url does not resolve
+- add dash support
+- add mimetype detection
         </news>
         <assets>
             <icon>icon.png</icon>

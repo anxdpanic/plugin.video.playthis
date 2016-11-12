@@ -1,5 +1,7 @@
 2.2.6
 - add generalized scraping for sources as fallback if url does not resolve
+- add dash support
+- add mimetype detection
 
 2.2.5
 - export to .m3u now exports PlayThis plugin url instead of resolved url
