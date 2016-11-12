@@ -48,9 +48,9 @@ class PlayHistory:
             table = self.TABLE
         DATABASE.execute('VACUUM {0!s}'.format(table))
 
-    def add(self, url):
-        execute = 'INSERT INTO {0!s} (addon_id, url) VALUES (?, ?)'.format(self.TABLE)
-        inserted = DATABASE.execute(execute, (self.ID, str(url)))
+    def add(self, url, content_type):
+        execute = 'INSERT INTO {0!s} (addon_id, url, content_type) VALUES (?, ?, ?)'.format(self.TABLE)
+        inserted = DATABASE.execute(execute, (self.ID, str(url), str(content_type)))
         if inserted == 1:
             execute = 'SELECT COUNT(*) FROM {0!s} WHERE addon_id=?'.format(self.TABLE)
             result = int(DATABASE.fetch(execute, (self.ID,))[0][0])
@@ -88,11 +88,11 @@ class PlayHistory:
         selected = DATABASE.fetch(execute, (self.ID,))
         results = []
         if selected:
-            for id_key, addon_id, query in selected:
+            for id_key, addon_id, query, content_type in selected:
                 if not include_ids:
-                    results.extend([unquote(query)])
+                    results.extend([(unquote(query), content_type)])
                 else:
-                    results.extend([(id_key, unquote(query))])
+                    results.extend([(id_key, unquote(query), content_type)])
             return results
         else:
             return []
@@ -110,33 +110,41 @@ class PlayHistory:
         if got_input:
             got_input = got_input.strip()
             got_input = quote(re.sub(r'\s+', ' ', got_input))
-            self.add(got_input)
             return got_input
         return ''
 
-    def history_dialog(self):
+    def history_dialog(self, ctype):
         if self.size_limit() != 0:
-            queries = self.get()
-            if len(queries) > 0:
-                queries.insert(0, '[B]{0!s}[/B]'.format(kodi.i18n('new_')))
-                queries.insert(1, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')))
-                index = kodi.Dialog().select(kodi.i18n('choose_playback'), queries)
-                if index > -1:
-                    if index == 1:
-                        self.clear()
+            _queries = self.get()
+            if len(_queries) > 0:
+                queries = []
+                for item, content_type in _queries:
+                    if content_type == ctype:
+                        queries += [item]
+                if len(queries) > 0:
+                    queries.insert(0, '[B]{0!s}[/B]'.format(kodi.i18n('new_')))
+                    queries.insert(1, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')))
+                    index = kodi.Dialog().select(kodi.i18n('choose_playback'), queries)
+                    if index > -1:
+                        if index == 1:
+                            self.clear()
+                            return ''
+                        elif index > 1:
+                            return queries[index]
+                    else:
                         return ''
-                    elif index > 1:
-                        return queries[index]
-                else:
-                    return ''
         return self.get_input()
 
-    def history_directory(self):
+    def history_directory(self, ctype):
         icon_path = kodi.get_icon()
         fanart_path = kodi.get_fanart()
         total_items = None
         if self.size_limit() != 0:
-            queries = self.get(include_ids=True)
+            _queries = self.get(include_ids=True)
+            queries = []
+            for index, (row_id, item, content_type) in enumerate(_queries):
+                if content_type == ctype:
+                    queries += [_queries[index]]
             if len(queries) > 0:
                 total_items = len(queries) + 2
                 kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, '[B]{0!s}[/B]'.format(kodi.i18n('new_')),
@@ -144,14 +152,15 @@ class PlayHistory:
                                  total_items=total_items)
                 kodi.create_item({'mode': MODES.CLEARHISTORY}, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
-                for row_id, item in queries:
+                for row_id, item, content_type in queries:
                     menu_items = [(kodi.i18n('delete_url'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U})))]
                     kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},
                                      item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
-                                     is_playable=True, total_items=total_items, menu_items=menu_items)
+                                     is_playable=True, total_items=total_items, menu_items=menu_items,
+                                     content_type=content_type)
         if not total_items:
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
                              fanart=fanart_path, is_folder=False, is_playable=False)
@@ -159,7 +168,9 @@ class PlayHistory:
 
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-                         'addon_id, url, CONSTRAINT unq UNIQUE (addon_id, url))'.format(self.TABLE), '')
+                         'addon_id, url, content_type, CONSTRAINT unq UNIQUE (addon_id, url) )'.format(self.TABLE), '')
+        DATABASE.execute('ALTER TABLE {0!s} ADD COLUMN content_type DEFAULT {1!s}'
+                         .format(self.TABLE, 'video'), '')
 
 
 class M3UUtils:
@@ -182,7 +193,7 @@ class M3UUtils:
         if items:
             _m3u = '#EXTM3U\n'
             m3u = _m3u
-            for item in items:
+            for item, content_type in items:
                 title = item
                 if results == 'resolved':
                     resolved = resolve(item)

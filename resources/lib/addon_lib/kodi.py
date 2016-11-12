@@ -115,13 +115,14 @@ def set_content(content):
 
 
 def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
-                replace_menu=False):
-    list_item = xbmcgui.ListItem(label, iconImage=thumb, thumbnailImage=thumb)
-    add_item(queries, list_item, fanart, is_folder, is_playable, total_items, menu_items, replace_menu)
+                replace_menu=False, content_type='video'):
+    list_item = xbmcgui.ListItem(label, iconImage=thumb)
+    add_item(queries, list_item, thumb, fanart, is_folder, is_playable, total_items,
+             menu_items, replace_menu, content_type=content_type)
 
 
-def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
-             replace_menu=False):
+def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
+             replace_menu=False, content_type='video'):
     if menu_items is None: menu_items = []
     if is_folder is None:
         is_folder = False if is_playable else True
@@ -132,8 +133,8 @@ def add_item(queries, list_item, fanart='', is_folder=None, is_playable=None, to
         playable = 'true' if is_playable else 'false'
 
     liz_url = get_plugin_url(queries)
-    if fanart: list_item.setProperty('fanart_image', fanart)
-    list_item.setInfo('video', {'title': list_item.getLabel()})
+    list_item.setArt({'thumb': thumb, 'fanart': fanart})
+    list_item.setInfo(content_type, {'title': list_item.getLabel()})
     list_item.setProperty('isPlayable', playable)
     list_item.addContextMenuItems(menu_items, replaceItems=replace_menu)
     xbmcplugin.addDirectoryItem(int(sys.argv[1]), liz_url, list_item, isFolder=is_folder, totalItems=total_items)

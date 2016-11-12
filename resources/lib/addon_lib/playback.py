@@ -19,38 +19,62 @@
 
 import re
 import urlparse
+import socket
 import kodi
+import utils
 import log_utils
+from urllib2 import quote
 from urlresolver import common, add_plugin_dirs, scrape_supported, choose_source, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, append_headers, scrape_sources, parse_smil_source_list
+from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
+from urlresolver.plugins.lib.helpers import append_headers as __append_headers
+
 from constants import RESOLVER_DIR
+
+socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.mpd')
 net = common.Net()
 
 
-def __get_content_type_and_headers(url):
+def append_headers(headers):
+    if headers.has_key('Accept-Encoding'):
+        del headers['Accept-Encoding']
+    if headers.has_key('Host'):
+        del headers['Host']
+    return __append_headers(headers)
+
+
+def __get_content_type_and_headers(url, headers=None):
     # returns content-type, headers
     parsed_url = urlparse.urlparse(url)
-    headers = {'User-Agent': common.FF_USER_AGENT,
-               'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
+    if headers is None:
+        headers = {'User-Agent': common.FF_USER_AGENT,
+                   'Host': parsed_url.hostname,
+                   'Accept-Language': 'en',
+                   'Accept-Encoding': 'gzip, deflate',
+                   'Connection': 'Keep-Alive',
+                   'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
 
     try:
         response = net.http_HEAD(url, headers=headers)
     except:
-        return '', ''
+        return 'video', headers
 
     response_headers = response.get_headers(as_dict=True)
     headers.update({'Cookie': response_headers.get('Set-Cookie', '')})
 
-    ctype_header = response_headers.get('Content-Type', '')
+    ctype_header = response_headers.get('Content-Type', 'video')
 
     try:
         media, subtype = re.findall('([a-z\-]+)/([a-z0-9\-+.]+);?', ctype_header, re.DOTALL)[0]
         content_type = media
         if (content_type == 'application') and (subtype == 'dash+xml'):
             content_type = 'mpd'
+        elif (content_type == 'application') and (subtype == 'smil+xml'):
+            content_type = 'smil'
+        elif (content_type == 'application') and ('mpeg' in subtype):
+            content_type = 'video'
     except:
         content_type = ctype_header
 
@@ -110,31 +134,45 @@ def scrape(html, title=''):
     return None
 
 
-def play_this(item, title='', thumbnail='', player=True):
+def play_this(item, title='', thumbnail='', player=True, history=None):
+    if history is None:
+        history = kodi.get_setting('history-add-on-play') == "true"
     stream_url = None
     content_type = 'video'
     is_dash = False
+    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
 
-    if not item.startswith('plugin://'):
+    if item.startswith('http'):
         content_type, headers = __get_content_type_and_headers(item)
-        if content_type == 'video' or content_type == 'audio' or content_type == 'image' or content_type == 'mpd':
-            stream_url = item + append_headers(headers)
-            if content_type == 'mpd':
+        log_utils.log('Source |{0}| has media type |{1}|'.format(item, content_type), log_utils.LOGDEBUG)
+        if content_type == 'video' or content_type == 'audio' or content_type == 'image' \
+                or content_type == 'mpd' or content_type == 'smil':
+            source = item
+            if content_type == 'smil':
+                content_type = 'video'
+                smil, _headers = __get_html_and_headers(item, headers)
+                source = pick_source(parse_smil_source_list(smil))
+            elif content_type == 'mpd':
                 content_type = 'video'
                 if not dash_supported:
-                    stream_url = None
-
+                    source = None
+            if source:
+                stream_url = source + append_headers(headers)
         elif content_type == 'text':
             content_type = 'video'
-            stream_url = resolve(item, title=title)
-            if stream_url:
-                if '.mpd' in stream_url or dash_supported:
-                    is_dash = True
-                    if '.mpd' not in stream_url:
-                        content_type, _headers = __get_content_type_and_headers(stream_url)
-                        if content_type != 'mpd':
-                            is_dash = False
-                            stream_url = None
+            headers.update({'Referer': item})
+            source = resolve(item, title=title)
+            if source:
+                log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
+                if '.smil' in source:
+                    smil, _headers = __get_html_and_headers(item, headers)
+                    source = pick_source(parse_smil_source_list(smil))
+                elif '.mpd' in source and not dash_supported:
+                    source = None
+                if source:
+                    stream_url = source
+                    if not stream_url.startswith('plugin://'):
+                        stream_url += append_headers(headers)
 
             if not stream_url:
                 html, headers = __get_html_and_headers(item, headers)
@@ -143,49 +181,65 @@ def play_this(item, title='', thumbnail='', player=True):
                     blacklist += ['.mpd']
                 sources = scrape_sources(html, result_blacklist=blacklist)
                 if sources:
-                    headers.update({'Referer': item})
                     source = pick_source(sources)
+                    log_utils.log('Source |{0}| found by |Scraping for sources|'.format(source), log_utils.LOGDEBUG)
                     if '.smil' in source:
-                        smil, headers = __get_html_and_headers(source, headers)
+                        smil, _headers = __get_html_and_headers(item, headers)
                         source = pick_source(parse_smil_source_list(smil))
-                    elif '.mpd' in source or dash_supported:
-                        is_dash = True
-                        if '.mpd' not in source:
-                            content_type, _headers = __get_content_type_and_headers(source)
-                            if content_type != 'mpd':
-                                is_dash = False
-
-                    stream_url = source + append_headers(headers)
+                    elif '.mpd' in source and not dash_supported:
+                        source = None
+                    if source:
+                        stream_url = source + append_headers(headers)
 
                 if not stream_url:
-                    stream_url = scrape(html, title=title)
-                    if stream_url:
-                        if '.mpd' in stream_url or dash_supported:
-                            is_dash = True
-                            if '.mpd' not in stream_url:
-                                content_type, _headers = __get_content_type_and_headers(stream_url)
-                                if content_type != 'mpd':
-                                    is_dash = False
-                                    stream_url = None
+                    source = scrape(html, title=title)
+                    if source:
+                        log_utils.log('Source |{0}| found by |Scraping for URLResolver supported|'
+                                      .format(source), log_utils.LOGDEBUG)
+                        if '.smil' in source:
+                            smil, _headers = __get_html_and_headers(item, headers)
+                            source = pick_source(parse_smil_source_list(smil))
+                        elif '.mpd' in source:
+                            if not dash_supported:
+                                source = None
+                        if source:
+                            stream_url = source
+                            if not stream_url.startswith('plugin://'):
+                                stream_url += append_headers(headers)
 
-    else:
+    elif any(item.startswith(p) for p in direct):
+        log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
         stream_url = item
 
-    if is_dash and not dash_supported:
+    if is_dash and (not dash_supported):
         stream_url = None
 
-    if stream_url:
+    if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
+        if history:
+            play_history = utils.PlayHistory()
+            history_item = item
+            if '%' not in item:
+                history_item = quote(item)
+            log_utils.log('Adding source |{0}| to history with content_type |{1}|'
+                          .format(item, content_type), log_utils.LOGDEBUG)
+            play_history.add(history_item, content_type)
+            if player == 'history':
+                return
         if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
             log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
             kodi.execute_builtin('RunPlugin(%s)' % stream_url)
         else:
-            playback_item = kodi.ListItem(label=title, thumbnailImage=thumbnail, path=stream_url)
-            if is_dash:
-                playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
+            playback_item = kodi.ListItem(label=title, path=stream_url)
+            playback_item.setArt({'thumb': thumbnail})
             playback_item.setProperty('IsPlayable', 'true')
-            playback_item.setInfo(content_type, {'title': playback_item.getLabel()})
-            playback_item.addStreamInfo(content_type, {})
-
+            info = {'title': playback_item.getLabel()}
+            if content_type == 'image':
+                info.update({'picturepath': stream_url})
+            playback_item.setInfo(content_type, info)
+            if content_type == 'video' or content_type == 'audio':
+                playback_item.addStreamInfo(content_type, {})
+                if is_dash:
+                    playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
             if player:
                 log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.Player().play(stream_url, playback_item)

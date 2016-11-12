@@ -18,21 +18,21 @@
 """
 
 import os
-from utils import PlayHistory, M3UUtils
 from addon_lib import kodi
+from addon_lib.utils import PlayHistory, M3UUtils
 from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR
 from addon_lib.playback import play_this
-from urllib2 import unquote, quote
+from urllib2 import unquote
 
 play_history = PlayHistory()
 
 
-@DISPATCHER.register(MODES.MAIN)
-def main_route():
+@DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
+def main_route(content_type='video'):
     if play_history.use_directory():
-        play_history.history_directory()
+        play_history.history_directory(content_type)
     else:
-        playback_item = play_history.history_dialog()
+        playback_item = play_history.history_dialog(content_type)
         if playback_item:
             play_this(unquote(playback_item), player=True)
 
@@ -46,9 +46,7 @@ def get_new_item(player=True):
 
 @DISPATCHER.register(MODES.ADD, ['path'])
 def add_url(path):
-    if '%' not in path:
-        path = quote(path)
-    play_history.add(path)
+    play_this(path, title=path, player='history')
 
 
 @DISPATCHER.register(MODES.DELETE, ['row_id'], ['refresh'])
@@ -60,14 +58,7 @@ def delete_url(row_id, refresh=True):
 
 @DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])
 def play(path, player=True, history=None):
-    if history is None:
-        history = kodi.get_setting('history-add-on-play') == "true"
-    if history:
-        history = path
-        if '%' not in history:
-            history = quote(history)
-        play_history.add(history)
-    play_this(unquote(path), player=player)
+    play_this(unquote(path), player=player, history=history)
 
 
 @DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list'])
