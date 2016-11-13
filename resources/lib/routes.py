@@ -29,6 +29,12 @@ play_history = PlayHistory()
 
 @DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
 def main_route(content_type='video'):
+    content = 'episodes'
+    if content_type == 'audio':
+        content = 'songs'
+    elif content_type == 'image':
+        content = 'images'
+    kodi.set_content(content)
     if play_history.use_directory():
         play_history.history_directory(content_type)
     else:
@@ -61,8 +67,8 @@ def play(path, player=True, history=None):
     play_this(unquote(path), player=player, history=history)
 
 
-@DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list'])
-def export_m3u(export_path=None, from_list='history'):
+@DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list', 'ctype'])
+def export_m3u(export_path=None, from_list='history', ctype='video'):
     if export_path is None:
         export_path = kodi.get_setting('export_path')
         if not export_path:
@@ -78,12 +84,12 @@ def export_m3u(export_path=None, from_list='history'):
                 m3u_file = kodi.translate_path(export_path + m3u_name)
             else:
                 m3u_file = os.path.join(export_path, m3u_name)
-            M3UUtils(m3u_file, from_list).export()
+            M3UUtils(m3u_file, from_list).export(ctype)
 
 
-@DISPATCHER.register(MODES.CLEARHISTORY)
-def clear_history():
-    play_history.clear()
+@DISPATCHER.register(MODES.CLEARHISTORY, kwargs=['ctype'])
+def clear_history(ctype=None):
+    play_history.clear(ctype)
 
 
 @DISPATCHER.register(MODES.URLRESOLVER)

@@ -229,17 +229,21 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
             kodi.execute_builtin('RunPlugin(%s)' % stream_url)
         else:
-            playback_item = kodi.ListItem(label=title, path=stream_url)
-            playback_item.setArt({'thumb': thumbnail})
-            playback_item.setProperty('IsPlayable', 'true')
-            info = {'title': playback_item.getLabel()}
+            info = {'title': title}
             if content_type == 'image':
+                playback_item = kodi.ListItem(label=title, iconImage=stream_url, path=stream_url)
+                playback_item.setProperty('IsPlayable', 'true')
+                playback_item.setArt({'thumb': stream_url, 'poster': stream_url, 'fanart': stream_url})
                 info.update({'picturepath': stream_url})
-            playback_item.setInfo(content_type, info)
-            if content_type == 'video' or content_type == 'audio':
+            else:
+                playback_item = kodi.ListItem(label=title, iconImage=thumbnail, path=stream_url)
+                playback_item.setProperty('IsPlayable', 'true')
+                playback_item.setArt({'thumb': thumbnail})
                 playback_item.addStreamInfo(content_type, {})
                 if is_dash:
                     playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
+            playback_item.setInfo(content_type, info)
+
             if player:
                 log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.Player().play(stream_url, playback_item)

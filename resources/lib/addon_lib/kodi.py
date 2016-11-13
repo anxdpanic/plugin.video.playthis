@@ -91,7 +91,7 @@ def get_icon():
 
 
 def get_fanart():
-    return os.path.join(get_path(), 'fanart.png')
+    return os.path.join(get_path(), 'fanart.jpg')
 
 
 def get_plugin_url(queries):
