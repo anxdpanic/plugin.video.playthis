@@ -123,8 +123,13 @@ def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable
 
 def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
              replace_menu=False, content_type='video', info=None):
+
     if menu_items is None: menu_items = []
+
     if info is None: info = {'title': list_item.getLabel()}
+    if not thumb: thumb = get_icon()
+    if not fanart: fanart = get_fanart()
+
     if is_folder is None:
         is_folder = False if is_playable else True
 
@@ -132,12 +137,10 @@ def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playabl
         playable = 'false' if is_folder else 'true'
     else:
         playable = 'true' if is_playable else 'false'
+
     liz_url = queries
     if isinstance(queries, dict):
         liz_url = get_plugin_url(queries)
-
-    if not thumb: thumb = os.path.join(get_path(), 'icon.png')
-    if not fanart: fanart = os.path.join(get_path(), 'fanart.jpg')
 
     list_item.setArt({'thumb': thumb, 'fanart': fanart})
     list_item.setInfo(content_type, info)
