@@ -150,21 +150,31 @@ class PlayHistory:
                 if content_type == ctype:
                     queries += [_queries[index]]
             if len(queries) > 0:
-                total_items = len(queries) + 2
+                total_items = len(queries)
+                """
                 kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, '[B]{0!s}[/B]'.format(kodi.i18n('new_')),
                                  thumb=icon_path, fanart=fanart_path, is_folder=False, is_playable=False,
                                  total_items=total_items)
-                kodi.create_item({'mode': MODES.CLEARHISTORY, 'ctype': ctype}, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
+                kodi.create_item({'mode': MODES.CLEARHISTORY, 'ctype': ctype},
+                                 '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
+                """
                 for row_id, item, content_type in queries:
-                    menu_items = [(kodi.i18n('delete_url'), 'RunPlugin(%s)' %
+                    liz_url = None
+                    if ctype == 'image':
+                        liz_url = item
+                    menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
+                                  (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
+                                  (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type})))]
                     kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},
                                      item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
-                                     content_type=content_type)
+                                     content_type=content_type, liz_url=liz_url)
         if not total_items:
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
                              fanart=fanart_path, is_folder=False, is_playable=False)
@@ -179,8 +189,8 @@ class PlayHistory:
         DATABASE.execute('ALTER TABLE {0!s} RENAME TO {1!s}'
                          .format(self.OLD_TABLE, '{0!s}_bak'.format(self.OLD_TABLE)), '')
 
-class M3UUtils:
 
+class M3UUtils:
     def __init__(self, filename, from_list='history'):
         if not from_list:
             from_list = 'history'
@@ -214,7 +224,8 @@ class M3UUtils:
                 else:
                     if results == 'playthis':
                         pt_url = \
-                            'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}'.format(quote(item))
+                            'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}'\
+                                .format(quote(item))
                         log_utils.log('M3UUtils.export adding PlayThis item: |{0!s}| as |{1!s}|'.format(pt_url, title),
                                       log_utils.LOGDEBUG)
                         m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, pt_url)
