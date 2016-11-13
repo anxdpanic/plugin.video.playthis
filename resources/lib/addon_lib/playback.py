@@ -215,7 +215,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
         stream_url = None
 
     if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
-        if history:
+        if history or player == 'history':
             play_history = utils.PlayHistory()
             history_item = item
             if '%' not in item:

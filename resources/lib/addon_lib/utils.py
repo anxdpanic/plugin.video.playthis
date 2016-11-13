@@ -26,7 +26,8 @@ from urllib2 import quote, unquote
 
 
 class PlayHistory:
-    TABLE = 'play_0_0_1'
+    OLD_TABLE = 'play_0_0_1'
+    TABLE = 'play_0_0_2'
     ID = kodi.get_id()
 
     def __init__(self):
@@ -168,10 +169,12 @@ class PlayHistory:
 
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-                         'addon_id, url, content_type, CONSTRAINT unq UNIQUE (addon_id, url) )'.format(self.TABLE), '')
-        DATABASE.execute('ALTER TABLE {0!s} ADD COLUMN content_type DEFAULT {1!s}'
-                         .format(self.TABLE, 'video'), '')
-
+                         'addon_id, url, content_type TEXT DEFAULT "video", '
+                         'CONSTRAINT unq UNIQUE (addon_id, url, content_type) )'.format(self.TABLE), '')
+        DATABASE.execute('INSERT INTO {0!s} (addon_id, url) SELECT addon_id, url FROM {1!s}'
+                         .format(self.TABLE, self.OLD_TABLE), '')
+        DATABASE.execute('ALTER TABLE {0!s} RENAME TO {1!s}'
+                         .format(self.OLD_TABLE, '{0!s}_bak'.format(self.OLD_TABLE)), '')
 
 class M3UUtils:
 
