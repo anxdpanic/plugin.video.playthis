@@ -68,6 +68,8 @@ def __get_content_type_and_headers(url, headers=None):
 
     try:
         media, subtype = re.findall('([a-z\-]+)/([a-z0-9\-+.]+);?', ctype_header, re.DOTALL)[0]
+        log_utils.log('HEAD request returned MIME type: |{0!s}/{1!s}| and headers: |{2!s}|'
+                      .format(media, subtype, response_headers), log_utils.LOGDEBUG)
         content_type = media
         if (content_type == 'application') and (subtype == 'dash+xml'):
             content_type = 'mpd'
@@ -75,10 +77,13 @@ def __get_content_type_and_headers(url, headers=None):
             content_type = 'smil'
         elif (content_type == 'application') and ('mpeg' in subtype):
             content_type = 'video'
+        elif (content_type == 'application') and (subtype == 'octet-stream') and \
+                any(ext in url for ext in ['.iso', '.bin']):
+            content_type = 'video'
     except:
         content_type = ctype_header
 
-    log_utils.log('HEAD Request returned Content-Type: |{0!s}| updated Headers: |{1!s}|'
+    log_utils.log('HEAD request complete updated headers: |{1!s}| using media type: |{0!s}|'
                   .format(content_type, headers), log_utils.LOGDEBUG)
     return content_type, headers
 
@@ -91,7 +96,7 @@ def __get_html_and_headers(url, headers):
         if cookie:
             headers['Cookie'] = headers.get('Cookie', '') + cookie
 
-        log_utils.log('GET Request updated Headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
+        log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
         return response.content, headers
     except:
         return '', ''
@@ -229,24 +234,25 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
             kodi.execute_builtin('RunPlugin(%s)' % stream_url)
         else:
-            info = {'title': title}
             if content_type == 'image':
-                playback_item = kodi.ListItem(label=title, iconImage=stream_url, path=stream_url)
-                playback_item.setProperty('IsPlayable', 'true')
-                playback_item.setArt({'thumb': stream_url, 'poster': stream_url, 'fanart': stream_url})
-                info.update({'picturepath': stream_url})
+                player_open = {'jsonrpc': '2.0',
+                               'id': '1',
+                               'method': 'Player.Open',
+                               'params': {'item': {'file': stream_url}}}
+                log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                kodi.execute_jsonrpc(player_open)
             else:
+                info = {'title': title}
                 playback_item = kodi.ListItem(label=title, iconImage=thumbnail, path=stream_url)
                 playback_item.setProperty('IsPlayable', 'true')
                 playback_item.setArt({'thumb': thumbnail})
                 playback_item.addStreamInfo(content_type, {})
                 if is_dash:
                     playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
-            playback_item.setInfo(content_type, info)
-
-            if player:
-                log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                kodi.Player().play(stream_url, playback_item)
-            else:
-                log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                kodi.set_resolved_url(playback_item)
+                playback_item.setInfo(content_type, info)
+                if player:
+                    log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                    kodi.Player().play(stream_url, playback_item)
+                else:
+                    log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                    kodi.set_resolved_url(playback_item)
