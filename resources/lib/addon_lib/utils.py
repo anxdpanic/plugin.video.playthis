@@ -160,9 +160,9 @@ class PlayHistory:
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
                 """
                 for row_id, item, content_type in queries:
-                    liz_url = None
+                    play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)}
                     if ctype == 'image':
-                        liz_url = item
+                        play_path = item
                     menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
@@ -171,10 +171,10 @@ class PlayHistory:
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type})))]
-                    kodi.create_item({'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)},
+                    kodi.create_item(play_path,
                                      item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
-                                     content_type=content_type, liz_url=liz_url)
+                                     content_type=content_type)
         if not total_items:
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
                              fanart=fanart_path, is_folder=False, is_playable=False)

@@ -115,14 +115,14 @@ def set_content(content):
 
 
 def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
-                replace_menu=False, content_type='video', info=None, liz_url=None):
-    list_item = xbmcgui.ListItem(label, iconImage=thumb)
+                replace_menu=False, content_type='video', info=None):
+    list_item = xbmcgui.ListItem(label)
     add_item(queries, list_item, thumb, fanart, is_folder, is_playable, total_items,
-             menu_items, replace_menu, content_type=content_type, info=info, liz_url=liz_url)
+             menu_items, replace_menu, content_type=content_type, info=info)
 
 
 def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
-             replace_menu=False, content_type='video', info=None, liz_url=None):
+             replace_menu=False, content_type='video', info=None):
     if menu_items is None: menu_items = []
     if info is None: info = {'title': list_item.getLabel()}
     if is_folder is None:
@@ -132,8 +132,13 @@ def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playabl
         playable = 'false' if is_folder else 'true'
     else:
         playable = 'true' if is_playable else 'false'
-    if liz_url is None:
+    liz_url = queries
+    if isinstance(queries, dict):
         liz_url = get_plugin_url(queries)
+
+    if not thumb: thumb = os.path.join(get_path(), 'icon.png')
+    if not fanart: fanart = os.path.join(get_path(), 'fanart.jpg')
+
     list_item.setArt({'thumb': thumb, 'fanart': fanart})
     list_item.setInfo(content_type, info)
     list_item.setProperty('isPlayable', playable)
