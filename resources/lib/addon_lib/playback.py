@@ -19,11 +19,12 @@
 
 import re
 import urlparse
+import urllib2
+import struct
 import socket
 import kodi
 import utils
 import log_utils
-from urllib2 import quote
 from urlresolver import common, add_plugin_dirs, scrape_supported, choose_source, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
@@ -45,8 +46,34 @@ def append_headers(headers):
     return __append_headers(headers)
 
 
+def __get_html_and_headers(url, headers):
+    try:
+        response = net.http_GET(url, headers=headers)
+        response_headers = response.get_headers(as_dict=True)
+        cookie = response_headers.get('Set-Cookie', '')
+        if cookie:
+            headers['Cookie'] = headers.get('Cookie', '') + cookie
+
+        log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
+        return response.content, headers
+    except:
+        return '', ''
+
+
+def __get_qt_atom_url(url, headers):
+    log_utils.log('Attempting to get url from quicktime atom: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+    try:
+        mov, headers = __get_html_and_headers(url, headers)
+        r = re.search('moov.*?rmra.*?rdrf.*?url (....)(.*)', mov)
+        l = struct.unpack("!I", r.group(1))[0]
+        return r.group(2)[:l], headers
+    except:
+        return None, headers
+
+
 def __get_content_type_and_headers(url, headers=None):
     # returns content-type, headers
+    url_override = None
     parsed_url = urlparse.urlparse(url)
     if headers is None:
         headers = {'User-Agent': common.FF_USER_AGENT,
@@ -64,6 +91,7 @@ def __get_content_type_and_headers(url, headers=None):
     response_headers = response.get_headers(as_dict=True)
     headers.update({'Cookie': response_headers.get('Set-Cookie', '')})
 
+    clength_header = response_headers.get('Content-Length', '')
     ctype_header = response_headers.get('Content-Type', 'video')
 
     try:
@@ -80,26 +108,19 @@ def __get_content_type_and_headers(url, headers=None):
         elif (content_type == 'application') and (subtype == 'octet-stream') and \
                 any(ext in url for ext in ['.iso', '.bin']):
             content_type = 'video'
+        elif (content_type == 'video') and ('quicktime' in subtype):
+            try:
+                content_length = int(clength_header)
+                if content_length <= 10000:
+                    url_override, headers = __get_qt_atom_url(url, headers)
+            except:
+                pass
     except:
         content_type = ctype_header
 
     log_utils.log('HEAD request complete updated headers: |{1!s}| using media type: |{0!s}|'
                   .format(content_type, headers), log_utils.LOGDEBUG)
-    return content_type, headers
-
-
-def __get_html_and_headers(url, headers):
-    try:
-        response = net.http_GET(url, headers=headers)
-        response_headers = response.get_headers(as_dict=True)
-        cookie = response_headers.get('Set-Cookie', '')
-        if cookie:
-            headers['Cookie'] = headers.get('Cookie', '') + cookie
-
-        log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
-        return response.content, headers
-    except:
-        return '', ''
+    return content_type, headers, url_override
 
 
 def resolve(url, title=''):
@@ -148,7 +169,10 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
 
     if item.startswith('http'):
-        content_type, headers = __get_content_type_and_headers(item)
+        content_type, headers, url_override = __get_content_type_and_headers(item)
+        if url_override:
+            log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
+            item = url_override
         log_utils.log('Source |{0}| has media type |{1}|'.format(item, content_type), log_utils.LOGDEBUG)
         if content_type == 'video' or content_type == 'audio' or content_type == 'image' \
                 or content_type == 'mpd' or content_type == 'smil':
@@ -224,7 +248,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             play_history = utils.PlayHistory()
             history_item = item
             if '%' not in item:
-                history_item = quote(item)
+                history_item = urllib2.quote(item)
             log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                           .format(item, content_type), log_utils.LOGDEBUG)
             play_history.add(history_item, content_type)
