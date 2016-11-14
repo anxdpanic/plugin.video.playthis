@@ -233,14 +233,34 @@ def i18n(string_id):
 
 
 class WorkingDialog(object):
+    wd = None
+
     def __init__(self):
-        xbmc.executebuiltin('ActivateWindow(busydialog)')
+        try:
+            self.wd = xbmcgui.DialogBusy()
+            self.wd.create()
+            self.update(0)
+        except:
+            xbmc.executebuiltin('ActivateWindow(busydialog)')
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        xbmc.executebuiltin('Dialog.Close(busydialog)')
+        if self.wd is not None:
+            self.wd.close()
+        else:
+            xbmc.executebuiltin('Dialog.Close(busydialog)')
+
+    def is_canceled(self):
+        if self.wd is not None:
+            return self.wd.iscanceled()
+        else:
+            return False
+
+    def update(self, percent):
+        if self.wd is not None:
+            self.wd.update(percent)
 
 
 class ProgressDialog(object):
