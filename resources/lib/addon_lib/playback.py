@@ -83,6 +83,14 @@ def __get_content_type_and_headers(url, headers=None):
                    'Connection': 'Keep-Alive',
                    'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
 
+    potential_type = 'text'
+    if any(ext in url for ext in kodi.get_supported_media('video').split('|')):
+        potential_type = 'video'
+    elif any(ext in url for ext in kodi.get_supported_media('music').split('|')):
+        potential_type = 'audio'
+    elif any(ext in url for ext in kodi.get_supported_media('picture').split('|')):
+        potential_type = 'image'
+
     try:
         response = net.http_HEAD(url, headers=headers)
         redirect = response.get_url()
@@ -91,13 +99,13 @@ def __get_content_type_and_headers(url, headers=None):
             url_override = redirect
             response = net.http_HEAD(url_override, headers=headers)
     except:
-        return 'text', headers, None
+        return potential_type, headers, None
 
     response_headers = response.get_headers(as_dict=True)
     headers.update({'Cookie': response_headers.get('Set-Cookie', '')})
 
     clength_header = response_headers.get('Content-Length', '')
-    ctype_header = response_headers.get('Content-Type', 'video')
+    ctype_header = response_headers.get('Content-Type', potential_type)
 
     try:
         media, subtype = re.findall('([a-z\-]+)/([a-z0-9\-+.]+);?', ctype_header, re.DOTALL)[0]

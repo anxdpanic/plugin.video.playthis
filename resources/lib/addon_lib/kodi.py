@@ -209,6 +209,10 @@ def update_container(url):
     xbmc.executebuiltin('Container.Update(%s)' % (url))
 
 
+def get_supported_media(media_type):
+    return xbmc.getSupportedMedia(media_type)
+
+
 def get_keyboard(heading, default=''):
     keyboard = xbmc.Keyboard()
     keyboard.setHeading(heading)
