@@ -31,6 +31,8 @@ STRINGS = {
     'm3u_filename': 30110,
     'export_list_m3u': 30111,
     'export_fail': 30112,
+    'choose_source': 30113,
+    'unknown': 30114,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706

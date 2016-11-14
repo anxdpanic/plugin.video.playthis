@@ -73,12 +73,13 @@ def __get_qt_atom_url(url, headers):
 
 def __get_potential_type(url):
     potential_type = 'text'
-    if any(ext in url for ext in kodi.get_supported_media('video').split('|')):
-        potential_type = 'video'
-    elif any(ext in url for ext in kodi.get_supported_media('music').split('|')):
+    if any(ext in url for ext in kodi.get_supported_media('music').split('|')):
         potential_type = 'audio'
     elif any(ext in url for ext in kodi.get_supported_media('picture').split('|')):
         potential_type = 'image'
+    elif any(ext in url for ext in kodi.get_supported_media('video').split('|')):
+        potential_type = 'video'
+
     return potential_type
 
 
@@ -161,17 +162,24 @@ def __check_for_new_url(url):
     return result
 
 
-def scrape_supported(html, regex=None, host_only=False):
+def scrape_supported(url, html, regex=None, host_only=False):
     # modified version of scrape supported from urlresolver to support additional label match group, and filtering
+    parsed_url = urlparse.urlparse(url)
     host_cache = {}
     if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
-    filter = ['jquery', '/ads.js', '-ads.js', 'data:', 'blob:' '/search', 'tab=', 'usp=']
+    filter = ['jquery', '/ads.js', '-ads.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.']
     for match in re.finditer(regex, html):
         stream_url = match.group(1)
-        if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links):
+        if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
+                stream_url.endswith('/'):
             continue
         stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
+
+        if stream_url.startswith('//'):
+            stream_url = '%s:%s' % (parsed_url.scheme, stream_url)
+        elif stream_url.startswith('/'):
+            stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
 
         host = urlparse.urlparse(stream_url).hostname
         label = host
@@ -191,10 +199,15 @@ def scrape_supported(html, regex=None, host_only=False):
         else:
             hmf = HostedMediaFile(url=stream_url)
 
+        potential_type = __get_potential_type(stream_url)
+
         is_valid = hmf.valid_url()
+        is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
         host_cache[host] = is_valid
-        if is_valid:
-            links.append((label, stream_url))
+        if is_valid and is_valid_type:
+            links.append((label, stream_url, True, 'video'))
+        else:
+            links.append((label, stream_url, False, potential_type))
     return links
 
 
@@ -216,7 +229,21 @@ def resolve(url, title=''):
         return resolved
 
 
-def scrape(html, title=''):
+def __pick_source(sources):
+    if len(sources) == 1:
+        return sources[0][1]
+    elif len(sources) > 1:
+        result = kodi.Dialog().select(kodi.i18n('choose_source'),
+                                      [source[0] if source[0] else kodi.i18n('unknown') for source in sources])
+        if result == -1:
+            return None
+        else:
+            return sources[result]
+    else:
+        return None
+
+
+def scrape(url, html):
     unresolved_source_list = []
 
     def _to_list(items):
@@ -227,35 +254,41 @@ def scrape(html, title=''):
     src_match_regex = '''\s*=\s*['"]([^'"]+)'''
 
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
+    _to_list(scrape_supported(url, html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
+    _to_list(scrape_supported(url, html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(html, regex='''data-lazy-src%s''' % src_match_regex))
+    _to_list(scrape_supported(url, html, regex='''data-lazy-src%s''' % src_match_regex))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(html, regex='''src%s''' % src_match_regex))
+    _to_list(scrape_supported(url, html, regex='''src%s''' % src_match_regex))
 
-    hmf_list = []
-    for label, source in unresolved_source_list:
-        hmf_list.append(HostedMediaFile(source, title=label))
+    result_list = []
+    for item in unresolved_source_list:
+        if item[3] != 'text':
+            result_list.append(item)
 
-    if hmf_list:
-        chosen = choose_source(hmf_list)
+    if result_list:
+        chosen = __pick_source(result_list)
         if chosen:
-            return resolve(chosen.get_url(), title=title)
-
-    return None
+            if chosen[2]:
+                return resolve(chosen[1], title=chosen[0]), chosen[3]
+            else:
+                return chosen[1], chosen[3]
+    return None, None
 
 
 def play_this(item, title='', thumbnail='', player=True, history=None):
     if history is None:
         history = kodi.get_setting('history-add-on-play') == "true"
+    override_history = kodi.get_setting('history-add-on-play') == "true"
     stream_url = None
     headers = None
     content_type = 'video'
+    override_content_type = None
     is_dash = False
     direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
     force_scrape_supported = ['reddit.com', 'google.']
+
     working_dialog = kodi.WorkingDialog()
     with working_dialog:
         if item.startswith('http'):
@@ -308,7 +341,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         sources = scrape_sources(html, result_blacklist=blacklist)
                         if sources:
                             source = pick_source(sources)
-                            log_utils.log('Source |{0}| found by |Scraping for sources|'.format(source), log_utils.LOGDEBUG)
+                            log_utils.log('Source |{0}| found by |Scraping for sources|'
+                                          .format(source), log_utils.LOGDEBUG)
                             if '.smil' in source:
                                 smil, _headers = __get_html_and_headers(item, headers)
                                 source = pick_source(parse_smil_source_list(smil))
@@ -319,16 +353,17 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                     working_dialog.update(60)
                     if not stream_url:
-                        source = scrape(html, title=title)
+                        source, override_content_type = scrape(item, html)
                         if source:
-                            log_utils.log('Source |{0}| found by |Scraping for URLResolver supported|'
+                            log_utils.log('Source |{0}| found by |Scraping for supported|'
                                           .format(source), log_utils.LOGDEBUG)
-                            if '.smil' in source:
-                                smil, _headers = __get_html_and_headers(item, headers)
-                                source = pick_source(parse_smil_source_list(smil))
-                            elif '.mpd' in source:
-                                if not dash_supported:
-                                    source = None
+                            if content_type == 'video':
+                                if '.smil' in source:
+                                    smil, _headers = __get_html_and_headers(item, headers)
+                                    source = pick_source(parse_smil_source_list(smil))
+                                elif '.mpd' in source:
+                                    if not dash_supported:
+                                        source = None
                             if source:
                                 stream_url = source.replace(r'\\', '')
 
@@ -350,8 +385,16 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
                 play_history.add(history_item, content_type)
-                if player == 'history':
-                    return
+            if override_content_type and override_history:
+                play_history = utils.PlayHistory()
+                history_item = stream_url
+                if '%' not in stream_url:
+                    history_item = urllib2.quote(stream_url)
+                log_utils.log('Adding source |{0}| to history with content_type |{1}|'
+                              .format(stream_url, override_content_type), log_utils.LOGDEBUG)
+                play_history.add(history_item, override_content_type)
+            if player == 'history':
+                return
 
             if (not stream_url.startswith('plugin://')) and ('|' not in stream_url) and (headers is not None):
                 stream_url += append_headers(headers)
@@ -363,12 +406,15 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.execute_builtin('RunPlugin(%s)' % stream_url)
             else:
+                if override_content_type:
+                    content_type = override_content_type
                 if content_type == 'image':
                     player_open = {'jsonrpc': '2.0',
                                    'id': '1',
                                    'method': 'Player.Open',
                                    'params': {'item': {'file': stream_url}}}
-                    log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                    log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'
+                                  .format(stream_url), log_utils.LOGDEBUG)
                     kodi.execute_jsonrpc(player_open)
                 else:
                     info = {'title': title}

@@ -67,6 +67,14 @@ msgctxt "#30112"
 msgid "Failed to export items to .m3u"
 msgstr ""
 
+msgctxt "#30113"
+msgid "Choose source"
+msgstr ""
+
+msgctxt "#30114"
+msgid "Unknown"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
