@@ -57,7 +57,7 @@ def __get_html_and_headers(url, headers):
         log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
         return response.content, headers
     except:
-        return '', ''
+        return '', headers
 
 
 def __get_qt_atom_url(url, headers):
@@ -159,15 +159,28 @@ def scrape(html, title=''):
     unresolved_source_list = \
         scrape_supported(html, '''href\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
+    unresolved_source_list += \
+        scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
+    unresolved_source_list += \
+        scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for scripts', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+
-    (?:(?<!ads.js)|(?<!jquery.js)|(?<!jquery.min.js)))''')
+    unresolved_source_list += \
+        scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+
+        (?:(?<!ads.js)|(?<!jquery.js)|(?<!jquery.min.js)))''')
 
     hmf_list = []
     for source in unresolved_source_list:
+        if 'reddit' in source:
+            try:
+                source = urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.*?)&amp;', source)[-1])
+            except:
+                pass
+        elif 'google' in source:
+            try:
+                source = urllib2.unquote(re.findall('google\.[a-z]+/.*?url=(.*?)&', source)[-1])
+            except:
+                pass
         host = urlparse.urlparse(source).hostname
         hmf_list.append(HostedMediaFile(source, title=host))
 
@@ -186,8 +199,23 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     content_type = 'video'
     is_dash = False
     direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
+    force_scrape_supported = ['reddit.com', 'google.']
 
     if item.startswith('http'):
+        if 'reddit' in item:
+            try:
+                url_override = urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.*?)&amp;', item)[-1])
+                log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
+                item = url_override
+            except:
+                pass
+        elif 'google' in item:
+            try:
+                url_override = urllib2.unquote(re.findall('google\.[a-z]+/.*?url=(.*?)&', item)[-1])
+                log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
+                item = url_override
+            except:
+                pass
         content_type, headers, url_override = __get_content_type_and_headers(item)
         if url_override:
             log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
@@ -224,20 +252,21 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
             if not stream_url:
                 html, headers = __get_html_and_headers(item, headers)
-                blacklist = ['dl', 'error.']
-                if not dash_supported:
-                    blacklist += ['.mpd']
-                sources = scrape_sources(html, result_blacklist=blacklist)
-                if sources:
-                    source = pick_source(sources)
-                    log_utils.log('Source |{0}| found by |Scraping for sources|'.format(source), log_utils.LOGDEBUG)
-                    if '.smil' in source:
-                        smil, _headers = __get_html_and_headers(item, headers)
-                        source = pick_source(parse_smil_source_list(smil))
-                    elif '.mpd' in source and not dash_supported:
-                        source = None
-                    if source:
-                        stream_url = source + append_headers(headers)
+                if not any(domain in item for domain in force_scrape_supported):
+                    blacklist = ['dl', 'error.']
+                    if not dash_supported:
+                        blacklist += ['.mpd']
+                    sources = scrape_sources(html, result_blacklist=blacklist)
+                    if sources:
+                        source = pick_source(sources)
+                        log_utils.log('Source |{0}| found by |Scraping for sources|'.format(source), log_utils.LOGDEBUG)
+                        if '.smil' in source:
+                            smil, _headers = __get_html_and_headers(item, headers)
+                            source = pick_source(parse_smil_source_list(smil))
+                        elif '.mpd' in source and not dash_supported:
+                            source = None
+                        if source:
+                            stream_url = source + append_headers(headers)
 
                 if not stream_url:
                     source = scrape(html, title=title)
