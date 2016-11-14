@@ -1,4 +1,4 @@
-2.3.0
+3.0.0
 - add generalized scraping for sources as fallback if url does not resolve
 - add dash and smil support
 - add basic mimetype detection
