@@ -84,7 +84,7 @@ def export_m3u(export_path=None, from_list='history', ctype='video'):
                 m3u_file = kodi.translate_path(export_path + m3u_name)
             else:
                 m3u_file = os.path.join(export_path, m3u_name)
-            M3UUtils(m3u_file, from_list).export(ctype)
+            M3UUtils(m3u_file, from_list).export(ctype=ctype)
 
 
 @DISPATCHER.register(MODES.CLEARHISTORY, kwargs=['ctype'])

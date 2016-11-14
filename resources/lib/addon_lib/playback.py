@@ -85,6 +85,11 @@ def __get_content_type_and_headers(url, headers=None):
 
     try:
         response = net.http_HEAD(url, headers=headers)
+        redirect = response.get_url()
+        if redirect != url:
+            log_utils.log('Head request following redirect to: |{0!s}|'.format(url_override), log_utils.LOGDEBUG)
+            url_override = redirect
+            response = net.http_HEAD(url_override, headers=headers)
     except:
         return 'text', headers, None
 
@@ -144,14 +149,14 @@ def resolve(url, title=''):
 def scrape(html, title=''):
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
     unresolved_source_list = \
-        scrape_supported(html, '''href\s*=\s*['"]([a-z]+(?<!data):[^'"]?(?:embed|video|api|player)[^'"]+)''')
+        scrape_supported(html, '''href\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([a-z]+(?<!data):[^'"]+)''')
+    unresolved_source_list += scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([a-z]+(?<!data):[^'"]+)''')
+    unresolved_source_list += scrape_supported(html, regex='''data-lazy-src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
     log_utils.log('Scraping for scripts', log_utils.LOGDEBUG)
-    unresolved_source_list += scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([a-z]+(?<!data):[^'"]+
-    (?:(?<!ads.js)|(?<!jquery.js)|(?<!jquery-min.js)))''')
+    unresolved_source_list += scrape_supported(html, regex='''<script.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+
+    (?:(?<!ads.js)|(?<!jquery.js)|(?<!jquery.min.js)))''')
 
     hmf_list = []
     for source in unresolved_source_list:
