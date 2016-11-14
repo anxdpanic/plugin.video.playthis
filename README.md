@@ -8,7 +8,7 @@ Keeps a history of played urls for future use.
 - Installation
     -
     * Kodi 17+: Enable - `Settings -> System -> Add-ons -> Unknown Sources`
-    1. Download repository: [repository.anxdpanic-x.x.x.zip](https://raw.githubusercontent.com/anxdpanic/_repository/master/zips/repository.anxdpanic/repository.anxdpanic-0.9.0.zip)
+    1. Download repository: [repository.anxdpanic-x.x.x.zip](https://offshoregit.com/anxdpanic/repository/zips/repository.anxdpanic/repository.anxdpanic-0.9.3.zip)
     2. [Install from zip file](http://kodi.wiki/view/Add-on_manager#How_to_install_from_a_ZIP_file) (repository.anxdpanic-x.x.x.zip)
     3. [Install from repository](http://kodi.wiki/view/add-on_manager#How_to_install_add-ons_from_a_repository) (anxdpanic Add-on Repository)
 
