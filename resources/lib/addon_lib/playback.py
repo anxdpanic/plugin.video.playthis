@@ -217,19 +217,23 @@ def resolve(url, title=''):
 
 
 def scrape(html, title=''):
+    unresolved_source_list = []
+
+    def _to_list(items):
+        for item in items:
+            if not any(item[1] == t[1] for t in unresolved_source_list):
+                unresolved_source_list.append(item)
+
     src_match_regex = '''\s*=\s*['"]([^'"]+)'''
+
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    unresolved_source_list = \
-        scrape_supported(html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex)
+    _to_list(scrape_supported(html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    unresolved_source_list += \
-        scrape_supported(html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex)
+    _to_list(scrape_supported(html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    unresolved_source_list += \
-        scrape_supported(html, regex='''data-lazy-src%s''' % src_match_regex)
+    _to_list(scrape_supported(html, regex='''data-lazy-src%s''' % src_match_regex))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    unresolved_source_list += \
-        scrape_supported(html, regex='''src%s''' % src_match_regex)
+    _to_list(scrape_supported(html, regex='''src%s''' % src_match_regex))
 
     hmf_list = []
     for label, source in unresolved_source_list:
