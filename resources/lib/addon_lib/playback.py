@@ -25,7 +25,7 @@ import socket
 import kodi
 import utils
 import log_utils
-from urlresolver import common, add_plugin_dirs, scrape_supported, choose_source, HostedMediaFile
+from urlresolver import common, add_plugin_dirs, choose_source, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 
@@ -136,6 +136,37 @@ def __get_content_type_and_headers(url, headers=None):
     return content_type, headers, url_override
 
 
+def scrape_supported(html, regex=None, host_only=False):
+    # modified version of scrape supported from urlresolver to support additional label match group
+    host_cache = {}
+    if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
+    links = []
+    for match in re.finditer(regex, html):
+        stream_url = match.group(1)
+        host = urlparse.urlparse(stream_url).hostname
+        label = host
+        if (len(match.groups()) > 1) and (match.group(2) is not None):
+            label = match.group(2)
+        if host_only:
+            if host is None:
+                continue
+
+            if host in host_cache:
+                if host_cache[host]:
+                    links.append(stream_url)
+                continue
+            else:
+                hmf = HostedMediaFile(host=host, media_id='dummy')  # use dummy media_id to allow host validation
+        else:
+            hmf = HostedMediaFile(url=stream_url)
+
+        is_valid = hmf.valid_url()
+        host_cache[host] = is_valid
+        if is_valid:
+            links.append((label, stream_url))
+    return links
+
+
 def resolve(url, title=''):
     add_plugin_dirs(RESOLVER_DIR)
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
@@ -157,7 +188,7 @@ def resolve(url, title=''):
 def scrape(html, title=''):
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
     unresolved_source_list = \
-        scrape_supported(html, '''href\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
+        scrape_supported(html, '''href\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)(?:.*?>\s*([^<]+)\s*</a>)''')
     log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
     unresolved_source_list += \
         scrape_supported(html, regex='''<iframe.*?src\s*=\s*['"]([^'"]{5}(?<!(?:data|blob):)[^'"]+)''')
@@ -170,7 +201,7 @@ def scrape(html, title=''):
         (?:(?<!ads.js)|(?<!jquery.js)|(?<!jquery.min.js)))''')
 
     hmf_list = []
-    for source in unresolved_source_list:
+    for label, source in unresolved_source_list:
         if 'reddit' in source:
             try:
                 source = urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.*?)&amp;', source)[-1])
@@ -181,8 +212,7 @@ def scrape(html, title=''):
                 source = urllib2.unquote(re.findall('google\.[a-z]+/.*?url=(.*?)&', source)[-1])
             except:
                 pass
-        host = urlparse.urlparse(source).hostname
-        hmf_list.append(HostedMediaFile(source, title=host))
+        hmf_list.append(HostedMediaFile(source, title=label))
 
     if hmf_list:
         chosen = choose_source(hmf_list)
