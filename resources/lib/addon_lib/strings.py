@@ -39,6 +39,9 @@ STRINGS = {
     'rename': 30118,
     'input_new_label': 30119,
     'rename_failed': 30120,
+    'cache_success': 30121,
+    'cache_failed': 30122,
+    'cache_yes_no': 30123,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706

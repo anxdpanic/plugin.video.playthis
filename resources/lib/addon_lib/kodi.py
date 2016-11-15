@@ -171,8 +171,8 @@ def notify(header=None, msg='', duration=2000, sound=None):
         xbmc.executebuiltin(builtin)
 
 
-def set_resolved_url(list_item):
-    xbmcplugin.setResolvedUrl(int(sys.argv[1]), True, list_item)
+def set_resolved_url(list_item, resolved=True):
+    xbmcplugin.setResolvedUrl(get_handle(), resolved, list_item)
 
 
 def get_info_label(name):

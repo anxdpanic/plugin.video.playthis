@@ -1,18 +1,21 @@
 <settings>
-    <category label="30700">
     <!-- History -->
+    <category label="30700">
         <setting label="30702" id="history-list-type" type="enum" lvalues="30703|30704" default="1"/>
         <setting label="30701" type="slider" id="history-size-limit" default="150" range="0,500" option="int"/>
         <setting label="30707" id="history-add-on-play" type="bool" default="true"/>
         <setting type="sep"/>
         <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
+        <setting type="sep"/>
+        <setting label="30711" type="slider" id="cache-expire-time" default="30" range="2,60" option="int"/>
+        <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
     </category>
-    <category label="30708">
     <!-- M3U -->
+    <category label="30708">
         <setting label="30706" id="export_path" type="folder" source="files" option="writeable"/>
     </category>
-    <category label="30709">
     <!-- URLResolver -->
-        <setting label="30705" id="urlresolver-settings" type="action" option="close" action="RunPlugin(plugin://plugin.video.playthis/?mode=urlresolver)"/>
+    <category label="30709">
+        <setting label="30705" id="urlresolver-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=urlresolver)"/>
     </category>
 </settings>

@@ -25,6 +25,7 @@ import socket
 import kodi
 import utils
 import log_utils
+import cache
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden
@@ -33,12 +34,15 @@ from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 from constants import RESOLVER_DIR
 
 socket.setdefaulttimeout(30)
+cache.cache_enabled = True
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.mpd')
 dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 working_dialog = kodi.WorkingDialog()
+
+user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 
 
 def append_headers(headers):
@@ -49,6 +53,7 @@ def append_headers(headers):
     return __append_headers(headers)
 
 
+@cache.cache_function(cache_limit=user_cache_limit)
 def __get_html_and_headers(url, headers):
     try:
         response = net.http_GET(url, headers=headers)
@@ -175,6 +180,7 @@ def __check_for_new_url(url):
     return result
 
 
+@cache.cache_function(cache_limit=user_cache_limit)
 def scrape_supported(url, html, regex=None, host_only=False):
     # modified version of scrape supported from urlresolver
     parsed_url = urlparse.urlparse(url)
@@ -326,6 +332,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     force_scrape_supported = ['reddit.com', 'google.']
     unresolved_source = None
     label = title
+    source_label = label
+
     with working_dialog:
         if item.startswith('http'):
             url_override = __check_for_new_url(item)
@@ -389,7 +397,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                     working_dialog.update(60)
                     if not stream_url:
-                        source, override_content_type, unresolved_source, label = scrape(item, html)
+                        source, override_content_type, unresolved_source, source_label = scrape(item, html)
                         if source:
                             log_utils.log('Source |{0}| found by |Scraping for supported|'
                                           .format(source), log_utils.LOGDEBUG)
@@ -413,8 +421,6 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
         if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
             working_dialog.update(90)
-            if not title:
-                title = label
             play_history = utils.PlayHistory()
             if history or player == 'history':
                 history_item = item
@@ -422,7 +428,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, content_type, title)
+                play_history.add(history_item, content_type, label if label else item)
             if override_content_type and override_history:
                 history_item = stream_url
                 if not history_item.startswith('plugin://') and unresolved_source:
@@ -431,7 +437,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, override_content_type, label)
+                play_history.add(history_item, override_content_type, source_label)
             if player == 'history':
                 return
 
@@ -457,8 +463,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                                   .format(stream_url), log_utils.LOGDEBUG)
                     kodi.execute_jsonrpc(player_open)
                 else:
-                    info = {'title': label}
-                    playback_item = kodi.ListItem(label=title, iconImage=thumbnail, path=stream_url)
+                    info = {'title': source_label}
+                    playback_item = kodi.ListItem(label=title, path=stream_url)
                     playback_item.setProperty('IsPlayable', 'true')
                     playback_item.setArt({'thumb': thumbnail})
                     playback_item.addStreamInfo(content_type, {})

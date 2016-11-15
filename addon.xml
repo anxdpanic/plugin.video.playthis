@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.0.0~alpha1"
+       version="3.0.0~alpha2"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
@@ -18,9 +18,11 @@
 - add content type support (video audio image)
 - add attempt to identify and support quicktime atom  ** thanks @tknorris
 - increased history size limits, applies to ALL content types as use cases my still be limited to one type
-- add parsing of google/reddit redirect links (subreddits, google search give playable results)
+- add parsing for google/reddit redirect links
 - export to M3U exports content specific list
 - delay adding to history until potentially valid source found
+- add labels/rename
+- add function caching, expire time and reset in settings
         </news>
         <assets>
             <icon>icon.png</icon>

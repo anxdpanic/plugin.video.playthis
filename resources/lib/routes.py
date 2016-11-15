@@ -18,7 +18,7 @@
 """
 
 import os
-from addon_lib import kodi
+from addon_lib import kodi, cache
 from addon_lib.utils import PlayHistory, M3UUtils
 from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR
 from addon_lib.playback import play_this
@@ -109,6 +109,17 @@ def clear_history(ctype=None):
     confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('clear_yes_no') % ltype)
     if confirmed:
         play_history.clear(ctype)
+
+
+@DISPATCHER.register(MODES.CLEARCACHE)
+def clear_cache():
+    confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('cache_yes_no'))
+    if confirmed:
+        result = cache.reset_cache()
+        if result:
+            kodi.notify(msg=kodi.i18n('cache_success'), sound=False)
+        else:
+            kodi.notify(msg=kodi.i18n('cache_failed'), sound=False)
 
 
 @DISPATCHER.register(MODES.URLRESOLVER)
