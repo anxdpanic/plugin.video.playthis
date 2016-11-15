@@ -401,7 +401,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         if source:
                             log_utils.log('Source |{0}| found by |Scraping for supported|'
                                           .format(source), log_utils.LOGDEBUG)
-                            if content_type == 'video':
+                            if override_content_type == 'video':
                                 if '.smil' in source:
                                     smil, _headers = __get_html_and_headers(item, headers)
                                     source = pick_source(parse_smil_source_list(smil))

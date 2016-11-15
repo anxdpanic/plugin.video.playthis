@@ -188,10 +188,17 @@ class PlayHistory:
                     thumb = icon_path
                     if content_type == 'image':
                         thumb = item
+                    info = {'title': label}
+                    if content_type == 'audio':
+                        info.update({'mediatype': 'song'})
+                    elif content_type == 'image':
+                        info.update({'mediatype': 'image'})
+                    else:
+                        info.update({'mediatype': 'episode'})
                     kodi.create_item(play_path,
                                      label, thumb=thumb, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
-                                     content_type=content_type)
+                                     content_type=content_type, info=info)
         if not total_items:
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
                              fanart=fanart_path, is_folder=False, is_playable=False)
