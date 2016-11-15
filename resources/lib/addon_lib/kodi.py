@@ -218,7 +218,7 @@ def get_keyboard(heading, default=''):
     if default: keyboard.setDefault(default)
     keyboard.doModal()
     if keyboard.isConfirmed():
-        return keyboard.getText()
+        return keyboard.getText().strip()
     else:
         return None
 

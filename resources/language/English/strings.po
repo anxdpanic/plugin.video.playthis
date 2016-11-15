@@ -87,6 +87,18 @@ msgctxt "#30117"
 msgid "Confirm"
 msgstr ""
 
+msgctxt "#30118"
+msgid "Rename"
+msgstr ""
+
+msgctxt "#30119"
+msgid "Input new label"
+msgstr ""
+
+msgctxt "#30120"
+msgid "Rename Failed"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""

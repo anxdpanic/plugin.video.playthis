@@ -55,8 +55,17 @@ def add_url(path):
     play_this(path, title=path, player='history')
 
 
+@DISPATCHER.register(MODES.RENAME, ['row_id'], ['refresh'])
+def rename_row_id(row_id, refresh=True):
+    label = kodi.get_keyboard(kodi.i18n('input_new_label'))
+    if label:
+        result = play_history.rename_row_id(row_id, label)
+        if result and refresh:
+            kodi.refresh_container()
+
+
 @DISPATCHER.register(MODES.DELETE, ['row_id'], ['refresh'])
-def delete_url(row_id, refresh=True):
+def delete_row(row_id, refresh=True):
     result, rowcount = play_history.delete_row_id(row_id)
     if (result, rowcount) == (1, 1) and refresh:
         kodi.refresh_container()

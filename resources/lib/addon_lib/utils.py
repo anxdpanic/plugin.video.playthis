@@ -49,9 +49,12 @@ class PlayHistory:
             table = self.TABLE
         DATABASE.execute('VACUUM {0!s}'.format(table))
 
-    def add(self, url, content_type):
-        execute = 'INSERT INTO {0!s} (addon_id, url, content_type) VALUES (?, ?, ?)'.format(self.TABLE)
-        inserted = DATABASE.execute(execute, (self.ID, str(url), str(content_type)))
+    def add(self, url, content_type, label=None):
+        if label is None:
+            label = url
+        label = unquote(label)
+        execute = 'INSERT INTO {0!s} (addon_id, url, content_type, label) VALUES (?, ?, ?, ?)'.format(self.TABLE)
+        inserted = DATABASE.execute(execute, (self.ID, str(url), str(content_type), label))
         if inserted == 1:
             execute = 'SELECT COUNT(*) FROM {0!s} WHERE addon_id=?'.format(self.TABLE)
             result = int(DATABASE.fetch(execute, (self.ID,))[0][0])
@@ -84,16 +87,23 @@ class PlayHistory:
             kodi.notify(msg=kodi.i18n('delete_failed'), sound=False)
         return result, rowcount
 
+    def rename_row_id(self, row_id, label):
+        execute = 'UPDATE {0!s} SET label=? WHERE id=? AND addon_id=?'.format(self.TABLE)
+        result = DATABASE.execute(execute, (label, row_id, self.ID))
+        if result != 1:
+            kodi.notify(msg=kodi.i18n('rename_failed'), sound=False)
+        return result
+
     def get(self, include_ids=False):
         execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
         selected = DATABASE.fetch(execute, (self.ID,))
         results = []
         if selected:
-            for id_key, addon_id, query, content_type in selected:
+            for id_key, addon_id, query, content_type, label in selected:
                 if not include_ids:
-                    results.extend([(unquote(query), content_type)])
+                    results.extend([(unquote(query), content_type, label)])
                 else:
-                    results.extend([(id_key, unquote(query), content_type)])
+                    results.extend([(id_key, unquote(query), content_type, label)])
             return results
         else:
             return []
@@ -122,9 +132,9 @@ class PlayHistory:
             _queries = self.get()
             if len(_queries) > 0:
                 queries = []
-                for item, content_type in _queries:
+                for item, content_type, label in _queries:
                     if content_type == ctype:
-                        queries += [item]
+                        queries += [label]
                 if len(queries) > 0:
                     queries.insert(0, '[B]{0!s}[/B]'.format(kodi.i18n('new_')))
                     queries.insert(1, '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')))
@@ -146,7 +156,7 @@ class PlayHistory:
         if self.size_limit() != 0:
             _queries = self.get(include_ids=True)
             queries = []
-            for index, (row_id, item, content_type) in enumerate(_queries):
+            for index, (row_id, item, content_type, label) in enumerate(_queries):
                 if content_type == ctype:
                     queries += [_queries[index]]
             if len(queries) > 0:
@@ -159,16 +169,18 @@ class PlayHistory:
                                  '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
                 """
-                for row_id, item, content_type in queries:
+                for row_id, item, content_type, label in queries:
                     play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)}
                     if ctype == 'image':
                         play_path = item
                     menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
+                                  (kodi.i18n('rename'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.RENAME, 'row_id': row_id, 'refresh': 'true'}))),
                                   (kodi.i18n('refresh'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.REFRESH}))),
                                   (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
+                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'refresh': 'true'}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
@@ -177,7 +189,7 @@ class PlayHistory:
                     if content_type == 'image':
                         thumb = item
                     kodi.create_item(play_path,
-                                     item.encode('utf-8'), thumb=thumb, fanart=fanart_path, is_folder=False,
+                                     label, thumb=thumb, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
                                      content_type=content_type)
         if not total_items:
@@ -187,12 +199,20 @@ class PlayHistory:
 
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '
-                         'addon_id, url, content_type TEXT DEFAULT "video", '
+                         'addon_id, url, content_type TEXT DEFAULT "video", label TEXT DEFAULT "Unknown", '
                          'CONSTRAINT unq UNIQUE (addon_id, url, content_type) )'.format(self.TABLE), '')
-        DATABASE.execute('INSERT INTO {0!s} (addon_id, url) SELECT addon_id, url FROM {1!s}'
-                         .format(self.TABLE, self.OLD_TABLE), '')
-        DATABASE.execute('ALTER TABLE {0!s} RENAME TO {1!s}'
-                         .format(self.OLD_TABLE, '{0!s}_bak'.format(self.OLD_TABLE)), '')
+        DATABASE.execute('''CREATE TRIGGER IF NOT EXISTS default_label_url
+                             AFTER INSERT ON {0!s}
+                             WHEN new.label="Unknown"
+                             BEGIN
+                                 UPDATE {0!s} SET label=new.url WHERE id=new.id;
+                             END
+                             ;
+                             '''.format(self.TABLE), '')
+        exists = DATABASE.fetch('SELECT name FROM sqlite_master WHERE type="table" AND name=?', (self.OLD_TABLE,))
+        if exists:
+            DATABASE.execute('INSERT INTO {0!s} (addon_id, url) SELECT addon_id, url FROM {1!s}'.format(self.TABLE, self.OLD_TABLE), '')
+            DATABASE.execute('ALTER TABLE {0!s} RENAME TO {1!s}'.format(self.OLD_TABLE, '{0!s}_bak'.format(self.OLD_TABLE)), '')
 
 
 class M3UUtils:
@@ -214,10 +234,9 @@ class M3UUtils:
         if items:
             _m3u = '#EXTM3U\n'
             m3u = _m3u
-            for item, content_type in items:
+            for item, content_type, title in items:
                 if content_type != ctype:
                     continue
-                title = item
                 if results == 'resolved':
                     resolved = resolve(item)
                 else:
@@ -228,9 +247,8 @@ class M3UUtils:
                     m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, resolved)
                 else:
                     if results == 'playthis':
-                        pt_url = \
-                            'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}'\
-                                .format(quote(item))
+                        pt_url = 'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}' \
+                            .format(quote(item))
                         log_utils.log('M3UUtils.export adding PlayThis item: |{0!s}| as |{1!s}|'.format(pt_url, title),
                                       log_utils.LOGDEBUG)
                         m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, pt_url)

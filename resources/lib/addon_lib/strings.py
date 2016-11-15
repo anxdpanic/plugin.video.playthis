@@ -36,6 +36,9 @@ STRINGS = {
     'refresh': 30115,
     'clear_yes_no': 30116,
     'confirm': 30117,
+    'rename': 30118,
+    'input_new_label': 30119,
+    'rename_failed': 30120,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706
