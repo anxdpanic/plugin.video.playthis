@@ -27,7 +27,7 @@ import utils
 import log_utils
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
+from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 
 from constants import RESOLVER_DIR
@@ -55,9 +55,22 @@ def __get_html_and_headers(url, headers):
         cookie = response_headers.get('Set-Cookie', '')
         if cookie:
             headers['Cookie'] = headers.get('Cookie', '') + cookie
-
+        html = response.content
+        redirect = response.get_url()
+        if ('reddit' in redirect) and ('over18' in redirect):
+            post_headers = {}
+            post_headers.update(
+                {'User-Agent': common.FF_USER_AGENT, 'Content-Type': 'application/x-www-form-urlencoded'})
+            data = get_hidden(html)
+            data.update({'over18': 'yes'})
+            response = net.http_POST(response.get_url(), form_data=data, headers=post_headers)
+            response_headers = response.get_headers(as_dict=True)
+            cookie = response_headers.get('Set-Cookie', '')
+            if cookie:
+                headers['Cookie'] = headers.get('Cookie', '')
+            html = response.content
         log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
-        return response.content, headers
+        return html, headers
     except:
         return '', headers
 
@@ -86,7 +99,6 @@ def __get_potential_type(url):
 
 
 def __get_content_type_and_headers(url, headers=None):
-    # returns content-type, headers
     url_override = None
     parsed_url = urlparse.urlparse(url)
     if headers is None:
@@ -148,8 +160,7 @@ def __check_for_new_url(url):
     result = url
     if 'google' in url:
         try:
-            result = \
-                urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
+            result = urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
                 result = urllib2.unquote(re.findall('google\.[a-z]+/.*?url=(.+?)&', url)[-1])
@@ -157,27 +168,25 @@ def __check_for_new_url(url):
                 pass
     elif 'reddit' in url:
         try:
-            result = \
-                urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
+            result = urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
         except:
             pass
     return result
 
 
 def scrape_supported(url, html, regex=None, host_only=False):
-    # modified version of scrape supported from urlresolver to support additional label match group, and filtering
+    # modified version of scrape supported from urlresolver
     parsed_url = urlparse.urlparse(url)
     host_cache = {}
     if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
-    filter = ['jquery', '/ads.', '-ads.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.']
+    filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:']
     for match in re.finditer(regex, html):
         stream_url = match.group(1)
         if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
-                stream_url.endswith('/'):
+                stream_url.endswith('/') or (len(stream_url) < 7):
             continue
         stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
-
         if stream_url.startswith('//'):
             stream_url = '%s:%s' % (parsed_url.scheme, stream_url)
         elif stream_url.startswith('/'):
@@ -191,8 +200,10 @@ def scrape_supported(url, html, regex=None, host_only=False):
         if isinstance(label, unicode):
             label.encode('utf-8', 'ignore')
 
-        try: label = HTMLParser().unescape(label)
-        except: pass
+        try:
+            label = HTMLParser().unescape(label)
+        except:
+            pass
 
         if host_only:
             if host is None:
@@ -282,9 +293,9 @@ def scrape(url, html):
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
     _to_list(scrape_supported(url, html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % val_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, regex='''data-lazy-src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
+    _to_list(scrape_supported(url, html, '''data-lazy-src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, regex='''src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
+    _to_list(scrape_supported(url, html, '''src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
 
     result_list = []
     for item in unresolved_source_list:
