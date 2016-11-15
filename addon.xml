@@ -5,7 +5,7 @@
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
-        <import addon="script.module.urlresolver" version="3.0.23"/> <!-- .24 (current github master) -->
+        <import addon="script.module.urlresolver" version="3.0.24"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>video audio image</provides>

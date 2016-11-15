@@ -180,7 +180,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     host_cache = {}
     if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
-    filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:']
+    filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.']
     for match in re.finditer(regex, html):
         stream_url = match.group(1)
         if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
