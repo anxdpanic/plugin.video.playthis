@@ -232,13 +232,13 @@ def i18n(string_id):
 
 
 def addon_enabled(addon_id):
-    rpc_request = json.dumps({"jsonrpc": "2.0",
-                              "method": "Addons.GetAddonDetails",
-                              "id": 1,
-                              "params": {"addonid": "%s" % addon_id,
-                                         "properties": ["enabled"]}
-                              })
-    response = json.loads(xbmc.executeJSONRPC(rpc_request))
+    rpc_request = {"jsonrpc": "2.0",
+                   "method": "Addons.GetAddonDetails",
+                   "id": 1,
+                   "params": {"addonid": "%s" % addon_id,
+                              "properties": ["enabled"]}
+                   }
+    response = execute_jsonrpc(rpc_request)
     try:
         return response['result']['addon']['enabled'] == 'true'
     except KeyError:
@@ -250,13 +250,13 @@ def addon_enabled(addon_id):
 
 
 def set_addon_enabled(addon_id, enabled=True):
-    rpc_request = json.dumps({"jsonrpc": "2.0",
-                              "method": "Addons.SetAddonEnabled",
-                              "id": 1,
-                              "params": {"addonid": "%s" % addon_id,
-                                         "enabled": enabled}
-                              })
-    response = json.loads(xbmc.executeJSONRPC(rpc_request))
+    rpc_request = {"jsonrpc": "2.0",
+                   "method": "Addons.SetAddonEnabled",
+                   "id": 1,
+                   "params": {"addonid": "%s" % addon_id,
+                              "enabled": enabled}
+                   }
+    response = execute_jsonrpc(rpc_request)
     try:
         return response['result'] == 'OK'
     except KeyError:
