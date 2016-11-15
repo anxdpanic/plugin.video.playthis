@@ -123,7 +123,6 @@ def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable
 
 def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
              replace_menu=False, content_type='video', info=None):
-
     if menu_items is None: menu_items = []
 
     if info is None: info = {'title': list_item.getLabel()}
@@ -230,6 +229,42 @@ def i18n(string_id):
     except Exception as e:
         xbmc.log('%s: Failed String Lookup: %s (%s)' % (get_name(), string_id, e), xbmc.LOGWARNING)
         return string_id
+
+
+def addon_enabled(addon_id):
+    rpc_request = json.dumps({"jsonrpc": "2.0",
+                              "method": "Addons.GetAddonDetails",
+                              "id": 1,
+                              "params": {"addonid": "%s" % addon_id,
+                                         "properties": ["enabled"]}
+                              })
+    response = json.loads(xbmc.executeJSONRPC(rpc_request))
+    try:
+        return response['result']['addon']['enabled'] == 'true'
+    except KeyError:
+        message = response['error']['message']
+        code = response['error']['code']
+        error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
+        xbmc.log(error, xbmc.LOGERROR)
+        raise KeyError(error)
+
+
+def set_addon_enabled(addon_id, enabled=True):
+    rpc_request = json.dumps({"jsonrpc": "2.0",
+                              "method": "Addons.SetAddonEnabled",
+                              "id": 1,
+                              "params": {"addonid": "%s" % addon_id,
+                                         "enabled": enabled}
+                              })
+    response = json.loads(xbmc.executeJSONRPC(rpc_request))
+    try:
+        return response['result'] == 'OK'
+    except KeyError:
+        message = response['error']['message']
+        code = response['error']['code']
+        error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
+        xbmc.log(error, xbmc.LOGERROR)
+        raise KeyError(error)
 
 
 class WorkingDialog(object):

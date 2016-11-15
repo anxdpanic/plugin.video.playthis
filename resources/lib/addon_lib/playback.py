@@ -25,7 +25,7 @@ import socket
 import kodi
 import utils
 import log_utils
-from urlresolver import common, add_plugin_dirs, choose_source, HostedMediaFile
+from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 
@@ -35,6 +35,7 @@ socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.mpd')
+dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 
 
@@ -372,7 +373,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
             stream_url = item
 
-        if is_dash and (not dash_supported):
+        if is_dash and (not dash_supported or not dash_enabled):
             stream_url = None
 
         if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
