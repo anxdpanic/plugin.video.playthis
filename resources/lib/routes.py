@@ -67,6 +67,11 @@ def play(path, player=True, history=None):
     play_this(unquote(path), player=player, history=history)
 
 
+@DISPATCHER.register(MODES.REFRESH)
+def refresh():
+    kodi.refresh_container()
+
+
 @DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list', 'ctype'])
 def export_m3u(export_path=None, from_list='history', ctype='video'):
     if export_path is None:
@@ -89,7 +94,12 @@ def export_m3u(export_path=None, from_list='history', ctype='video'):
 
 @DISPATCHER.register(MODES.CLEARHISTORY, kwargs=['ctype'])
 def clear_history(ctype=None):
-    play_history.clear(ctype)
+    ltype = ctype
+    if ltype is None:
+        ltype = 'all'
+    confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('clear_yes_no') % ltype)
+    if confirmed:
+        play_history.clear(ctype)
 
 
 @DISPATCHER.register(MODES.URLRESOLVER)

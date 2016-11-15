@@ -25,6 +25,7 @@ import socket
 import kodi
 import utils
 import log_utils
+from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
@@ -169,7 +170,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     host_cache = {}
     if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
-    filter = ['jquery', '/ads.js', '-ads.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.']
+    filter = ['jquery', '/ads.', '-ads.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.']
     for match in re.finditer(regex, html):
         stream_url = match.group(1)
         if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
@@ -186,6 +187,12 @@ def scrape_supported(url, html, regex=None, host_only=False):
         label = host
         if (len(match.groups()) > 1) and (match.group(2) is not None):
             label = match.group(2)
+
+        if isinstance(label, unicode):
+            label.encode('utf-8', 'ignore')
+
+        try: label = HTMLParser().unescape(label)
+        except: pass
 
         if host_only:
             if host is None:
@@ -234,8 +241,24 @@ def __pick_source(sources):
     if len(sources) == 1:
         return sources[0][1]
     elif len(sources) > 1:
-        result = kodi.Dialog().select(kodi.i18n('choose_source'),
-                                      [source[0] if source[0] else kodi.i18n('unknown') for source in sources])
+        listitem_sources = []
+        for source in sources:
+            title = source[0].encode('utf-8') if source[0] else kodi.i18n('unknown')
+            icon = ''
+            if source[3] == 'image':
+                icon = source[1]
+            l_item = kodi.ListItem(label=title, label2=source[3], iconImage=icon)
+            l_item.setArt({'thumb': icon})
+            listitem_sources.append(l_item)
+
+        try:
+            result = kodi.Dialog().select(kodi.i18n('choose_source'), list=listitem_sources, useDetails=True)
+        except:
+            result = kodi.Dialog().select(kodi.i18n('choose_source'),
+                                          ['[%s] %s' % (source[3], source[0].encode('utf-8'))
+                                           if source[0]
+                                           else '[%s] %s' % (source[3], kodi.i18n('unknown'))
+                                           for source in sources])
         if result == -1:
             return None
         else:
@@ -252,16 +275,16 @@ def scrape(url, html):
             if not any(item[1] == t[1] for t in unresolved_source_list):
                 unresolved_source_list.append(item)
 
-    src_match_regex = '''\s*=\s*['"]([^'"]+)'''
+    val_match_regex = '''\s*=\s*['"]([^'"]+)'''
 
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
+    _to_list(scrape_supported(url, html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % val_match_regex))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % src_match_regex))
+    _to_list(scrape_supported(url, html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % val_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, regex='''data-lazy-src%s''' % src_match_regex))
+    _to_list(scrape_supported(url, html, regex='''data-lazy-src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, regex='''src%s''' % src_match_regex))
+    _to_list(scrape_supported(url, html, regex='''src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
 
     result_list = []
     for item in unresolved_source_list:
@@ -272,10 +295,10 @@ def scrape(url, html):
         chosen = __pick_source(result_list)
         if chosen:
             if chosen[2]:
-                return resolve(chosen[1], title=chosen[0]), chosen[3]
+                return resolve(chosen[1], title=chosen[0]), chosen[3], chosen[1]
             else:
-                return chosen[1], chosen[3]
-    return None, None
+                return chosen[1], chosen[3], None
+    return None, None, None
 
 
 def play_this(item, title='', thumbnail='', player=True, history=None):
@@ -289,6 +312,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     is_dash = False
     direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
     force_scrape_supported = ['reddit.com', 'google.']
+    unresolved_source = None
 
     working_dialog = kodi.WorkingDialog()
     with working_dialog:
@@ -354,7 +378,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                     working_dialog.update(60)
                     if not stream_url:
-                        source, override_content_type = scrape(item, html)
+                        source, override_content_type, unresolved_source = scrape(item, html)
                         if source:
                             log_utils.log('Source |{0}| found by |Scraping for supported|'
                                           .format(source), log_utils.LOGDEBUG)
@@ -381,18 +405,20 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             if history or player == 'history':
                 play_history = utils.PlayHistory()
                 history_item = item
-                if '%' not in item:
-                    history_item = urllib2.quote(item)
+                if '%' not in history_item:
+                    history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
                 play_history.add(history_item, content_type)
             if override_content_type and override_history:
                 play_history = utils.PlayHistory()
                 history_item = stream_url
-                if '%' not in stream_url:
-                    history_item = urllib2.quote(stream_url)
+                if not history_item.startswith('plugin://') and unresolved_source:
+                    history_item = unresolved_source
+                if '%' not in history_item:
+                    history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
-                              .format(stream_url, override_content_type), log_utils.LOGDEBUG)
+                              .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
                 play_history.add(history_item, override_content_type)
             if player == 'history':
                 return

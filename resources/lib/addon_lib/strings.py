@@ -33,6 +33,9 @@ STRINGS = {
     'export_fail': 30112,
     'choose_source': 30113,
     'unknown': 30114,
+    'refresh': 30115,
+    'clear_yes_no': 30116,
+    'confirm': 30117,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706

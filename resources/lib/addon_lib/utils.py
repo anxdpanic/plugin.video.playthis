@@ -165,14 +165,19 @@ class PlayHistory:
                         play_path = item
                     menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
-                                  (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
+                                  (kodi.i18n('refresh'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.REFRESH}))),
                                   (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type})))]
+                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type}))),
+                                  (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type})))]
+                    thumb = icon_path
+                    if content_type == 'image':
+                        thumb = item
                     kodi.create_item(play_path,
-                                     item.encode('utf-8'), thumb=icon_path, fanart=fanart_path, is_folder=False,
+                                     item.encode('utf-8'), thumb=thumb, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
                                      content_type=content_type)
         if not total_items:

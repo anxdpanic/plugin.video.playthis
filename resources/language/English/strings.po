@@ -75,6 +75,18 @@ msgctxt "#30114"
 msgid "Unknown"
 msgstr ""
 
+msgctxt "#30115"
+msgid "Refresh"
+msgstr ""
+
+msgctxt "#30116"
+msgid "Clear %s history?"
+msgstr ""
+
+msgctxt "#30117"
+msgid "Confirm"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
