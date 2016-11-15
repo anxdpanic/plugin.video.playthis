@@ -36,7 +36,8 @@ Artwork by @konsumer420
         </description>
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
-		<website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
-		<source>https://github.com/anxdpanic/plugin.video.playthis</source>
+        <forum> </forum>
+        <website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
+        <source>https://github.com/anxdpanic/plugin.video.playthis</source>
 	</extension>
 </addon>
