@@ -28,21 +28,21 @@ import log_utils
 import cache
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden
+from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 
 from constants import RESOLVER_DIR
 
 socket.setdefaulttimeout(30)
-cache.cache_enabled = True
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.mpd')
 dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
-working_dialog = kodi.WorkingDialog()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time')) / 60
+cache.cache_enabled = user_cache_limit > 0
+
 
 
 def append_headers(headers):
@@ -287,6 +287,7 @@ def __pick_source(sources):
 
 def scrape(url, html):
     unresolved_source_list = []
+    html = add_packed_data(html)
 
     def _to_list(items):
         for item in items:
@@ -334,6 +335,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     label = title
     source_label = label
 
+    working_dialog = kodi.WorkingDialog()
     with working_dialog:
         if item.startswith('http'):
             url_override = __check_for_new_url(item)

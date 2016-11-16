@@ -109,6 +109,7 @@ def clear_history(ctype=None):
     confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('clear_yes_no') % ltype)
     if confirmed:
         play_history.clear(ctype)
+        kodi.refresh_container()
 
 
 @DISPATCHER.register(MODES.CLEARCACHE)

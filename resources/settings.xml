@@ -7,7 +7,7 @@
         <setting type="sep"/>
         <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
         <setting type="sep"/>
-        <setting label="30711" type="slider" id="cache-expire-time" default="30" range="2,60" option="int"/>
+        <setting label="30711" type="slider" id="cache-expire-time" default="30" range="0,60" option="int"/>
         <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
     </category>
     <!-- M3U -->
