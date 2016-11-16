@@ -30,7 +30,6 @@ from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
-from YDStreamExtractor import getVideoInfo
 
 from constants import RESOLVER_DIR
 
@@ -41,7 +40,7 @@ dash_supported = common.has_addon('inputstream.mpd')
 dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 
-user_cache_limit = int(kodi.get_setting('cache-expire-time')) / 60
+user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 cache.cache_enabled = user_cache_limit > 0
 
 
@@ -53,8 +52,19 @@ def append_headers(headers):
     return __append_headers(headers)
 
 
-@cache.cache_function(cache_limit=user_cache_limit)
-def __get_html_and_headers(url, headers):
+def get_default_headers(url):
+    parsed_url = urlparse.urlparse(url)
+    return {'User-Agent': common.FF_USER_AGENT,
+            'Host': parsed_url.hostname,
+            'Accept-Language': 'en',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'Keep-Alive',
+            'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
+
+
+def __get_html_and_headers(url, headers=None):
+    if headers is None:
+        headers = get_default_headers(url)
     try:
         response = net.http_GET(url, headers=headers)
         response_headers = response.get_headers(as_dict=True)
@@ -106,14 +116,8 @@ def __get_potential_type(url):
 
 def __get_content_type_and_headers(url, headers=None):
     url_override = None
-    parsed_url = urlparse.urlparse(url)
     if headers is None:
-        headers = {'User-Agent': common.FF_USER_AGENT,
-                   'Host': parsed_url.hostname,
-                   'Accept-Language': 'en',
-                   'Accept-Encoding': 'gzip, deflate',
-                   'Connection': 'Keep-Alive',
-                   'Referer': '%s://%s' % (parsed_url.scheme, parsed_url.hostname)}
+        headers = get_default_headers(url)
 
     potential_type = __get_potential_type(url)
 
@@ -180,7 +184,6 @@ def __check_for_new_url(url):
     return result
 
 
-@cache.cache_function(cache_limit=user_cache_limit)
 def scrape_supported(url, html, regex=None, host_only=False):
     # modified version of scrape supported from urlresolver
     parsed_url = urlparse.urlparse(url)
@@ -237,6 +240,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     return links
 
 
+@cache.cache_function(cache_limit=user_cache_limit)
 def resolve(url, title=''):
     add_plugin_dirs(RESOLVER_DIR)
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
@@ -253,6 +257,15 @@ def resolve(url, title=''):
         return None
     else:
         return resolved
+
+
+@cache.cache_function(cache_limit=user_cache_limit)
+def resolve_youtube_dl(url):
+    from YDStreamExtractor import getVideoInfo
+    source = getVideoInfo(url)
+    if source:
+        source = source.streamURL()
+    return source
 
 
 def __pick_source(sources):
@@ -384,9 +397,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                 working_dialog.update(30)
                 if not stream_url:
-                    source = getVideoInfo(item)
+                    source = resolve_youtube_dl(item)
                     if source:
-                        source = source.streamURL()
                         log_utils.log('Source |{0}| found by |youtube-dl|'
                                       .format(source), log_utils.LOGDEBUG)
                         source = __check_smil_dash(source, headers)

@@ -100,15 +100,15 @@ msgid "Rename failed"
 msgstr ""
 
 msgctxt "#30121"
-msgid "Cache has been reset"
+msgid "Function cache has been reset"
 msgstr ""
 
 msgctxt "#30122"
-msgid "Cache reset failed"
+msgid "Function cache reset failed"
 msgstr ""
 
 msgctxt "#30123"
-msgid "Reset cache?"
+msgid "Reset function cache?"
 msgstr ""
 
 msgctxt "#30700"
@@ -152,11 +152,11 @@ msgid "Resolvers"
 msgstr ""
 
 msgctxt "#30710"
-msgid "Reset cache"
+msgid "Reset function cache"
 msgstr ""
 
 msgctxt "#30711"
-msgid "Cache expire time (minutes)"
+msgid "Function cache expire time (hours)"
 msgstr ""
 
 msgctxt "#30712"
