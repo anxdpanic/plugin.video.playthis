@@ -148,13 +148,17 @@ msgid "M3U"
 msgstr ""
 
 msgctxt "#30709"
-msgid "URLResolver"
+msgid "Resolvers"
 msgstr ""
 
 msgctxt "#30710"
-msgid "Reset Cache"
+msgid "Reset cache"
 msgstr ""
 
 msgctxt "#30711"
 msgid "Cache expire time (minutes)"
+msgstr ""
+
+msgctxt "#30712"
+msgid "youtube-dl settings"
 msgstr ""

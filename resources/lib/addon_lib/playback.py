@@ -30,6 +30,7 @@ from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
+from YDStreamExtractor import getVideoInfo
 
 from constants import RESOLVER_DIR
 
@@ -42,7 +43,6 @@ net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time')) / 60
 cache.cache_enabled = user_cache_limit > 0
-
 
 
 def append_headers(headers):
@@ -320,6 +320,15 @@ def scrape(url, html):
     return None, None, None, None
 
 
+def __check_smil_dash(source, headers):
+    if '.smil' in source:
+        smil, _headers = __get_html_and_headers(source, headers)
+        source = pick_source(parse_smil_source_list(smil))
+    elif '.mpd' in source and not dash_supported:
+        source = None
+    return source
+
+
 def play_this(item, title='', thumbnail='', player=True, history=None):
     if history is None:
         history = kodi.get_setting('history-add-on-play') == "true"
@@ -348,7 +357,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
                 item = url_override
             log_utils.log('Source |{0}| has media type |{1}|'.format(item, content_type), log_utils.LOGDEBUG)
-            working_dialog.update(20)
+            working_dialog.update(15)
             if content_type == 'video' or content_type == 'audio' or content_type == 'image' \
                     or content_type == 'mpd' or content_type == 'smil':
                 source = item
@@ -369,15 +378,22 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 source = resolve(item, title=title)
                 if source:
                     log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
-                    if '.smil' in source:
-                        smil, _headers = __get_html_and_headers(item, headers)
-                        source = pick_source(parse_smil_source_list(smil))
-                    elif '.mpd' in source and not dash_supported:
-                        source = None
+                    source = __check_smil_dash(source, headers)
                     if source:
                         stream_url = source.replace(r'\\', '')
 
-                working_dialog.update(40)
+                working_dialog.update(30)
+                if not stream_url:
+                    source = getVideoInfo(item)
+                    if source:
+                        source = source.streamURL()
+                        log_utils.log('Source |{0}| found by |youtube-dl|'
+                                      .format(source), log_utils.LOGDEBUG)
+                        source = __check_smil_dash(source, headers)
+                        if source:
+                            stream_url = source.replace(r'\\', '')
+
+                working_dialog.update(45)
                 if not stream_url:
                     html, headers = __get_html_and_headers(item, headers)
                     if not any(override in item for override in force_scrape_supported):
@@ -389,11 +405,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                             source = pick_source(sources)
                             log_utils.log('Source |{0}| found by |Scraping for sources|'
                                           .format(source), log_utils.LOGDEBUG)
-                            if '.smil' in source:
-                                smil, _headers = __get_html_and_headers(item, headers)
-                                source = pick_source(parse_smil_source_list(smil))
-                            elif '.mpd' in source and not dash_supported:
-                                source = None
+                            source = __check_smil_dash(source, headers)
                             if source:
                                 stream_url = source.replace(r'\\', '')
 
@@ -404,12 +416,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                             log_utils.log('Source |{0}| found by |Scraping for supported|'
                                           .format(source), log_utils.LOGDEBUG)
                             if override_content_type == 'video':
-                                if '.smil' in source:
-                                    smil, _headers = __get_html_and_headers(item, headers)
-                                    source = pick_source(parse_smil_source_list(smil))
-                                elif '.mpd' in source:
-                                    if not dash_supported:
-                                        source = None
+                                source = __check_smil_dash(source, headers)
                             if source:
                                 stream_url = source.replace(r'\\', '')
 

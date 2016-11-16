@@ -126,3 +126,8 @@ def clear_cache():
 @DISPATCHER.register(MODES.URLRESOLVER)
 def urlresolver_settings():
     kodi.Addon(id='script.module.urlresolver').openSettings()
+
+
+@DISPATCHER.register(MODES.YOUTUBEDL)
+def youtubedl_settings():
+    kodi.Addon(id='script.module.youtube.dl').openSettings()

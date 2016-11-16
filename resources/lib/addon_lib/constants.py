@@ -45,4 +45,5 @@ MODES = __enum(
     EXPORT_M3U='export_m3u',
     REFRESH='refresh',
     RENAME='rename',
-    CLEARCACHE='clearcache')
+    CLEARCACHE='clearcache',
+    YOUTUBEDL='ytdl')

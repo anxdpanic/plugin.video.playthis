@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.0.0~alpha4"
+       version="3.0.0~alpha5"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
         <import addon="script.module.urlresolver" version="3.0.24"/>
+        <import addon="script.module.youtube.dl"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>video audio image</provides>
@@ -23,14 +24,17 @@
 - delay adding to history until potentially valid source found
 - add labels/rename
 - add function caching, expire time and reset in settings
+- add youtube-dl dependency
         </news>
         <assets>
             <icon>icon.png</icon>
             <fanart>fanart.jpg</fanart>
         </assets>
-        <summary lang="en">Resolve and play url/file</summary>
+        <summary lang="en">Find and resolve media from a url to play or open.</summary>
         <description lang="en">
-PlayThis will attempt to find and resolve(w/ URLResolver) media from a url to play or open. A history list is available for future use/exporting to M3U(only usable in Kodi w/ PlayThis installed). Supports video, audio and images.
+PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use/exporting to M3U**. Supports video, audio and images.
+* resolves using URLResolver and youtube-dl
+** M3U only usable in Kodi w/ PlayThis installed
 
 Companion browser extension available on the Chrome Web Store and Mozilla's AMO Gallery
 
