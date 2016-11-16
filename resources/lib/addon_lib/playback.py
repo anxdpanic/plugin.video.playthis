@@ -42,7 +42,7 @@ dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 working_dialog = kodi.WorkingDialog()
 
-user_cache_limit = int(kodi.get_setting('cache-expire-time'))
+user_cache_limit = int(kodi.get_setting('cache-expire-time')) / 60
 
 
 def append_headers(headers):

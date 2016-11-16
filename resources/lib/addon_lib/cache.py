@@ -43,10 +43,10 @@ def reset_cache():
         return False
 
 
-def _get_func(name, args=None, kwargs=None, cache_limit=60):
+def _get_func(name, args=None, kwargs=None, cache_limit=1):
     if not cache_enabled: return False, None
     now = time.time()
-    max_age = now - (cache_limit * 60)
+    max_age = now - (cache_limit * 60 * 60)
     if args is None: args = []
     if kwargs is None: kwargs = {}
     full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))

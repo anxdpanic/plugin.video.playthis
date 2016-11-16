@@ -246,7 +246,7 @@ def addon_enabled(addon_id):
         code = response['error']['code']
         error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
         xbmc.log(error, xbmc.LOGERROR)
-        raise KeyError(error)
+        return False
 
 
 def set_addon_enabled(addon_id, enabled=True):
@@ -264,7 +264,7 @@ def set_addon_enabled(addon_id, enabled=True):
         code = response['error']['code']
         error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
         xbmc.log(error, xbmc.LOGERROR)
-        raise KeyError(error)
+        return False
 
 
 class WorkingDialog(object):
