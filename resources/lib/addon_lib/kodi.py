@@ -247,7 +247,7 @@ def addon_enabled(addon_id):
         message = response['error']['message']
         code = response['error']['code']
         error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
-        xbmc.log(error, xbmc.LOGERROR)
+        xbmc.log(error, xbmc.LOGINFO)
         return False
 
 
@@ -265,7 +265,26 @@ def set_addon_enabled(addon_id, enabled=True):
         message = response['error']['message']
         code = response['error']['code']
         error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
-        xbmc.log(error, xbmc.LOGERROR)
+        xbmc.log(error, xbmc.LOGINFO)
+        return False
+
+
+def stop_player():
+    rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.GetActivePlayers"}
+    response = execute_jsonrpc(rpc_request)
+    try:
+        try:
+            player_id = response['result'][0]['playerid']
+        except IndexError:  # player not running or already stopped
+            return True
+        rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.Stop", "params": {"playerid": player_id}}
+        response = execute_jsonrpc(rpc_request)
+        return response['result'] == 'OK'
+    except KeyError:
+        message = response['error']['message']
+        code = response['error']['code']
+        error = 'Requested |%s| received error |%s| and code: |%s|' % (rpc_request, message, code)
+        xbmc.log(error, xbmc.LOGINFO)
         return False
 
 

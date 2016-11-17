@@ -602,6 +602,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 stream_url = '%s|%s' % (url_parts[0], url_parts[-1])
 
             working_dialog.update(80)
+            player_stopped = kodi.stop_player()
             if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
                 log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.execute_builtin('RunPlugin(%s)' % stream_url)
