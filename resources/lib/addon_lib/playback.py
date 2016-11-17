@@ -307,7 +307,7 @@ def resolve(url, title=''):
 def resolve_youtube_dl(url):
     label = None
     stream_url = None
-    content_type = None
+    content_type = 'video'
     source = _getYoutubeDLVideo(url, resolve_redirects=False)
     if source:
         stream_url = source.selectedStream()['xbmc_url']
@@ -317,7 +317,8 @@ def resolve_youtube_dl(url):
         format_id = source.selectedStream()['formatID']
         format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
         ext = formats[format_index]['ext']
-        content_type = __get_potential_type('.' + ext)
+        if ext:
+            content_type = __get_potential_type('.' + ext)
     return stream_url, label, content_type
 
 
