@@ -205,7 +205,7 @@ def __check_for_new_url(url):
             result = urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
-                result = urllib2.unquote(re.findall('google\.[a-z]+/.*?url=(.+?)&', url)[-1])
+                result = urllib2.unquote(re.findall('google\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
             except:
                 pass
     elif 'reddit' in url:
@@ -306,12 +306,19 @@ def resolve(url, title=''):
 @cache.cache_function(cache_limit=user_cache_limit)
 def resolve_youtube_dl(url):
     label = None
+    stream_url = None
+    content_type = None
     source = _getYoutubeDLVideo(url, resolve_redirects=False)
     if source:
-        source = source.selectedStream()['xbmc_url']
-        title = source.title()
+        stream_url = source.selectedStream()['xbmc_url']
+        title = source.title.encode('utf-8')
         label = None if title.lower().startswith('http') else title
-    return source, label
+        formats = source.selectedStream()['ytdl_format']['formats']
+        format_id = source.selectedStream()['formatID']
+        format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
+        ext = formats[format_index]['ext']
+        content_type = __get_potential_type('.' + ext)
+    return stream_url, label, content_type
 
 
 def __pick_source(sources):
@@ -380,16 +387,18 @@ def scrape(url):
         if chosen:
             if chosen[2]:
                 label = None
+                content_type = None
                 resolved = resolve(chosen[1], title=chosen[0])
                 if not resolved:
-                    resolved, label = resolve_youtube_dl(chosen[1])
+                    resolved, label, content_type = resolve_youtube_dl(chosen[1])
                 label = chosen[0] if label is None else label
-                return resolved, chosen[3], chosen[1], label, headers
+                content_type = chosen[3] if content_type is None else content_type
+                return resolved, content_type, chosen[1], label, headers
             elif chosen[3] == 'text':
-                resolved, label = resolve_youtube_dl(chosen[1])
+                resolved, label, content_type = resolve_youtube_dl(chosen[1])
                 if resolved:
                     label = chosen[0] if label is None else label
-                    return resolved, 'video', chosen[1], label, headers
+                    return resolved, content_type, chosen[1], label, headers
             return chosen[1], chosen[3], None, chosen[0], headers
     return None, None, None, None, None
 
@@ -458,7 +467,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                 working_dialog.update(60)
                 if not stream_url:
-                    source, _ytdl_label = resolve_youtube_dl(item)
+                    source, _ytdl_label, content_type = resolve_youtube_dl(item)
                     if source:
                         label = _ytdl_label if _ytdl_label is not None else label
                         log_utils.log('Source |{0}| found by |youtube-dl|'
