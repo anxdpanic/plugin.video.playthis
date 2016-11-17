@@ -162,3 +162,7 @@ msgstr ""
 msgctxt "#30712"
 msgid "youtube-dl settings"
 msgstr ""
+
+msgctxt "#30713"
+msgid "Cache"
+msgstr ""

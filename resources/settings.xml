@@ -6,7 +6,9 @@
         <setting label="30707" id="history-add-on-play" type="bool" default="true"/>
         <setting type="sep"/>
         <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
-        <setting type="sep"/>
+    </category>
+    <!-- Cache -->
+    <category label="30713">
         <setting label="30711" type="slider" id="cache-expire-time" default="1" range="0,8" option="int"/>
         <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
     </category>

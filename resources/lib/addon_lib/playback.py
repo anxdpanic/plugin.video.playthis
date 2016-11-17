@@ -28,9 +28,10 @@ import log_utils
 import cache
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, scrape_sources, parse_smil_source_list, get_hidden, add_packed_data
+from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
-
+from YDStreamExtractor import _getYoutubeDLVideo
+from youtube_dl import extractor as __extractor
 from constants import RESOLVER_DIR
 
 socket.setdefaulttimeout(30)
@@ -114,6 +115,37 @@ def __get_potential_type(url):
     return potential_type
 
 
+@cache.cache_function(cache_limit=168)
+def __get_gen_extractors():
+    return __extractor.gen_extractors()
+
+
+@cache.cache_function(cache_limit=168)
+def __get_gen_extractors_names():
+    names = set()
+    extractors = __get_gen_extractors()
+    for extractor in extractors:
+        if extractor.IE_NAME == 'generic': continue
+        name = extractor.IE_NAME.lower().split(':')[0]
+        if isinstance(name, unicode):
+            name = name.encode('utf-8')
+        names.add(name)
+    return list(names)
+
+
+def ytdl_supported(url):
+    extractors = __get_gen_extractors()
+    for extractor in extractors:
+        if extractor.suitable(url) and extractor.IE_NAME != 'generic':
+            return True
+    return False
+
+
+def ytdl_candidate(url):
+    names = __get_gen_extractors_names()
+    return any(name in url for name in names)
+
+
 def __get_content_type_and_headers(url, headers=None):
     url_override = None
     if headers is None:
@@ -186,58 +218,70 @@ def __check_for_new_url(url):
 
 def scrape_supported(url, html, regex=None, host_only=False):
     # modified version of scrape supported from urlresolver
-    parsed_url = urlparse.urlparse(url)
-    host_cache = {}
-    if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
-    links = []
-    filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.']
-    for match in re.finditer(regex, html):
-        stream_url = match.group(1)
-        if any(item in stream_url for item in filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
-                stream_url.endswith('/') or (len(stream_url) < 7):
-            continue
-        stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
-        if stream_url.startswith('//'):
-            stream_url = '%s:%s' % (parsed_url.scheme, stream_url)
-        elif stream_url.startswith('/'):
-            stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
-
-        host = urlparse.urlparse(stream_url).hostname
-        label = host
-        if (len(match.groups()) > 1) and (match.group(2) is not None):
-            label = match.group(2)
-
-        if isinstance(label, unicode):
-            label.encode('utf-8', 'ignore')
-
-        try:
-            label = HTMLParser().unescape(label)
-        except:
-            pass
-
-        if host_only:
-            if host is None:
+    working_dialog = kodi.WorkingDialog()
+    with working_dialog:
+        parsed_url = urlparse.urlparse(url)
+        host_cache = {}
+        if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
+        links = []
+        _filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.']
+        sources = []
+        new_iter = re.findall(regex, html, re.DOTALL)
+        for index, match in enumerate(new_iter):
+            working_dialog.update(int(index / 100))
+            stream_url = match[0]
+            if any(item in stream_url for item in _filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
+                    not re.match('^[hrf/:].+', stream_url):
                 continue
+            stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
+            if stream_url.startswith('//'):
+                stream_url = '%s:%s' % (parsed_url.scheme, stream_url)
+            elif stream_url.startswith('/'):
+                stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
 
-            if host in host_cache:
-                if host_cache[host]:
-                    links.append(stream_url)
-                continue
+            host = urlparse.urlparse(stream_url).hostname
+            label = host.encode('utf-8')
+            if (len(match) > 1) and (match[1] is not None) and (match[1].strip()):
+                label = match[1]
+                if isinstance(label, unicode):
+                    label.encode('utf-8', 'ignore')
+                try:
+                    label = HTMLParser().unescape(label)
+                except:
+                    pass
+            sources.append((label, stream_url))
+
+        for index, source in enumerate(sources):
+            label = source[0]
+            stream_url = source[1]
+            working_dialog.update(int(index / 100))
+            if host_only:
+                if host is None:
+                    continue
+
+                if host in host_cache:
+                    if host_cache[host]:
+                        links.append(stream_url)
+                    continue
+                else:
+                    hmf = HostedMediaFile(host=host, media_id='dummy')  # use dummy media_id to allow host validation
             else:
-                hmf = HostedMediaFile(host=host, media_id='dummy')  # use dummy media_id to allow host validation
-        else:
-            hmf = HostedMediaFile(url=stream_url)
+                hmf = HostedMediaFile(url=stream_url)
+            potential_type = __get_potential_type(stream_url)
 
-        potential_type = __get_potential_type(stream_url)
-
-        is_valid = hmf.valid_url()
-        is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
-        host_cache[host] = is_valid
-        if is_valid and is_valid_type:
-            links.append((label, stream_url, True, 'video'))
-        else:
-            links.append((label, stream_url, False, potential_type))
-    return links
+            is_valid = hmf.valid_url()
+            is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
+            host_cache[host] = is_valid
+            if is_valid and is_valid_type:
+                links.append((label, stream_url, True, 'video'))
+            else:
+                if potential_type == 'text':
+                    if ytdl_candidate(stream_url):
+                        ytdl_valid = ytdl_supported(stream_url)
+                        if ytdl_valid:
+                            links.append((label, stream_url, True, 'video'))
+                links.append((label, stream_url, False, potential_type))
+        return links
 
 
 @cache.cache_function(cache_limit=user_cache_limit)
@@ -261,11 +305,13 @@ def resolve(url, title=''):
 
 @cache.cache_function(cache_limit=user_cache_limit)
 def resolve_youtube_dl(url):
-    from YDStreamExtractor import getVideoInfo
-    source = getVideoInfo(url)
+    label = None
+    source = _getYoutubeDLVideo(url, resolve_redirects=False)
     if source:
-        source = source.streamURL()
-    return source
+        source = source.selectedStream()['xbmc_url']
+        title = source.title()
+        label = None if title.lower().startswith('http') else title
+    return source, label
 
 
 def __pick_source(sources):
@@ -298,8 +344,10 @@ def __pick_source(sources):
         return None
 
 
-def scrape(url, html):
+@cache.cache_function(cache_limit=user_cache_limit)
+def _scrape(url):
     unresolved_source_list = []
+    html, headers = __get_html_and_headers(url)
     html = add_packed_data(html)
 
     def _to_list(items):
@@ -310,27 +358,40 @@ def scrape(url, html):
     val_match_regex = '''\s*=\s*['"]([^'"]+)'''
 
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-href%s(?:.*?>\s*([^<]+).*?</a>)''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''data-href-url%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''href%s(?:.*?>\s*([^<]+).*?</a>)''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''href%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-lazy-src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
+    _to_list(scrape_supported(url, html, '''data-lazy-src%s(?:.*?(?:(?:title|alt)\s*=\s*['"]([^'"]+)))?''' % val_match_regex))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''src%s(?:.*?(?:title|alt)%s)?''' % (val_match_regex, val_match_regex)))
+    _to_list(scrape_supported(url, html, '''src%s(?:.*?(?:(?:title|alt)\s*=\s*['"]([^'"]+)))?''' % val_match_regex))
 
     result_list = []
     for item in unresolved_source_list:
         if item[3] != 'text':
             result_list.append(item)
+    return result_list, headers
 
+
+def scrape(url):
+    result_list, headers = _scrape(url)
     if result_list:
         chosen = __pick_source(result_list)
         if chosen:
             if chosen[2]:
-                return resolve(chosen[1], title=chosen[0]), chosen[3], chosen[1], chosen[0]
-            else:
-                return chosen[1], chosen[3], None, chosen[0]
-    return None, None, None, None
+                label = None
+                resolved = resolve(chosen[1], title=chosen[0])
+                if not resolved:
+                    resolved, label = resolve_youtube_dl(chosen[1])
+                label = chosen[0] if label is None else label
+                return resolved, chosen[3], chosen[1], label, headers
+            elif chosen[3] == 'text':
+                resolved, label = resolve_youtube_dl(chosen[1])
+                if resolved:
+                    label = chosen[0] if label is None else label
+                    return resolved, 'video', chosen[1], label, headers
+            return chosen[1], chosen[3], None, chosen[0], headers
+    return None, None, None, None, None
 
 
 def __check_smil_dash(source, headers):
@@ -352,14 +413,13 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     override_content_type = None
     is_dash = False
     direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
-    force_scrape_supported = ['reddit.com', 'google.']
     unresolved_source = None
     label = title
     source_label = label
 
-    working_dialog = kodi.WorkingDialog()
-    with working_dialog:
-        if item.startswith('http'):
+    if item.startswith('http'):
+        working_dialog = kodi.WorkingDialog()
+        with working_dialog:
             url_override = __check_for_new_url(item)
             if item != url_override:
                 item = url_override
@@ -370,7 +430,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
                 item = url_override
             log_utils.log('Source |{0}| has media type |{1}|'.format(item, content_type), log_utils.LOGDEBUG)
-            working_dialog.update(15)
+            working_dialog.update(20)
             if content_type == 'video' or content_type == 'audio' or content_type == 'image' \
                     or content_type == 'mpd' or content_type == 'smil':
                 source = item
@@ -386,6 +446,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     stream_url = source
 
             elif content_type == 'text':
+                working_dialog.update(40)
                 content_type = 'video'
                 headers.update({'Referer': item})
                 source = resolve(item, title=title)
@@ -395,54 +456,40 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     if source:
                         stream_url = source.replace(r'\\', '')
 
-                working_dialog.update(30)
+                working_dialog.update(60)
                 if not stream_url:
-                    source = resolve_youtube_dl(item)
+                    source, _ytdl_label = resolve_youtube_dl(item)
                     if source:
+                        label = _ytdl_label if _ytdl_label is not None else label
                         log_utils.log('Source |{0}| found by |youtube-dl|'
                                       .format(source), log_utils.LOGDEBUG)
                         source = __check_smil_dash(source, headers)
                         if source:
                             stream_url = source.replace(r'\\', '')
+                working_dialog.update(99)
 
-                working_dialog.update(45)
-                if not stream_url:
-                    html, headers = __get_html_and_headers(item, headers)
-                    if not any(override in item for override in force_scrape_supported):
-                        blacklist = ['dl', 'error.']
-                        if not dash_supported:
-                            blacklist += ['.mpd']
-                        sources = scrape_sources(html, result_blacklist=blacklist)
-                        if sources:
-                            source = pick_source(sources)
-                            log_utils.log('Source |{0}| found by |Scraping for sources|'
-                                          .format(source), log_utils.LOGDEBUG)
-                            source = __check_smil_dash(source, headers)
-                            if source:
-                                stream_url = source.replace(r'\\', '')
+        if not stream_url:
+            source, override_content_type, unresolved_source, source_label, headers = scrape(item)
+            if source:
+                log_utils.log('Source |{0}| found by |Scraping for supported|'
+                              .format(source), log_utils.LOGDEBUG)
+                if override_content_type == 'video':
+                    source = __check_smil_dash(source, headers)
+                if source:
+                    stream_url = source.replace(r'\\', '')
 
-                    working_dialog.update(60)
-                    if not stream_url:
-                        source, override_content_type, unresolved_source, source_label = scrape(item, html)
-                        if source:
-                            log_utils.log('Source |{0}| found by |Scraping for supported|'
-                                          .format(source), log_utils.LOGDEBUG)
-                            if override_content_type == 'video':
-                                source = __check_smil_dash(source, headers)
-                            if source:
-                                stream_url = source.replace(r'\\', '')
+    elif any(item.startswith(p) for p in direct):
+        log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
+        stream_url = item
 
-        elif any(item.startswith(p) for p in direct):
-            working_dialog.update(80)
-            log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
-            stream_url = item
+    if is_dash and (not dash_supported or not dash_enabled):
+        stream_url = None
 
-        if is_dash and (not dash_supported or not dash_enabled):
-            stream_url = None
-
-        if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
-            working_dialog.update(90)
+    if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
+        working_dialog = kodi.WorkingDialog()
+        with working_dialog:
             play_history = utils.PlayHistory()
+            working_dialog.update(20)
             if history or player == 'history':
                 history_item = item
                 if '%' not in history_item:
@@ -450,9 +497,10 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
                 play_history.add(history_item, content_type, label if label else item)
+            working_dialog.update(40)
             if override_content_type and override_history:
                 history_item = stream_url
-                if not history_item.startswith('plugin://') and unresolved_source:
+                if history_item.startswith('plugin://') and unresolved_source:
                     history_item = unresolved_source
                 if '%' not in history_item:
                     history_item = urllib2.quote(history_item)
@@ -462,13 +510,14 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             if player == 'history':
                 return
 
+            working_dialog.update(60)
             if (not stream_url.startswith('plugin://')) and ('|' not in stream_url) and (headers is not None):
                 stream_url += append_headers(headers)
             if len(stream_url.split('|')) > 2:
                 url_parts = stream_url.split('|')
                 stream_url = '%s|%s' % (url_parts[0], url_parts[-1])
 
-            working_dialog.update(99)
+            working_dialog.update(80)
             if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
                 log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.execute_builtin('RunPlugin(%s)' % stream_url)
@@ -498,5 +547,5 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     else:
                         log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                         kodi.set_resolved_url(playback_item)
-        else:
-            log_utils.log('Found no potential sources: |{0!s}|'.format(item), log_utils.LOGDEBUG)
+    else:
+        log_utils.log('Found no potential sources: |{0!s}|'.format(item), log_utils.LOGDEBUG)
