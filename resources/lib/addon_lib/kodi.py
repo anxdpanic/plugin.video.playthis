@@ -269,6 +269,10 @@ def set_addon_enabled(addon_id, enabled=True):
         return False
 
 
+def close_all_dialogs():
+    xbmc.executebuiltin('Dialog.Close(all,true)')
+
+
 class WorkingDialog(object):
     wd = None
 
@@ -303,11 +307,12 @@ class WorkingDialog(object):
 class ProgressDialog(object):
     pd = None
 
-    def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0):
+    def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0, custom=False):
         self.begin = time.time()
         self.timer = timer
         self.background = background
         self.heading = heading
+        self.custom = custom
         if active and not timer:
             self.pd = self.__create_dialog(line1, line2, line3)
             self.pd.update(0)
@@ -318,7 +323,7 @@ class ProgressDialog(object):
             msg = line1 + line2 + line3
             pd.create(self.heading, msg)
         else:
-            if xbmc.getCondVisibility('Window.IsVisible(progressdialog)'):
+            if xbmc.getCondVisibility('Window.IsVisible(progressdialog)') and self.custom:
                 pd = CustomProgressDialog.ProgressDialog()
             else:
                 pd = xbmcgui.DialogProgress()
