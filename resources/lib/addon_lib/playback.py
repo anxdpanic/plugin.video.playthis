@@ -224,7 +224,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
         host_cache = {}
         if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
         links = []
-        _filter = ['.js', 'data:', 'blob:' '/search', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.']
+        _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.']
         sources = []
         new_iter = re.findall(regex, html, re.DOTALL)
         for index, match in enumerate(new_iter):
