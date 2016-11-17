@@ -224,7 +224,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     links = []
     _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.']
     sources = []
-    progress_dialog = kodi.ProgressDialog('Scraping for supported', '%s: %s' % ('Source', url))
+    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ')
     canceled = False
     with progress_dialog:
         while not progress_dialog.is_canceled():
@@ -238,6 +238,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
                 stream_url = match[0]
                 if any(item in stream_url for item in _filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
                         not re.match('^[hrf/:].+', stream_url):
+                    progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('discarded'), '%s' % stream_url), ' ')
                     continue
                 stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
                 if stream_url.startswith('//'):
@@ -261,7 +262,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
                         label = HTMLParser().unescape(label)
                 except:
                     pass
-                progress_dialog.update(percent, 'Preparing results', '%s: %s' % ('Added', '[%s] %s' % (label, stream_url)))
+                progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('added'), label), stream_url)
                 sources.append((label, stream_url))
             if progress_dialog.is_canceled():
                 canceled = True
@@ -269,7 +270,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
         if canceled:
             return []
 
-    progress_dialog = kodi.ProgressDialog('Scraping for supported', '%s: %s' % ('Source', url))
+    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ')
     canceled = False
     with progress_dialog:
         while not progress_dialog.is_canceled():
@@ -299,7 +300,9 @@ def scrape_supported(url, html, regex=None, host_only=False):
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
                 host_cache[host] = is_valid
                 if is_valid and is_valid_type:
-                    progress_dialog.update(percent, 'Checking for supported', '%s: %s' % ('[video]', label), stream_url)
+                    progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'URLResolver'),
+                                           '[%s]: %s' % (label, stream_url))
                     links.append((label, stream_url, True, 'video'))
                     continue
                 else:
@@ -307,10 +310,18 @@ def scrape_supported(url, html, regex=None, host_only=False):
                         if ytdl_candidate(stream_url):
                             ytdl_valid = ytdl_supported(stream_url)
                             if ytdl_valid:
-                                progress_dialog.update(percent, 'Checking for supported', '%s: %s' % ('[video]', label), stream_url)
+                                progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                                       '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
+                                                       '[%s]: %s' % (label, stream_url))
                                 links.append((label, stream_url, True, 'video'))
                                 continue
-                    progress_dialog.update(percent, 'Checking for supported', '[%s]: %s' % (potential_type, label), stream_url)
+                        progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                               '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
+                                               '[%s]: %s' % (label, stream_url))
+                    else:
+                        progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                               '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'Kodi'),
+                                               '[%s]: %s' % (label, stream_url))
                     links.append((label, stream_url, False, potential_type))
                     continue
             if progress_dialog.is_canceled():
@@ -469,23 +480,23 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     source_label = label
 
     if item.startswith('http'):
-        progress_dialog = kodi.ProgressDialog('Resolving', '%s: %s' % ('Determine type', item))
+        progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item)
         canceled = False
         with progress_dialog:
             while not progress_dialog.is_canceled():
                 url_override = __check_for_new_url(item)
                 if item != url_override:
                     log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
-                    progress_dialog.update(5, '%s: %s' % ('Source', item), '%s: %s' % ('Replaced by', url_override))
+                    progress_dialog.update(5, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('replaced_with'), url_override), ' ')
                     item = url_override
                 content_type, headers, url_override = __get_content_type_and_headers(item)
                 if url_override:
                     log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
-                    progress_dialog.update(10, '%s: %s' % ('Source', item), '%s: %s' % ('Replaced by', url_override))
+                    progress_dialog.update(10, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('replaced_with'), url_override), ' ')
                     item = url_override
 
                 log_utils.log('Source |{0}| has media type |{1}|'.format(item, content_type), log_utils.LOGDEBUG)
-                progress_dialog.update(20, '%s: %s' % ('Source', item), '%s: %s' % ('Using type', content_type))
+                progress_dialog.update(20, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('using_media_type'), content_type), ' ')
                 if content_type == 'video' or content_type == 'audio' or content_type == 'image' \
                         or content_type == 'mpd' or content_type == 'smil':
                     source = item
@@ -503,7 +514,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 elif content_type == 'text':
                     if progress_dialog.is_canceled():
                         break
-                    progress_dialog.update(40, '%s: %s' % ('Source', item), 'Attempting to resolve using URLResolver')
+                    progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: URLResolver' % kodi.i18n('attempt_resolve_with'), ' ')
                     content_type = 'video'
                     headers.update({'Referer': item})
                     source = resolve(item, title=title)
@@ -511,13 +522,15 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
                         source = __check_smil_dash(source, headers)
                         if source:
-                            progress_dialog.update(98, '%s: %s' % ('Source', item), 'Resolution successful using URLResolver', '%s: %s' % ('Resolved source', source))
+                            progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
+                                                   '%s: URLResolver' % kodi.i18n('attempt_resolve_with'),
+                                                   '%s: %s' % (kodi.i18n('resolution_successful'), source))
                             stream_url = source
 
                     if not stream_url:
                         if progress_dialog.is_canceled():
                             break
-                        progress_dialog.update(60, '%s: %s' % ('Source', item), '%s' % 'Attempting to resolve using youtube-dl')
+                        progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
                         source, _ytdl_label, content_type = resolve_youtube_dl(item)
                         if source:
                             label = _ytdl_label if _ytdl_label is not None else label
@@ -525,11 +538,13 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                                           .format(source), log_utils.LOGDEBUG)
                             source = __check_smil_dash(source, headers)
                             if source:
-                                progress_dialog.update(98, '%s: %s' % ('Source', item), 'Resolution successful using youtube-dl', '%s: %s' % ('Resolved source', source))
+                                progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
+                                                       '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
+                                                       '%s: %s' % (kodi.i18n('resolution_successful'), source))
                                 stream_url = source
 
                 if not progress_dialog.is_canceled():
-                    progress_dialog.update(100, ' ', 'Resolution completed', ' ')
+                    progress_dialog.update(100, ' ', kodi.i18n('resolution_completed'), ' ')
                 else:
                     canceled = True
                 break

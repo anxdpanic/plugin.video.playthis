@@ -111,6 +111,62 @@ msgctxt "#30123"
 msgid "Reset function cache?"
 msgstr ""
 
+msgctxt "#30124"
+msgid "Resolution completed"
+msgstr ""
+
+msgctxt "#30125"
+msgid "Source"
+msgstr ""
+
+msgctxt "#30126"
+msgid "Resolution successful"
+msgstr ""
+
+msgctxt "#30127"
+msgid "Attempting to resolve with"
+msgstr ""
+
+msgctxt "#30128"
+msgid "Attempting to determine type"
+msgstr ""
+
+msgctxt "#30129"
+msgid "Resolving"
+msgstr ""
+
+msgctxt "#30130"
+msgid "Scraping for potentially supported media urls"
+msgstr ""
+
+msgctxt "#30131"
+msgid "Added"
+msgstr ""
+
+msgctxt "#30132"
+msgid "Discarded"
+msgstr ""
+
+msgctxt "#30133"
+msgid "Preparing results"
+msgstr ""
+
+msgctxt "#30134"
+msgid "Support potential"
+msgstr ""
+
+msgctxt "#30135"
+msgid "Replaced with"
+msgstr ""
+
+msgctxt "#30136"
+msgid "Using media type"
+msgstr ""
+
+msgctxt "#30137"
+msgid "Checking for potential support"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
