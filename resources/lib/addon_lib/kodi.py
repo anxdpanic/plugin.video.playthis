@@ -42,6 +42,8 @@ ListItem = xbmcgui.ListItem
 Player = xbmc.Player
 execute_builtin = xbmc.executebuiltin
 sleep = xbmc.sleep
+conditional_visibility = xbmc.getCondVisibility
+get_supported_media = xbmc.getSupportedMedia
 
 addon = xbmcaddon.Addon()
 get_setting = addon.getSetting
@@ -150,6 +152,14 @@ def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playabl
     xbmcplugin.addDirectoryItem(int(sys.argv[1]), liz_url, list_item, isFolder=is_folder, totalItems=total_items)
 
 
+def get_playlist(list_type, new=False):
+    # 0 = music, # 1 = video
+    pl = xbmc.PlayList(list_type)
+    if new:
+        pl.clear()
+    return pl
+
+
 def parse_query(query):
     q = {'mode': 'main'}
     if query.startswith('?'): query = query[1:]
@@ -208,10 +218,6 @@ def refresh_container():
 
 def update_container(url):
     xbmc.executebuiltin('Container.Update(%s)' % (url))
-
-
-def get_supported_media(media_type):
-    return xbmc.getSupportedMedia(media_type)
 
 
 def get_keyboard(heading, default=''):
@@ -288,8 +294,8 @@ def stop_player():
         return False
 
 
-def close_all_dialogs():
-    xbmc.executebuiltin('Dialog.Close(all,true)')
+def close_dialog(dialog_name):
+    xbmc.executebuiltin('Dialog.Close(%s,true)' % dialog_name)
 
 
 class WorkingDialog(object):

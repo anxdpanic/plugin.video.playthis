@@ -237,7 +237,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
                 percent = int((float(index) / float(len_iter)) * 100)
                 stream_url = match[0]
                 if any(item in stream_url for item in _filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
-                        not re.match('^[hrf/:].+', stream_url):
+                        not re.match('^[hruf:/].+', stream_url):
                     progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('discarded'), '%s' % stream_url), ' ')
                     continue
                 stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
@@ -474,7 +474,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     content_type = 'video'
     override_content_type = None
     is_dash = False
-    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:']
+    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:', 'udp:']
     unresolved_source = None
     label = title
     source_label = label
@@ -609,15 +609,15 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             else:
                 if override_content_type:
                     content_type = override_content_type
+
                 if content_type == 'image':
-                    player_open = {'jsonrpc': '2.0',
-                                   'id': '1',
-                                   'method': 'Player.Open',
-                                   'params': {'item': {'file': stream_url}}}
-                    log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'
-                                  .format(stream_url), log_utils.LOGDEBUG)
-                    kodi.execute_jsonrpc(player_open)
+                    player_open = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': stream_url}}}
+                    log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+                    response = kodi.execute_jsonrpc(player_open)
                 else:
+                    playlist_type = 1
+                    if content_type == 'audio': playlist_type = 0
+                    playlist = kodi.get_playlist(playlist_type, new=True)
                     info = {'title': source_label}
                     playback_item = kodi.ListItem(label=title, path=stream_url)
                     playback_item.setProperty('IsPlayable', 'true')
@@ -626,6 +626,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     if is_dash:
                         playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
                     playback_item.setInfo(content_type, info)
+                    playlist.add(stream_url, listitem=playback_item)
                     if player:
                         log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                         kodi.Player().play(stream_url, playback_item)
