@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.0.0~alpha5"
+       version="3.0.0~alpha6"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
@@ -24,7 +24,8 @@
 - delay adding to history until potentially valid source found
 - add labels/rename
 - add function caching, expire time and reset in settings
-- add youtube-dl dependency
+- add youtube-dl support
+- add progress dialog
         </news>
         <assets>
             <icon>icon.png</icon>

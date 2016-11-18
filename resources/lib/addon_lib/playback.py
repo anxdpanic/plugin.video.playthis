@@ -417,10 +417,10 @@ def _scrape(url):
 
     val_match_regex = '''\s*=\s*['"]([^'"]+)'''
 
-    log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-href-url%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
     _to_list(scrape_supported(url, html, '''href%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
+    log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
+    _to_list(scrape_supported(url, html, '''data-href-url%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
     _to_list(scrape_supported(url, html, '''data-lazy-src%s(?:.*?(?:(?:title|alt)\s*=\s*['"]([^'"]+)))?''' % val_match_regex))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
