@@ -28,12 +28,14 @@ play_history = PlayHistory()
 
 
 @DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
-def main_route(content_type='video'):
-    content = 'episodes'
+def main_route(content_type='executable'):
+    content = 'files'
     if content_type == 'audio':
         content = 'songs'
     elif content_type == 'image':
         content = 'images'
+    elif content_type == 'video':
+        content = 'episodes'
     kodi.set_content(content)
     if play_history.use_directory():
         play_history.history_directory(content_type)

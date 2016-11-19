@@ -550,6 +550,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 break
 
         if not stream_url and not canceled:
+            content_type = 'executable'
             source, override_content_type, unresolved_source, source_label, headers = scrape(item)
             if source:
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
@@ -569,7 +570,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     if is_dash and (not dash_supported or not dash_enabled):
         stream_url = None
 
-    if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image'):
+    if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image' or content_type == 'executable'):
         working_dialog = kodi.WorkingDialog()
         with working_dialog:
             play_history = utils.PlayHistory()

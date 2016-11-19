@@ -9,14 +9,14 @@
         <import addon="script.module.youtube.dl"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
-        <provides>video audio image</provides>
+        <provides>executable video audio image</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
 - add generalized scraping for sources as fallback if url does not resolve
 - add dash and smil support
 - add basic mimetype detection
-- add content type support (video audio image)
+- add content type support (video audio image executable)
 - add attempt to identify and support quicktime atom  ** thanks @tknorris
 - increased history size limits, applies to ALL content types as use cases my still be limited to one type
 - add parsing for google/reddit redirect links

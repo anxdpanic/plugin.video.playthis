@@ -275,16 +275,18 @@ def set_addon_enabled(addon_id, enabled=True):
         return False
 
 
-def stop_player():
-    rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.GetActivePlayers"}
-    response = execute_jsonrpc(rpc_request)
-    try:
+def stop_player(player_id=None):
+    # 0 = audio, 1 = video, 2 = image, None = Active
+    if player_id is None:
+        rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.GetActivePlayers"}
+        response = execute_jsonrpc(rpc_request)
         try:
             player_id = response['result'][0]['playerid']
         except IndexError:  # player not running or already stopped
             return True
-        rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.Stop", "params": {"playerid": player_id}}
-        response = execute_jsonrpc(rpc_request)
+    rpc_request = {"id": 1, "jsonrpc": "2.0", "method": "Player.Stop", "params": {"playerid": player_id}}
+    response = execute_jsonrpc(rpc_request)
+    try:
         return response['result'] == 'OK'
     except KeyError:
         message = response['error']['message']
