@@ -2,12 +2,15 @@
 - add generalized scraping for sources as fallback if url does not resolve
 - add dash and smil support
 - add basic mimetype detection
-- add content type support (video audio image)
+- add content type support (video audio image executable)
 - add attempt to identify and support quicktime atom  ** thanks @tknorris
 - increased history size limits, applies to ALL content types as use cases my still be limited to one type
-- add parsing of google/reddit redirect links (subreddits, google search give playable results)
 - export to M3U exports content specific list
 - delay adding to history until potentially valid source found
+- add labels/rename
+- add function caching, expire time and reset in settings
+- add youtube-dl support
+- add progress dialog
 
 2.2.5
 - export to .m3u now exports PlayThis plugin url instead of resolved url
