@@ -200,8 +200,9 @@ class PlayHistory:
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
                                      content_type=content_type, info=info)
         if not total_items:
+            menu_items = [(kodi.i18n('refresh'), 'RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.REFRESH})))]
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
-                             fanart=fanart_path, is_folder=False, is_playable=False)
+                             fanart=fanart_path, is_folder=False, is_playable=False, menu_items=menu_items)
         kodi.end_of_directory(cache_to_disc=False)
 
     def create_table(self):

@@ -42,6 +42,7 @@ dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
+resolver_cache_limit = 0.11
 cache.cache_enabled = user_cache_limit > 0
 
 
@@ -222,7 +223,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     host_cache = {}
     if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
-    _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.']
+    _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss']
     sources = []
     progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ')
     canceled = False
@@ -236,8 +237,8 @@ def scrape_supported(url, html, regex=None, host_only=False):
                     break
                 percent = int((float(index) / float(len_iter)) * 100)
                 stream_url = match[0]
-                if any(item in stream_url for item in _filter) or stream_url == '#' or any(stream_url == t[1] for t in links) or \
-                        not re.match('^[hruf:/].+', stream_url):
+                if stream_url == '#' or stream_url == '//' or '/' not in stream_url or not re.match('^[hruf:/].+', stream_url) or \
+                        any(item in stream_url for item in _filter) or any(stream_url == t[1] for t in links):
                     progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('discarded'), '%s' % stream_url), ' ')
                     continue
                 stream_url = __check_for_new_url(stream_url).replace(r'\\', '')
@@ -248,8 +249,10 @@ def scrape_supported(url, html, regex=None, host_only=False):
 
                 host = urlparse.urlparse(stream_url).hostname
                 label = host.encode('utf-8')
-                if (len(match) > 1) and (match[1] is not None) and (match[1].strip()):
-                    label = match[1]
+                if (len(match) > 2) and (match[2] is not None) and (match[2].strip()) and (host not in match[2]):
+                    label = match[2].strip()
+                elif (len(match) > 1) and (match[1] is not None) and (match[1].strip()) and (host not in match[1]):
+                    label = match[1].strip()
                 if not isinstance(label, unicode):
                     label = label.decode('utf-8', 'ignore')
                 failed_unescape = False
@@ -332,7 +335,7 @@ def scrape_supported(url, html, regex=None, host_only=False):
     return links
 
 
-@cache.cache_function(cache_limit=user_cache_limit)
+@cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve(url, title=''):
     add_plugin_dirs(RESOLVER_DIR)
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
@@ -351,12 +354,12 @@ def resolve(url, title=''):
         return resolved
 
 
-@cache.cache_function(cache_limit=user_cache_limit)
+@cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve_youtube_dl(url):
     label = None
     stream_url = None
     content_type = 'video'
-    source = _getYoutubeDLVideo(url, resolve_redirects=False)
+    source = _getYoutubeDLVideo(url, resolve_redirects=True)
     if source:
         stream_url = source.selectedStream()['xbmc_url']
         title = source.title
@@ -365,12 +368,14 @@ def resolve_youtube_dl(url):
             label = HTMLParser().unescape(label)
         except:
             pass
-        formats = source.selectedStream()['ytdl_format']['formats']
-        format_id = source.selectedStream()['formatID']
-        format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
-        ext = formats[format_index]['ext']
-        if ext:
-            content_type = __get_potential_type('.' + ext)
+        selected_stream = source.selectedStream()
+        if 'ytdl_format' in selected_stream and 'formats' in selected_stream['ytdl_format']:
+            formats = selected_stream['ytdl_format']['formats']
+            format_id = selected_stream['formatID']
+            format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
+            ext = formats[format_index]['ext']
+            if ext:
+                content_type = __get_potential_type('.' + ext)
     return stream_url, label, content_type
 
 
@@ -411,20 +416,27 @@ def _scrape(url):
     html = add_packed_data(html)
 
     def _to_list(items):
-        for item in items:
-            if not any(item[1] == t[1] for t in unresolved_source_list):
-                unresolved_source_list.append(item)
+        for lstitem in items:
+            if not any(lstitem[1] == t[1] for t in unresolved_source_list):
+                unresolved_source_list.append(lstitem)
+            else:
+                if lstitem[0] not in lstitem[1]:
+                    for idx, itm in enumerate(unresolved_source_list):
+                        if lstitem[1] == itm[1]:
+                            if itm[0] in itm[1]:
+                                unresolved_source_list[idx] = lstitem
+                                break
 
-    val_match_regex = '''\s*=\s*['"]([^'"]+)'''
-
+    log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
+    _to_list(scrape_supported(url, html, '''iframe src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''href%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''href\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-href-url%s(?:.*?(?:(?:title|data-title)\s*=\s*['"]([^'"]+)))?(?:.*?(?:>\s*([^<]+).*?</a>))?''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''data-href-url\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-lazy-src%s(?:.*?(?:(?:title|alt)\s*=\s*['"]([^'"]+)))?''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''data-lazy-src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''src%s(?:.*?(?:(?:title|alt)\s*=\s*['"]([^'"]+)))?''' % val_match_regex))
+    _to_list(scrape_supported(url, html, '''src(?<!iframe\s)\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
 
     result_list = []
     for item in unresolved_source_list:
@@ -478,6 +490,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     unresolved_source = None
     label = title
     source_label = label
+    history_item = None
 
     if item.startswith('http'):
         progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item)
@@ -594,7 +607,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 play_history.add(history_item, override_content_type, source_label)
             if player == 'history':
                 return
-
+            if history_item:
+                kodi.refresh_container()
             working_dialog.update(60)
             if (not stream_url.startswith('plugin://')) and ('|' not in stream_url) and (headers is not None):
                 stream_url += append_headers(headers)
@@ -616,18 +630,14 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                     response = kodi.execute_jsonrpc(player_open)
                 else:
-                    playlist_type = 1
-                    if content_type == 'audio': playlist_type = 0
-                    playlist = kodi.get_playlist(playlist_type, new=True)
                     info = {'title': source_label}
                     playback_item = kodi.ListItem(label=title, path=stream_url)
                     playback_item.setProperty('IsPlayable', 'true')
-                    playback_item.setArt({'thumb': thumbnail})
+                    playback_item.setArt({'icon': thumbnail, 'thumb': thumbnail})
                     playback_item.addStreamInfo(content_type, {})
                     if is_dash:
                         playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
                     playback_item.setInfo(content_type, info)
-                    playlist.add(stream_url, listitem=playback_item)
                     if player:
                         log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                         kodi.Player().play(stream_url, playback_item)
