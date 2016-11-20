@@ -66,11 +66,13 @@ def rename_row_id(row_id, refresh=True):
             kodi.refresh_container()
 
 
-@DISPATCHER.register(MODES.DELETE, ['row_id'], ['refresh'])
-def delete_row(row_id, refresh=True):
-    result, rowcount = play_history.delete_row_id(row_id)
-    if (result, rowcount) == (1, 1) and refresh:
-        kodi.refresh_container()
+@DISPATCHER.register(MODES.DELETE, ['row_id'], ['title', 'refresh'])
+def delete_row(row_id, title='', refresh=True):
+    confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), '%s \'%s\'%s' % (kodi.i18n('delete_url'), unquote(title), '?'))
+    if confirmed:
+        result, rowcount = play_history.delete_row_id(row_id)
+        if (result, rowcount) == (1, 1) and refresh:
+            kodi.refresh_container()
 
 
 @DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])

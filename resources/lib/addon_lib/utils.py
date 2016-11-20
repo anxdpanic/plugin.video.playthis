@@ -180,7 +180,7 @@ class PlayHistory:
                                   (kodi.i18n('refresh'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.REFRESH}))),
                                   (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'refresh': 'true'}))),
+                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'title': quote(label), 'refresh': 'true'}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
