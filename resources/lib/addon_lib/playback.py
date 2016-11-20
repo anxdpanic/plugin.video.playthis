@@ -38,7 +38,6 @@ socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.mpd')
-dash_enabled = kodi.addon_enabled('inputstream.mpd')
 net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
@@ -580,7 +579,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
         log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
         stream_url = item
 
-    if is_dash and (not dash_supported or not dash_enabled):
+    if is_dash and (not dash_supported or not kodi.addon_enabled('inputstream.mpd')):
         stream_url = None
 
     if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image' or content_type == 'executable'):
