@@ -301,29 +301,32 @@ def close_dialog(dialog_name):
     xbmc.executebuiltin('Dialog.Close(%s,true)' % dialog_name)
 
 
-class KodiVersion(object):
-    """
-    Usage:
-        kodi_version = KodiVersion()
-        if kodi_version.major < 17:
-            print 'Not Krypton'
-    """
-    def __init__(self):
-        version = xbmc.getInfoLabel('System.BuildVersion')
-        major = re.findall('([0-9]+)\.[0-9]+', version)[0]
-        minor = re.findall('[0-9]+\.([0-9]+)', version)[0]
-        revision = re.findall('\w+:(\w+-\w+)', version)[0]
-        try: tag = re.findall('-([a-zA-Z]+)[0-9]+', version)[0].lower().decode('utf-8')
+def get_kodi_version():
+    class MetaClass(type):
+        def __str__(self):
+            return '|%s| -> |%s|%s|%s|%s|%s|' % (self.version, self.major, self.minor, self.tag, self.tag_version, self.revision)
+
+    class KodiVersion(object):
+        __metaclass__ = MetaClass
+        version = xbmc.getInfoLabel('System.BuildVersion').decode('utf-8')
+        match = re.search('([0-9]+)\.([0-9]+)', version)
+        if match: major, minor = match.groups()
+        match = re.search('-([a-zA-Z]+)([0-9]*)', version)
+        if match: tag, tag_version = match.groups()
+        match = re.search('\w+:(\w+-\w+)', version)
+        if match: revision = match.group(1)
+
+        try: major = int(major)
+        except: major = 0
+        try: minor = int(minor)
+        except: minor = 0
+        try: revision = revision.decode('utf-8')
+        except: revision = u''
+        try: tag = tag.decode('utf-8')
         except: tag = u''
-        try: tag_version = int(re.findall('-[a-zA-Z]+([0-9]+)', version)[0])
+        try: tag_version = int(tag_version)
         except: tag_version = 0
-        self.__dict__ = {u'version': version.decode('utf-8'),
-                         u'major': int(major),
-                         u'minor': int(minor),
-                         u'revision': revision.decode('utf-8'),
-                         u'tag': tag,
-                         u'tag_version': tag_version}
-        del version, major, minor, revision, tag, tag_version
+    return KodiVersion
 
 
 class WorkingDialog(object):
