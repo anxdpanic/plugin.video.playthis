@@ -301,6 +301,31 @@ def close_dialog(dialog_name):
     xbmc.executebuiltin('Dialog.Close(%s,true)' % dialog_name)
 
 
+class KodiVersion(object):
+    """
+    Usage:
+        kodi_version = KodiVersion()
+        if kodi_version.major < 17:
+            print 'Not Krypton'
+    """
+    def __init__(self):
+        version = xbmc.getInfoLabel('System.BuildVersion')
+        major = re.findall('([0-9]+)\.[0-9]+', version)[0]
+        minor = re.findall('[0-9]+\.([0-9]+)', version)[0]
+        revision = re.findall('\w+:(\w+-\w+)', version)[0]
+        try: tag = re.findall('-([a-zA-Z]+)[0-9]+', version)[0].lower().decode('utf-8')
+        except: tag = u''
+        try: tag_version = int(re.findall('-[a-zA-Z]+([0-9]+)', version)[0])
+        except: tag_version = 0
+        self.__dict__ = {u'version': version.decode('utf-8'),
+                         u'major': int(major),
+                         u'minor': int(minor),
+                         u'revision': revision.decode('utf-8'),
+                         u'tag': tag,
+                         u'tag_version': tag_version}
+        del version, major, minor, revision, tag, tag_version
+
+
 class WorkingDialog(object):
     wd = None
 
