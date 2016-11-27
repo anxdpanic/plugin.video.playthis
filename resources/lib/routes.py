@@ -35,7 +35,7 @@ def main_route(content_type='executable'):
     elif content_type == 'image':
         content = 'images'
     elif content_type == 'video':
-        content = 'episodes'
+        content = 'videos'
     kodi.set_content(content)
     if play_history.use_directory():
         play_history.history_directory(content_type)
