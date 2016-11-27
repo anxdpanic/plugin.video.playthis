@@ -145,8 +145,12 @@ def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playabl
     if isinstance(queries, dict):
         liz_url = get_plugin_url(queries)
 
-    list_item.setArt({'thumb': thumb, 'fanart': fanart})
-    list_item.setIconImage(thumb)
+    art = {'icon': thumb, 'thumb': thumb, 'fanart': fanart}
+    if get_kodi_version().major < 16:
+        list_item.setIconImage(thumb)
+        del art['icon']
+    list_item.setArt(art)
+
     list_item.setInfo(content_type, info)
     list_item.setProperty('isPlayable', playable)
     list_item.addContextMenuItems(menu_items, replaceItems=replace_menu)

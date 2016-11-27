@@ -630,9 +630,13 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     response = kodi.execute_jsonrpc(player_open)
                 else:
                     info = {'title': source_label}
+                    art = {'icon': thumbnail, 'thumb': thumbnail}
                     playback_item = kodi.ListItem(label=title, path=stream_url)
                     playback_item.setProperty('IsPlayable', 'true')
-                    playback_item.setArt({'icon': thumbnail, 'thumb': thumbnail})
+                    if kodi.get_kodi_version().major < 16:
+                        playback_item.setIconImage(thumbnail)
+                        del art['icon']
+                    playback_item.setArt(art)
                     playback_item.addStreamInfo(content_type, {})
                     if is_dash:
                         playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
