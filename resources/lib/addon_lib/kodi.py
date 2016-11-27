@@ -301,8 +301,10 @@ def stop_player(player_id=None):
         return False
 
 
-def close_dialog(dialog_name):
-    xbmc.executebuiltin('Dialog.Close(%s,true)' % dialog_name)
+def close_dialog(dialog_name, forced=True):
+    if not forced: forced = 'false'
+    else: forced = 'true'
+    xbmc.executebuiltin('Dialog.Close(%s,%s)' % (dialog_name, forced))
 
 
 def get_kodi_version():
