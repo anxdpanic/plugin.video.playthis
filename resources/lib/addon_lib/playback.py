@@ -203,7 +203,6 @@ def __get_content_type_and_headers(url, headers=None):
 def __check_for_new_url(url):
     if 'google' in url:
         try:
-
             return urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
@@ -344,11 +343,13 @@ def resolve_youtube_dl(url):
     label = None
     stream_url = None
     headers = None
+    thumbnail = None
     content_type = 'video'
     source = _getYoutubeDLVideo(url, resolve_redirects=True)
     if source:
         stream_url = source.selectedStream()['xbmc_url']
         title = source.title
+        thumbnail = source.thumbnail
         label = None if title.lower().startswith('http') else title
         try:
             label = HTMLParser().unescape(label)
@@ -363,7 +364,7 @@ def resolve_youtube_dl(url):
             headers = formats[format_index]['http_headers']
             if ext:
                 content_type = __get_potential_type('.' + ext)
-    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'headers': headers}
+    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'thumbnail': thumbnail, 'headers': headers}
 
 
 def __pick_source(sources):
@@ -441,6 +442,7 @@ def scrape(url):
                 label = None
                 content_type = None
                 headers = None
+                thumbnail = None
                 resolved = resolve(chosen['url'], title=chosen['label'])
                 if not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
@@ -448,21 +450,24 @@ def scrape(url):
                     resolved = ytdl_result['resolved_url']
                     content_type = ytdl_result['content_type']
                     headers = ytdl_result['headers']
+                    thumbnail = ytdl_result['thumbnail']
                 headers = result['headers'] if headers is None else headers
                 label = chosen['label'] if label is None else label
                 content_type = chosen['content_type'] if content_type is None else content_type
-                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'headers': headers}
+                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'thumbnail': thumbnail, 'headers': headers}
             elif chosen['content_type'] == 'text':
                 ytdl_result = resolve_youtube_dl(chosen['url'])
                 if ytdl_result['resolved_url']:
                     label = chosen['label'] if ytdl_result['label'] is None else ytdl_result['label']
                     headers = result['headers'] if ytdl_result['headers'] is None else ytdl_result['headers']
                     return {'label': label, 'resolved_url': ytdl_result['resolved_url'], 'content_type': ytdl_result['content_type'], 'unresolved_url': chosen['url'],
-                            'headers': headers}
+                            'thumbnail': ytdl_result['thumbnail'], 'headers': headers}
 
-            return {'label': chosen['label'], 'resolved_url': chosen['url'], 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'headers': result['headers']}
+            thumbnail = chosen['url'] if chosen['content_type'] == 'image' else None
+            return {'label': chosen['label'], 'resolved_url': chosen['url'], 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'thumbnail': thumbnail,
+                    'headers': result['headers']}
 
-    return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'headers': None}
+    return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'thumbnail': None, 'headers': None}
 
 
 def __check_smil_dash(source, headers):
@@ -513,6 +518,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     unresolved_source = None
     label = title
     source_label = label
+    source_thumbnail = thumbnail
     history_item = None
 
     if item.startswith('http'):
@@ -578,6 +584,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         if ytdl_result['resolved_url']:
                             headers = ytdl_result['headers']
                             label = ytdl_result['label'] if ytdl_result['label'] is not None else label
+                            source_thumbnail = ytdl_result['thumbnail'] if ytdl_result['thumbnail'] is not None else source_thumbnail
                             log_utils.log('Source |{0}| found by |youtube-dl|'
                                           .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
                             sd_result = __check_smil_dash(ytdl_result['resolved_url'], headers)
@@ -603,6 +610,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             unresolved_source = scrape_result['unresolved_url']
             source_label = scrape_result['label']
             headers = scrape_result['headers']
+            if scrape_result['thumbnail']:
+                source_thumbnail = scrape_result['thumbnail']
             if source:
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
                               .format(source), log_utils.LOGDEBUG)
@@ -669,7 +678,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                           'url': stream_url,
                           'is_dash': is_dash,
                           'info': {'title': source_label},
-                          'art': {'icon': thumbnail, 'thumb': thumbnail}}
+                          'art': {'icon': source_thumbnail, 'thumb': source_thumbnail}}
 
                 play(source, player)
 
