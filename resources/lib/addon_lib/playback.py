@@ -41,7 +41,7 @@ dash_supported = common.has_addon('inputstream.mpd')
 net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
-resolver_cache_limit = 0.11
+resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
 cache.cache_enabled = user_cache_limit > 0
 
 
@@ -115,12 +115,12 @@ def __get_potential_type(url):
     return potential_type
 
 
-@cache.cache_function(cache_limit=168)
+@cache.cache_function(cache_limit=23)
 def __get_gen_extractors():
     return __extractor.gen_extractors()
 
 
-@cache.cache_function(cache_limit=168)
+@cache.cache_function(cache_limit=23)
 def __get_gen_extractors_names():
     names = set()
     extractors = __get_gen_extractors()
@@ -288,7 +288,7 @@ def scrape_supported(url, html, regex):
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                            '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'URLResolver'),
                                            '[%s]: %s' % (label, stream_url))
-                    links.append((label, stream_url, True, 'video'))
+                    links.append((label, stream_url, 'URLResolver', 'video'))
                     continue
                 else:
                     if potential_type == 'text':
@@ -298,7 +298,7 @@ def scrape_supported(url, html, regex):
                                 progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                        '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
                                                        '[%s]: %s' % (label, stream_url))
-                                links.append((label, stream_url, True, 'video'))
+                                links.append((label, stream_url, 'youtube-dl', 'video'))
                                 continue
                         progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
@@ -307,7 +307,7 @@ def scrape_supported(url, html, regex):
                         progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'Kodi'),
                                                '[%s]: %s' % (label, stream_url))
-                    links.append((label, stream_url, False, potential_type))
+                    links.append((label, stream_url, None, potential_type))
                     continue
             if progress_dialog.is_canceled():
                 canceled = True
@@ -365,23 +365,23 @@ def __pick_source(sources):
     if len(sources) == 1:
         return sources[0][1]
     elif len(sources) > 1:
-        listitem_sources = []
-        for source in sources:
-            title = source[0] if source[0] else kodi.i18n('unknown')
-            icon = ''
-            if source[3] == 'image':
-                icon = source[1]
-            l_item = kodi.ListItem(label=title, label2=source[3], iconImage=icon)
-            l_item.setArt({'thumb': icon})
-            listitem_sources.append(l_item)
-
-        try:
+        if kodi.get_kodi_version().major > 16:
+            listitem_sources = []
+            for source in sources:
+                title = source[0] if source[0] else kodi.i18n('unknown')
+                label2 = '%s [[COLOR=lightgray]%s[/COLOR]]' % (source[3].capitalize(), source[2] if source[2] else 'Kodi')
+                icon = ''
+                if source[3] == 'image':
+                    icon = source[1]
+                l_item = kodi.ListItem(label=title, label2=label2, iconImage=icon)
+                l_item.setArt({'thumb': icon})
+                listitem_sources.append(l_item)
             result = kodi.Dialog().select(kodi.i18n('choose_source'), list=listitem_sources, useDetails=True)
-        except:
+        else:
             result = kodi.Dialog().select(kodi.i18n('choose_source'),
-                                          ['[%s] %s' % (source[3], source[0])
+                                          ['[%s] %s' % (source[3].capitalize(), source[0])
                                            if source[0]
-                                           else '[%s] %s' % (source[3], kodi.i18n('unknown'))
+                                           else '[%s] %s' % (source[3].capitalize(), kodi.i18n('unknown'))
                                            for source in sources])
         if result == -1:
             return None
