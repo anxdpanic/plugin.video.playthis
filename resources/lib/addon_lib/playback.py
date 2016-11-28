@@ -203,10 +203,11 @@ def __get_content_type_and_headers(url, headers=None):
 def __check_for_new_url(url):
     if 'google' in url:
         try:
+
             return urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
-                return urllib2.unquote(re.findall('google[a-z]+\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
+                return urllib2.unquote(re.findall('google[a-z]*\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
             except:
                 pass
     if 'reddit' in url:
@@ -342,6 +343,7 @@ def resolve(url, title=''):
 def resolve_youtube_dl(url):
     label = None
     stream_url = None
+    headers = None
     content_type = 'video'
     source = _getYoutubeDLVideo(url, resolve_redirects=True)
     if source:
@@ -358,9 +360,10 @@ def resolve_youtube_dl(url):
             format_id = selected_stream['formatID']
             format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
             ext = formats[format_index]['ext']
+            headers = formats[format_index]['http_headers']
             if ext:
                 content_type = __get_potential_type('.' + ext)
-    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type}
+    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'headers': headers}
 
 
 def __pick_source(sources):
@@ -437,21 +440,25 @@ def scrape(url):
             if chosen['resolver']:
                 label = None
                 content_type = None
+                headers = None
                 resolved = resolve(chosen['url'], title=chosen['label'])
                 if not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
                     label = ytdl_result['label']
                     resolved = ytdl_result['resolved_url']
                     content_type = ytdl_result['content_type']
+                    headers = ytdl_result['headers']
+                headers = result['headers'] if headers is None else headers
                 label = chosen['label'] if label is None else label
                 content_type = chosen['content_type'] if content_type is None else content_type
-                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'headers': result['headers']}
+                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'headers': headers}
             elif chosen['content_type'] == 'text':
                 ytdl_result = resolve_youtube_dl(chosen['url'])
                 if ytdl_result['resolved_url']:
                     label = chosen['label'] if ytdl_result['label'] is None else ytdl_result['label']
+                    headers = result['headers'] if ytdl_result['headers'] is None else ytdl_result['headers']
                     return {'label': label, 'resolved_url': ytdl_result['resolved_url'], 'content_type': ytdl_result['content_type'], 'unresolved_url': chosen['url'],
-                            'headers': result['headers']}
+                            'headers': headers}
 
             return {'label': chosen['label'], 'resolved_url': chosen['url'], 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'headers': result['headers']}
 
@@ -569,6 +576,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
                         ytdl_result = resolve_youtube_dl(item)
                         if ytdl_result['resolved_url']:
+                            headers = ytdl_result['headers']
                             label = ytdl_result['label'] if ytdl_result['label'] is not None else label
                             log_utils.log('Source |{0}| found by |youtube-dl|'
                                           .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
