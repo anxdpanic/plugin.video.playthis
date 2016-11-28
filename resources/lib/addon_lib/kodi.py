@@ -38,7 +38,6 @@ __log = xbmc.log
 
 Addon = xbmcaddon.Addon
 Dialog = xbmcgui.Dialog
-ListItem = xbmcgui.ListItem
 Player = xbmc.Player
 execute_builtin = xbmc.executebuiltin
 sleep = xbmc.sleep
@@ -120,7 +119,7 @@ def set_content(content):
 
 def create_item(queries, label, thumb='', fanart='', is_folder=None, is_playable=None, total_items=0, menu_items=None,
                 replace_menu=False, content_type='video', info=None):
-    list_item = xbmcgui.ListItem(label)
+    list_item = ListItem(label)
     add_item(queries, list_item, thumb, fanart, is_folder, is_playable, total_items,
              menu_items, replace_menu, content_type=content_type, info=info)
 
@@ -145,12 +144,7 @@ def add_item(queries, list_item, thumb='', fanart='', is_folder=None, is_playabl
     if isinstance(queries, dict):
         liz_url = get_plugin_url(queries)
 
-    art = {'icon': thumb, 'thumb': thumb, 'fanart': fanart}
-    if get_kodi_version().major < 16:
-        list_item.setIconImage(thumb)
-        del art['icon']
-    list_item.setArt(art)
-
+    list_item.setArt({'icon': thumb, 'thumb': thumb, 'fanart': fanart})
     list_item.setInfo(content_type, info)
     list_item.setProperty('isPlayable', playable)
     list_item.addContextMenuItems(menu_items, replaceItems=replace_menu)
@@ -476,3 +470,11 @@ class CountdownDialog(object):
     def update(self, percent, line1='', line2='', line3=''):
         if self.pd is not None:
             self.pd.update(percent, line1, line2, line3)
+
+
+class ListItem(xbmcgui.ListItem):
+    def setArt(self, dictionary):
+        if get_kodi_version().major < 16 and 'icon' in dictionary:
+            self.setIconImage(dictionary['icon'])
+            del dictionary['icon']
+        super(ListItem, self).setArt(dictionary)

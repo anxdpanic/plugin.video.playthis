@@ -453,7 +453,7 @@ def scrape(url):
                     return {'label': label, 'resolved_url': ytdl_result['resolved_url'], 'content_type': ytdl_result['content_type'], 'unresolved_url': chosen['url'],
                             'headers': result['headers']}
 
-            return {'label': chosen['label'], 'resolved_url': None, 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'headers': result['headers']}
+            return {'label': chosen['label'], 'resolved_url': chosen['url'], 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'headers': result['headers']}
 
     return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'headers': None}
 
@@ -632,9 +632,6 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     art = {'icon': thumbnail, 'thumb': thumbnail}
                     playback_item = kodi.ListItem(label=title, path=stream_url)
                     playback_item.setProperty('IsPlayable', 'true')
-                    if kodi.get_kodi_version().major < 16:
-                        playback_item.setIconImage(thumbnail)
-                        del art['icon']
                     playback_item.setArt(art)
                     playback_item.addStreamInfo(content_type, {})
                     if is_dash:
