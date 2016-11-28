@@ -199,28 +199,24 @@ def __get_content_type_and_headers(url, headers=None):
 
 
 def __check_for_new_url(url):
-    result = url
     if 'google' in url:
         try:
-            result = urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
+            return urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
-                result = urllib2.unquote(re.findall('google\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
+                return urllib2.unquote(re.findall('google[a-z]+\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
             except:
                 pass
-    elif 'reddit' in url:
+    if 'reddit' in url:
         try:
-            result = urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
+            return urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
         except:
             pass
-    return result
+    return url
 
 
-def scrape_supported(url, html, regex=None, host_only=False):
-    # modified version of scrape supported from urlresolver
+def scrape_supported(url, html, regex):
     parsed_url = urlparse.urlparse(url)
-    host_cache = {}
-    if regex is None: regex = '''href\s*=\s*['"]([^'"]+)'''
     links = []
     _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss']
     sources = []
@@ -284,23 +280,11 @@ def scrape_supported(url, html, regex=None, host_only=False):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
-                if host_only:
-                    if host is None:
-                        continue
-
-                    if host in host_cache:
-                        if host_cache[host]:
-                            links.append(stream_url)
-                        continue
-                    else:
-                        hmf = HostedMediaFile(host=host, media_id='dummy')  # use dummy media_id to allow host validation
-                else:
-                    hmf = HostedMediaFile(url=stream_url)
+                hmf = HostedMediaFile(url=stream_url)
                 potential_type = __get_potential_type(stream_url)
-
                 is_valid = hmf.valid_url()
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
-                host_cache[host] = is_valid
+
                 if is_valid and is_valid_type:
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                            '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'URLResolver'),
@@ -485,7 +469,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     content_type = 'video'
     override_content_type = None
     is_dash = False
-    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:', 'udp:']
+    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:', 'udp:', 'upnp:']
     unresolved_source = None
     label = title
     source_label = label
