@@ -72,35 +72,35 @@ def __get_html_and_headers(url, headers=None):
         cookie = response_headers.get('Set-Cookie', '')
         if cookie:
             headers['Cookie'] = headers.get('Cookie', '') + cookie
-        html = response.content
+        contents = response.content
         redirect = response.get_url()
         if ('reddit' in redirect) and ('over18' in redirect):
             post_headers = {}
             post_headers.update(
                 {'User-Agent': common.FF_USER_AGENT, 'Content-Type': 'application/x-www-form-urlencoded'})
-            data = get_hidden(html)
+            data = get_hidden(contents)
             data.update({'over18': 'yes'})
             response = net.http_POST(response.get_url(), form_data=data, headers=post_headers)
             response_headers = response.get_headers(as_dict=True)
             cookie = response_headers.get('Set-Cookie', '')
             if cookie:
                 headers['Cookie'] = headers.get('Cookie', '')
-            html = response.content
+            contents = response.content
         log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
-        return html, headers
+        return {'contents': contents, 'headers': headers}
     except:
-        return '', headers
+        return {'contents': '', 'headers': headers}
 
 
 def __get_qt_atom_url(url, headers):
     log_utils.log('Attempting to get url from quicktime atom: |{0!s}|'.format(url), log_utils.LOGDEBUG)
     try:
-        mov, headers = __get_html_and_headers(url, headers)
-        r = re.search('moov.*?rmra.*?rdrf.*?url (....)(.*)', mov)
+        result = __get_html_and_headers(url, headers)
+        r = re.search('moov.*?rmra.*?rdrf.*?url (....)(.*)', result['contents'])
         l = struct.unpack("!I", r.group(1))[0]
-        return r.group(2)[:l], headers
+        return {'url': r.group(2)[:l], 'headers': result['headers']}
     except:
-        return None, headers
+        return {'url': None, 'headers': headers}
 
 
 def __get_potential_type(url):
@@ -161,7 +161,7 @@ def __get_content_type_and_headers(url, headers=None):
             url_override = redirect
             response = net.http_HEAD(url_override, headers=headers)
     except:
-        return potential_type, headers, None
+        return {'content_type': potential_type, 'headers': headers, 'url_override': None}
 
     response_headers = response.get_headers(as_dict=True)
     headers.update({'Cookie': response_headers.get('Set-Cookie', '')})
@@ -187,7 +187,9 @@ def __get_content_type_and_headers(url, headers=None):
             try:
                 content_length = int(clength_header)
                 if content_length <= 10000:
-                    url_override, headers = __get_qt_atom_url(url, headers)
+                    qt_result = __get_qt_atom_url(url, headers)
+                    headers = qt_result['headers']
+                    url_override = qt_result['url']
             except:
                 pass
     except:
@@ -195,7 +197,7 @@ def __get_content_type_and_headers(url, headers=None):
 
     log_utils.log('HEAD request complete updated headers: |{1!s}| using media type: |{0!s}|'
                   .format(content_type, headers), log_utils.LOGDEBUG)
-    return content_type, headers, url_override
+    return {'content_type': content_type, 'headers': headers, 'url_override': url_override}
 
 
 def __check_for_new_url(url):
@@ -243,7 +245,7 @@ def scrape_supported(url, html, regex):
                     stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
 
                 host = urlparse.urlparse(stream_url).hostname
-                label = host.encode('utf-8')
+                label = host
                 if (len(match) > 2) and (match[2] is not None) and (match[2].strip()) and (host not in match[2]):
                     label = match[2].strip()
                 elif (len(match) > 1) and (match[1] is not None) and (match[1].strip()) and (host not in match[1]):
@@ -288,7 +290,7 @@ def scrape_supported(url, html, regex):
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                            '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'URLResolver'),
                                            '[%s]: %s' % (label, stream_url))
-                    links.append((label, stream_url, 'URLResolver', 'video'))
+                    links.append({'label': label, 'url': stream_url, 'resolver': 'URLResolver', 'content_type': 'video'})
                     continue
                 else:
                     if potential_type == 'text':
@@ -298,7 +300,7 @@ def scrape_supported(url, html, regex):
                                 progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                        '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
                                                        '[%s]: %s' % (label, stream_url))
-                                links.append((label, stream_url, 'youtube-dl', 'video'))
+                                links.append({'label': label, 'url': stream_url, 'resolver': 'youtube-dl', 'content_type': 'video'})
                                 continue
                         progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
@@ -307,7 +309,7 @@ def scrape_supported(url, html, regex):
                         progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'Kodi'),
                                                '[%s]: %s' % (label, stream_url))
-                    links.append((label, stream_url, None, potential_type))
+                    links.append({'label': label, 'url': stream_url, 'resolver': None, 'content_type': potential_type})
                     continue
             if progress_dialog.is_canceled():
                 canceled = True
@@ -358,7 +360,7 @@ def resolve_youtube_dl(url):
             ext = formats[format_index]['ext']
             if ext:
                 content_type = __get_potential_type('.' + ext)
-    return stream_url, label, content_type
+    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type}
 
 
 def __pick_source(sources):
@@ -368,20 +370,20 @@ def __pick_source(sources):
         if kodi.get_kodi_version().major > 16:
             listitem_sources = []
             for source in sources:
-                title = source[0] if source[0] else kodi.i18n('unknown')
-                label2 = '%s [[COLOR=lightgray]%s[/COLOR]]' % (source[3].capitalize(), source[2] if source[2] else 'Kodi')
+                title = source['label'] if source['label'] else kodi.i18n('unknown')
+                label2 = '%s [[COLOR=lightgray]%s[/COLOR]]' % (source['content_type'].capitalize(), source['resolver'] if source['resolver'] else 'Kodi')
                 icon = ''
-                if source[3] == 'image':
-                    icon = source[1]
+                if source['content_type'] == 'image':
+                    icon = source['url']
                 l_item = kodi.ListItem(label=title, label2=label2)
                 l_item.setArt({'icon': icon, 'thumb': icon})
                 listitem_sources.append(l_item)
             result = kodi.Dialog().select(kodi.i18n('choose_source'), list=listitem_sources, useDetails=True)
         else:
             result = kodi.Dialog().select(kodi.i18n('choose_source'),
-                                          ['[%s] %s' % (source[3].capitalize(), source[0])
-                                           if source[0]
-                                           else '[%s] %s' % (source[3].capitalize(), kodi.i18n('unknown'))
+                                          ['[%s] %s' % (source['content_type'].capitalize(), source['label'])
+                                           if source['label']
+                                           else '[%s] %s' % (source['content_type'].capitalize(), kodi.i18n('unknown'))
                                            for source in sources])
         if result == -1:
             return None
@@ -394,20 +396,19 @@ def __pick_source(sources):
 @cache.cache_function(cache_limit=user_cache_limit)
 def _scrape(url):
     unresolved_source_list = []
-    html, headers = __get_html_and_headers(url)
-    html = add_packed_data(html)
+    result = __get_html_and_headers(url)
+    html = add_packed_data(result['contents'])
 
     def _to_list(items):
         for lstitem in items:
-            if not any(lstitem[1] == t[1] for t in unresolved_source_list):
+            if not any(lstitem['url'] == t['url'] for t in unresolved_source_list):
                 unresolved_source_list.append(lstitem)
             else:
-                if lstitem[0] not in lstitem[1]:
+                if lstitem['label'] not in lstitem['url']:
                     for idx, itm in enumerate(unresolved_source_list):
-                        if lstitem[1] == itm[1]:
-                            if itm[0] in itm[1]:
-                                unresolved_source_list[idx] = lstitem
-                                break
+                        if (lstitem['url'] == itm['url']) and (itm['label'] in itm['url']):
+                            unresolved_source_list[idx] = lstitem
+                            break
 
     log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
     _to_list(scrape_supported(url, html, '''iframe src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
@@ -422,38 +423,45 @@ def _scrape(url):
 
     result_list = []
     for item in unresolved_source_list:
-        if item[3] != 'text':
+        if item['content_type'] != 'text':
             result_list.append(item)
-    return result_list, headers
+    return {'results': result_list, 'headers': result['headers']}
 
 
 def scrape(url):
-    result_list, headers = _scrape(url)
+    result = _scrape(url)
+    result_list = result['results']
     if result_list:
         chosen = __pick_source(result_list)
         if chosen:
-            if chosen[2]:
+            if chosen['resolver']:
                 label = None
                 content_type = None
-                resolved = resolve(chosen[1], title=chosen[0])
+                resolved = resolve(chosen['url'], title=chosen['label'])
                 if not resolved:
-                    resolved, label, content_type = resolve_youtube_dl(chosen[1])
-                label = chosen[0] if label is None else label
-                content_type = chosen[3] if content_type is None else content_type
-                return resolved, content_type, chosen[1], label, headers
-            elif chosen[3] == 'text':
-                resolved, label, content_type = resolve_youtube_dl(chosen[1])
-                if resolved:
-                    label = chosen[0] if label is None else label
-                    return resolved, content_type, chosen[1], label, headers
-            return chosen[1], chosen[3], None, chosen[0], headers
-    return None, None, None, None, None
+                    ytdl_result = resolve_youtube_dl(chosen['url'])
+                    label = ytdl_result['label']
+                    resolved = ytdl_result['resolved_url']
+                    content_type = ytdl_result['content_type']
+                label = chosen['label'] if label is None else label
+                content_type = chosen['content_type'] if content_type is None else content_type
+                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'headers': result['headers']}
+            elif chosen['content_type'] == 'text':
+                ytdl_result = resolve_youtube_dl(chosen['url'])
+                if ytdl_result['resolved_url']:
+                    label = chosen['label'] if ytdl_result['label'] is None else ytdl_result['label']
+                    return {'label': label, 'resolved_url': ytdl_result['resolved_url'], 'content_type': ytdl_result['content_type'], 'unresolved_url': chosen['url'],
+                            'headers': result['headers']}
+
+            return {'label': chosen['label'], 'resolved_url': None, 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'headers': result['headers']}
+
+    return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'headers': None}
 
 
 def __check_smil_dash(source, headers):
     if '.smil' in source:
-        smil, _headers = __get_html_and_headers(source, headers)
-        source = pick_source(parse_smil_source_list(smil))
+        smil_result = __get_html_and_headers(source, headers)
+        source = pick_source(parse_smil_source_list(smil_result['contents']))
     elif '.mpd' in source and not dash_supported:
         source = None
     return source
@@ -484,7 +492,10 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
                     progress_dialog.update(5, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('replaced_with'), url_override), ' ')
                     item = url_override
-                content_type, headers, url_override = __get_content_type_and_headers(item)
+                result = __get_content_type_and_headers(item)
+                content_type = result['content_type']
+                headers = result['headers']
+                url_override = result['url_override']
                 if url_override:
                     log_utils.log('Source |{0}| has been replaced by |{1}|'.format(item, url_override), log_utils.LOGDEBUG)
                     progress_dialog.update(10, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('replaced_with'), url_override), ' ')
@@ -497,8 +508,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     source = item
                     if content_type == 'smil':
                         content_type = 'video'
-                        smil, _headers = __get_html_and_headers(item, headers)
-                        source = pick_source(parse_smil_source_list(smil))
+                        smil_result = __get_html_and_headers(item, headers)
+                        source = pick_source(parse_smil_source_list(smil_result['contents']))
                     elif content_type == 'mpd':
                         content_type = 'video'
                         if not dash_supported:
@@ -526,12 +537,12 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         if progress_dialog.is_canceled():
                             break
                         progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
-                        source, _ytdl_label, content_type = resolve_youtube_dl(item)
-                        if source:
-                            label = _ytdl_label if _ytdl_label is not None else label
+                        ytdl_result = resolve_youtube_dl(item)
+                        if ytdl_result['resolved_url']:
+                            label = ytdl_result['label'] if ytdl_result['label'] is not None else label
                             log_utils.log('Source |{0}| found by |youtube-dl|'
-                                          .format(source), log_utils.LOGDEBUG)
-                            source = __check_smil_dash(source, headers)
+                                          .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
+                            source = __check_smil_dash(ytdl_result['resolved_url'], headers)
                             if source:
                                 progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
                                                        '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
@@ -546,7 +557,12 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
         if not stream_url and not canceled:
             content_type = 'executable'
-            source, override_content_type, unresolved_source, source_label, headers = scrape(item)
+            scrape_result = scrape(item)
+            source = scrape_result['resolved_url']
+            override_content_type = scrape_result['content_type']
+            unresolved_source = scrape_result['unresolved_url']
+            source_label = scrape_result['label']
+            headers = scrape_result['headers']
             if source:
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
                               .format(source), log_utils.LOGDEBUG)
