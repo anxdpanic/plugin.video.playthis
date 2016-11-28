@@ -220,7 +220,7 @@ def scrape_supported(url, html, regex):
     links = []
     _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss']
     sources = []
-    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ')
+    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=2)
     canceled = False
     with progress_dialog:
         while not progress_dialog.is_canceled():
@@ -268,7 +268,7 @@ def scrape_supported(url, html, regex):
         if canceled:
             return []
 
-    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ')
+    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=2)
     canceled = False
     with progress_dialog:
         while not progress_dialog.is_canceled():
