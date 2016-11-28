@@ -373,8 +373,8 @@ def __pick_source(sources):
                 icon = ''
                 if source[3] == 'image':
                     icon = source[1]
-                l_item = kodi.ListItem(label=title, label2=label2, iconImage=icon)
-                l_item.setArt({'thumb': icon})
+                l_item = kodi.ListItem(label=title, label2=label2)
+                l_item.setArt({'icon': icon, 'thumb': icon})
                 listitem_sources.append(l_item)
             result = kodi.Dialog().select(kodi.i18n('choose_source'), list=listitem_sources, useDetails=True)
         else:
