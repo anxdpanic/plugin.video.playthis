@@ -37,7 +37,7 @@ from constants import RESOLVER_DIR
 socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
-dash_supported = common.has_addon('inputstream.mpd')
+dash_supported = common.has_addon('inputstream.adaptive')
 net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
@@ -482,7 +482,8 @@ def play(source, player=True):
         playback_item.setArt(source['art'])
         playback_item.addStreamInfo(source['content_type'], {})
         if source['is_dash']:
-            playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
+            playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+            playback_item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
         playback_item.setInfo(source['content_type'], source['info'])
         if player:
             log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
@@ -611,7 +612,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
         log_utils.log('Source |{0}| may be supported'.format(item), log_utils.LOGDEBUG)
         stream_url = item
 
-    if is_dash and (not dash_supported or not kodi.addon_enabled('inputstream.mpd')):
+    if is_dash and (not dash_supported or not kodi.addon_enabled('inputstream.adaptive')):
         stream_url = None
 
     if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image' or content_type == 'executable'):
