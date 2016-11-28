@@ -459,12 +459,37 @@ def scrape(url):
 
 
 def __check_smil_dash(source, headers):
+    is_dash = False
     if '.smil' in source:
         smil_result = __get_html_and_headers(source, headers)
         source = pick_source(parse_smil_source_list(smil_result['contents']))
     elif '.mpd' in source and not dash_supported:
+        is_dash = False
         source = None
-    return source
+    elif '.mpd' in source and dash_supported:
+        is_dash = True
+    return {'url': source, 'is_dash': is_dash}
+
+
+def play(source, player=True):
+    if source['content_type'] == 'image':
+        player_open = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
+        log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+        response = kodi.execute_jsonrpc(player_open)
+    else:
+        playback_item = kodi.ListItem(label=source['info']['title'], path=source['url'])
+        playback_item.setProperty('IsPlayable', 'true')
+        playback_item.setArt(source['art'])
+        playback_item.addStreamInfo(source['content_type'], {})
+        if source['is_dash']:
+            playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
+        playback_item.setInfo(source['content_type'], source['info'])
+        if player:
+            log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+            kodi.Player().play(source['url'], playback_item)
+        else:
+            log_utils.log('Play using set_resolved_url: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+            kodi.set_resolved_url(playback_item)
 
 
 def play_this(item, title='', thumbnail='', player=True, history=None):
@@ -514,6 +539,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         content_type = 'video'
                         if not dash_supported:
                             source = None
+                        else:
+                            is_dash = True
                     if source:
                         stream_url = source
 
@@ -526,7 +553,9 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     source = resolve(item, title=title)
                     if source:
                         log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
-                        source = __check_smil_dash(source, headers)
+                        sd_result = __check_smil_dash(source, headers)
+                        source = sd_result['url']
+                        is_dash = sd_result['is_dash']
                         if source:
                             progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
                                                    '%s: URLResolver' % kodi.i18n('attempt_resolve_with'),
@@ -542,7 +571,9 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                             label = ytdl_result['label'] if ytdl_result['label'] is not None else label
                             log_utils.log('Source |{0}| found by |youtube-dl|'
                                           .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
-                            source = __check_smil_dash(ytdl_result['resolved_url'], headers)
+                            sd_result = __check_smil_dash(ytdl_result['resolved_url'], headers)
+                            source = sd_result['url']
+                            is_dash = sd_result['is_dash']
                             if source:
                                 progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
                                                        '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
@@ -567,7 +598,9 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
                               .format(source), log_utils.LOGDEBUG)
                 if override_content_type == 'video':
-                    source = __check_smil_dash(source, headers)
+                    sd_result = __check_smil_dash(source, headers)
+                    source = sd_result['url']
+                    is_dash = sd_result['is_dash']
                 if source:
                     stream_url = source
 
@@ -623,25 +656,13 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 if override_content_type:
                     content_type = override_content_type
 
-                if content_type == 'image':
-                    player_open = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': stream_url}}}
-                    log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                    response = kodi.execute_jsonrpc(player_open)
-                else:
-                    info = {'title': source_label}
-                    art = {'icon': thumbnail, 'thumb': thumbnail}
-                    playback_item = kodi.ListItem(label=title, path=stream_url)
-                    playback_item.setProperty('IsPlayable', 'true')
-                    playback_item.setArt(art)
-                    playback_item.addStreamInfo(content_type, {})
-                    if is_dash:
-                        playback_item.setProperty('inputstreamaddon', 'inputstream.mpd')
-                    playback_item.setInfo(content_type, info)
-                    if player:
-                        log_utils.log('Play using Player(): |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                        kodi.Player().play(stream_url, playback_item)
-                    else:
-                        log_utils.log('Play using set_resolved_url: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                        kodi.set_resolved_url(playback_item)
+                source = {'content_type': content_type,
+                          'url': stream_url,
+                          'is_dash': is_dash,
+                          'info': {'title': source_label},
+                          'art': {'icon': thumbnail, 'thumb': thumbnail}}
+
+                play(source, player)
+
     else:
         log_utils.log('Found no potential sources: |{0!s}|'.format(item), log_utils.LOGDEBUG)
