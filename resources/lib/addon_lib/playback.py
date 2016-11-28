@@ -250,14 +250,13 @@ def scrape_supported(url, html, regex):
                     label = match[1].strip()
                 if not isinstance(label, unicode):
                     label = label.decode('utf-8', 'ignore')
-                failed_unescape = False
                 try:
-                    label = HTMLParser().unescape(label)
-                except:
-                    failed_unescape = True
-                try:
-                    if not failed_unescape:
-                        label = HTMLParser().unescape(label)
+                    parser = HTMLParser()
+                    label = parser.unescape(label)
+                    try:
+                        label = parser.unescape(label)
+                    except:
+                        pass
                 except:
                     pass
                 progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('added'), label), stream_url)
