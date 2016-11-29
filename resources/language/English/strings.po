@@ -48,11 +48,11 @@ msgid "Delete"
 msgstr ""
 
 msgctxt "#30108"
-msgid "No items in list for export to .m3u"
+msgid "No item(s) to export"
 msgstr ""
 
 msgctxt "#30109"
-msgid "Items exported to .m3u successfully"
+msgid "Item(s) exported successfully"
 msgstr ""
 
 msgctxt "#30110"
@@ -64,7 +64,7 @@ msgid "Export list to .m3u"
 msgstr ""
 
 msgctxt "#30112"
-msgid "Failed to export items to .m3u"
+msgid "Failed to export item(s)"
 msgstr ""
 
 msgctxt "#30113"
@@ -179,6 +179,14 @@ msgctxt "#30140"
 msgid "Clearing cookies failed"
 msgstr ""
 
+msgctxt "#30141"
+msgid ".strm Filename"
+msgstr ""
+
+msgctxt "#30142"
+msgid "Export to .strm"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
@@ -212,7 +220,7 @@ msgid "Add to history on play"
 msgstr ""
 
 msgctxt "#30708"
-msgid "M3U"
+msgid "Export"
 msgstr ""
 
 msgctxt "#30709"
@@ -237,4 +245,8 @@ msgstr ""
 
 msgctxt "#30714"
 msgid "Clear cookies"
+msgstr ""
+
+msgctxt "#30715"
+msgid "STRM export path"
 msgstr ""

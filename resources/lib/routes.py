@@ -19,7 +19,7 @@
 
 import os
 from addon_lib import kodi, cache
-from addon_lib.utils import PlayHistory, M3UUtils
+from addon_lib.utils import PlayHistory, M3UUtils, STRMUtils
 from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR, COOKIE_FILE
 from addon_lib.playback import play_this
 from urllib2 import unquote
@@ -103,6 +103,31 @@ def export_m3u(export_path=None, from_list='history', ctype='video'):
             else:
                 m3u_file = os.path.join(export_path, m3u_name)
             M3UUtils(m3u_file, from_list).export(ctype=ctype)
+
+
+@DISPATCHER.register(MODES.EXPORT_STRM, args=['row_id'], kwargs=['export_path'])
+def export_strm(row_id, export_path=None):
+    if export_path is None:
+        export_path = kodi.get_setting('export_path_strm')
+        if not export_path:
+            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path_strm'), 'video', '', False, False, ADDON_DATA_DIR)
+            kodi.set_setting('export_path_strm', export_path)
+    if export_path:
+        default_filename = ''
+        rows = play_history.get(row_id=row_id)
+        if rows:
+            url, content_type, title, thumb = rows[0]
+            default_filename = kodi.string_to_filename(title) + '.strm'
+        strm_name = kodi.get_keyboard(kodi.i18n('strm_filename'), default_filename)
+        if strm_name:
+            if export_path.startswith('special://'):
+                if not export_path.endswith('/'):
+                    export_path += '/'
+                    kodi.set_setting('export_path_strm', export_path)
+                strm_file = kodi.translate_path(export_path + strm_name)
+            else:
+                strm_file = os.path.join(export_path, strm_name)
+            STRMUtils(strm_file).export(row_id)
 
 
 @DISPATCHER.register(MODES.CLEARHISTORY, kwargs=['ctype'])

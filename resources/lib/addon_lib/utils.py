@@ -95,9 +95,13 @@ class PlayHistory:
             kodi.notify(msg=kodi.i18n('rename_failed'), sound=False)
         return result
 
-    def get(self, include_ids=False):
-        execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
-        selected = DATABASE.fetch(execute, (self.ID,))
+    def get(self, include_ids=False, row_id=None):
+        if row_id is None:
+            execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
+            selected = DATABASE.fetch(execute, (self.ID,))
+        else:
+            execute = 'SELECT * FROM {0!s} WHERE id=? AND addon_id=?'.format(self.TABLE)
+            selected = DATABASE.fetch(execute, (row_id, self.ID))
         results = []
         if selected:
             for id_key, addon_id, query, content_type, label, thumbnail in selected:
@@ -182,6 +186,8 @@ class PlayHistory:
                                    (kodi.get_plugin_url({'mode': MODES.REFRESH}))),
                                   (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'title': quote(label), 'refresh': 'true'}))),
+                                  (kodi.i18n('export_to_strm'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_STRM, 'row_id': row_id}))),
                                   (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
@@ -232,7 +238,7 @@ class M3UUtils:
         if not from_list:
             from_list = 'history'
         self.from_list = from_list
-        self.filename = filename
+        self.filename = filename if filename.endswith('.m3u') else filename + '.m3u'
 
     def _get(self):
         log_utils.log('M3UUtils._get from_list: |{0!s}|'.format(self.from_list), log_utils.LOGDEBUG)
@@ -242,11 +248,11 @@ class M3UUtils:
             return []
 
     def export(self, results='playthis', ctype='video'):
-        items = self._get()
-        if items:
+        rows = self._get()
+        if rows:
             _m3u = '#EXTM3U\n'
             m3u = _m3u
-            for item, content_type, title, thumb in items:
+            for item, content_type, title, thumb in rows:
                 if content_type != ctype:
                     continue
                 if results == 'resolved':
@@ -270,10 +276,9 @@ class M3UUtils:
                         m3u += '#EXTINF:{0!s} tvg-logo="{3!s}",{1!s}\n{2!s}\n'.format('0', title, item, thumb)
 
             if m3u != _m3u:
-                m3u_file = self.filename if self.filename.endswith('.m3u') else self.filename + '.m3u'
-                log_utils.log('M3UUtils.export writing .m3u: |{0!s}|'.format(m3u_file), log_utils.LOGDEBUG)
+                log_utils.log('M3UUtils.export writing .m3u: |{0!s}|'.format(self.filename), log_utils.LOGDEBUG)
                 try:
-                    with open(m3u_file, 'w+') as f:
+                    with open(self.filename, 'w+') as f:
                         f.write(m3u)
                     log_utils.log('M3UUtils.export writing .m3u completed.', log_utils.LOGDEBUG)
                     kodi.notify(msg=kodi.i18n('export_success'), sound=False)
@@ -283,4 +288,34 @@ class M3UUtils:
                     kodi.notify(msg=kodi.i18n('export_fail'), sound=False)
                     return
         log_utils.log('M3UUtils.export no items for export to .m3u', log_utils.LOGDEBUG)
+        kodi.notify(msg=kodi.i18n('no_items_export'), sound=False)
+
+
+class STRMUtils:
+    def __init__(self, filename):
+        self.filename = filename if filename.endswith('.strm') else filename + '.strm'
+
+    def _get(self, row_id):
+        return PlayHistory().get(row_id=row_id)
+
+    def export(self, row_id):
+        rows = self._get(row_id)
+        if rows:
+            url, content_type, title, thumb = rows[0]
+            play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(url), 'thumb': quote(thumb)}
+            strm = kodi.get_plugin_url(play_path)
+
+            if strm:
+                log_utils.log('STRMUtils.export writing .m3u: |{0!s}|'.format(self.filename), log_utils.LOGDEBUG)
+                try:
+                    with open(self.filename, 'w+') as f:
+                        f.write(strm)
+                    log_utils.log('STRMUtils.export writing .m3u completed.', log_utils.LOGDEBUG)
+                    kodi.notify(msg=kodi.i18n('export_success'), sound=False)
+                    return
+                except:
+                    log_utils.log('STRMUtils.export failed to write .strm', log_utils.LOGDEBUG)
+                    kodi.notify(msg=kodi.i18n('export_fail'), sound=False)
+                    return
+        log_utils.log('STRMUtils.export no item for export to .strm', log_utils.LOGDEBUG)
         kodi.notify(msg=kodi.i18n('no_items_export'), sound=False)

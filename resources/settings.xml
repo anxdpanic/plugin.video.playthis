@@ -13,9 +13,10 @@
         <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
         <setting label="30714" id="clear-cookies" type="action" action="RunPlugin(plugin://$ID/?mode=clearcookies)"/>
     </category>
-    <!-- M3U -->
+    <!-- Export -->
     <category label="30708">
         <setting label="30706" id="export_path" type="folder" source="files" option="writeable"/>
+        <setting label="30715" id="export_path_strm" type="folder" source="files" option="writeable"/>
     </category>
     <!-- Resolvers -->
     <category label="30709">

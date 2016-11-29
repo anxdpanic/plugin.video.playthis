@@ -44,6 +44,7 @@ MODES = __enum(
     ADD='add',
     DELETE='delete',
     URLRESOLVER='urlresolver',
+    EXPORT_STRM='export_strm',
     EXPORT_M3U='export_m3u',
     REFRESH='refresh',
     RENAME='rename',

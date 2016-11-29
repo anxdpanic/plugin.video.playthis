@@ -59,7 +59,10 @@ STRINGS = {
     'cookies_success': 30139,
     'cookies_failed': 30140,
     'cookies_yes_no': 30138,
+    'strm_filename': 30141,
+    'export_to_strm': 30142,
     'general': 30700,
     'history_size_limit': 30701,
-    'export_path': 30706
+    'export_path': 30706,
+    'export_path_strm': 30715
 }

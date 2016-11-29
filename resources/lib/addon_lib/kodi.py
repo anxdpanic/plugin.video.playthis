@@ -44,6 +44,7 @@ sleep = xbmc.sleep
 conditional_visibility = xbmc.getCondVisibility
 get_supported_media = xbmc.getSupportedMedia
 vfs = xbmcvfs
+
 addon = xbmcaddon.Addon()
 get_setting = addon.getSetting
 show_settings = addon.openSettings
@@ -238,6 +239,14 @@ def i18n(string_id):
         return string_id
 
 
+def string_to_filename(string):
+    filename = string.strip()
+    filename = filename.replace(' ', '_')
+    filename = ''.join(c for c in filename if c.isalnum() or c in ('.', '_'))
+    filename = re.sub('_{2,}', '_', filename)
+    return filename
+
+
 def addon_enabled(addon_id):
     rpc_request = {"jsonrpc": "2.0",
                    "method": "Addons.GetAddonDetails",
@@ -296,8 +305,10 @@ def stop_player(player_id=None):
 
 
 def close_dialog(dialog_name, forced=True):
-    if not forced: forced = 'false'
-    else: forced = 'true'
+    if not forced:
+        forced = 'false'
+    else:
+        forced = 'true'
     xbmc.executebuiltin('Dialog.Close(%s,%s)' % (dialog_name, forced))
 
 
@@ -316,16 +327,27 @@ def get_kodi_version():
         match = re.search('\w+:(\w+-\w+)', version)
         if match: revision = match.group(1)
 
-        try: major = int(major)
-        except: major = 0
-        try: minor = int(minor)
-        except: minor = 0
-        try: revision = revision.decode('utf-8')
-        except: revision = u''
-        try: tag = tag.decode('utf-8')
-        except: tag = u''
-        try: tag_version = int(tag_version)
-        except: tag_version = 0
+        try:
+            major = int(major)
+        except:
+            major = 0
+        try:
+            minor = int(minor)
+        except:
+            minor = 0
+        try:
+            revision = revision.decode('utf-8')
+        except:
+            revision = u''
+        try:
+            tag = tag.decode('utf-8')
+        except:
+            tag = u''
+        try:
+            tag_version = int(tag_version)
+        except:
+            tag_version = 0
+
     return KodiVersion
 
 
