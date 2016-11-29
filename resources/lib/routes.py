@@ -20,7 +20,7 @@
 import os
 from addon_lib import kodi, cache
 from addon_lib.utils import PlayHistory, M3UUtils, STRMUtils
-from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR, COOKIE_FILE, THUMBNAILS_DIR
+from addon_lib.constants import DISPATCHER, MODES, COOKIE_FILE, THUMBNAILS_DIR
 from addon_lib.playback import play_this
 from urllib2 import unquote
 
@@ -110,7 +110,7 @@ def export_m3u(export_path=None, from_list='history', ctype='video'):
     if export_path is None:
         export_path = kodi.get_setting('export_path')
         if not export_path:
-            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path'), 'video', '', False, False, ADDON_DATA_DIR)
+            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path'), 'files', '', False, False)
             kodi.set_setting('export_path', export_path)
     if export_path:
         m3u_name = kodi.get_keyboard(kodi.i18n('m3u_filename'), '')
@@ -130,7 +130,7 @@ def export_strm(row_id, export_path=None):
     if export_path is None:
         export_path = kodi.get_setting('export_path_strm')
         if not export_path:
-            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path_strm'), 'video', '', False, False, ADDON_DATA_DIR)
+            export_path = kodi.Dialog().browse(3, kodi.i18n('export_path_strm'), 'files', '', False, False)
             kodi.set_setting('export_path_strm', export_path)
     if export_path:
         default_filename = ''

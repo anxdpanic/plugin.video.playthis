@@ -32,7 +32,7 @@ DATABASE_FILE = kodi.translate_path('special://database/{0!s}{1!s}.db'.format(ko
 DATABASE = db_utils.SQLite(DATABASE_FILE)
 DISPATCHER = URL_Dispatcher()
 
-ADDON_DATA_DIR = kodi.translate_path('special://home/userdata/addon_data/%s/' % kodi.get_id())
+ADDON_DATA_DIR = kodi.translate_path('special://profile/addon_data/%s/' % kodi.get_id())
 THUMBNAILS_DIR = kodi.translate_path('special://masterprofile/Thumbnails/')
 RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
 COOKIE_FILE = kodi.translate_path('special://temp/%s/cookies.lwp' % kodi.get_id())

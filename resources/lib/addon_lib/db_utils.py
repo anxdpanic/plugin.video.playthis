@@ -81,13 +81,15 @@ class SQLite:
             connection.close()
             return result, rowcount
 
-    def execute(self, sql_statement, sql_params=None):
+    def execute(self, sql_statement, sql_params=None, suppress=False):
         """
         wrapper for cursor.execute
         :param sql_statement: str: sql_statement may be parameterized (i. e. placeholders instead of SQL literals)
         :param sql_params: tuple, dict: sql_params supports two kinds of placeholders;
                                         tuple:  question marks (qmark style)
                                         dict:   named placeholders (named style).
+        :param suppress: bool: suppress error log output
+
         :return: int:   0: on error
                         1: sql_statement successfully executed, committed
                         2: duplicate record on insert
@@ -112,7 +114,8 @@ class SQLite:
             return 2
         except sql.Error as e:
             connection.rollback()
-            log_utils.log(str(e), log_utils.LOGERROR)
+            if not suppress:
+                log_utils.log(str(e), log_utils.LOGERROR)
             return 0
         finally:
             cursor.close()

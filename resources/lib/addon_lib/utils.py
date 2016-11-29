@@ -231,7 +231,7 @@ class PlayHistory:
                              END
                              ;
                              '''.format(self.TABLE), '')
-        DATABASE.execute('ALTER TABLE {0!s} ADD COLUMN thumbnail TEXT DEFAULT ""'.format(self.TABLE), '')
+        DATABASE.execute('ALTER TABLE {0!s} ADD COLUMN thumbnail TEXT DEFAULT ""'.format(self.TABLE), '', suppress=True)
 
         exists = DATABASE.fetch('SELECT name FROM sqlite_master WHERE type="table" AND name=?', (self.OLD_TABLE,))
         if exists:
