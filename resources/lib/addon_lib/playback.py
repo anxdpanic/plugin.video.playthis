@@ -30,9 +30,12 @@ from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
-from YDStreamExtractor import _getYoutubeDLVideo
-from youtube_dl import extractor as __extractor
 from constants import RESOLVER_DIR
+
+with kodi.WorkingDialog():
+    from YDStreamExtractor import _getYoutubeDLVideo
+    from youtube_dl import extractor as __extractor
+
 
 socket.setdefaulttimeout(30)
 
@@ -105,7 +108,9 @@ def __get_qt_atom_url(url, headers):
 
 def __get_potential_type(url):
     potential_type = 'text'
-    if any(ext in url for ext in kodi.get_supported_media('music').split('|')):
+    if '.mpd' in url:
+        potential_type = 'mpd'
+    elif any(ext in url for ext in kodi.get_supported_media('music').split('|')):
         potential_type = 'audio'
     elif any(ext in url for ext in kodi.get_supported_media('picture').split('|')):
         potential_type = 'image'
@@ -155,16 +160,23 @@ def __get_content_type_and_headers(url, headers=None):
 
     try:
         response = net.http_HEAD(url, headers=headers)
-        redirect = response.get_url()
-        if redirect != url:
-            log_utils.log('Head request following redirect to: |{0!s}|'.format(url_override), log_utils.LOGDEBUG)
-            url_override = redirect
-            response = net.http_HEAD(url_override, headers=headers)
+        response_headers = response.get_headers(as_dict=True)
+        if 'Set-Cookie' in response_headers:
+            headers.update({'Cookie': response_headers.get('Set-Cookie')})
+        try:
+            redirect = response.get_url()
+            if redirect != url:
+                log_utils.log('Head request following redirect to: |{0!s}|'.format(url_override), log_utils.LOGDEBUG)
+                url_override = redirect
+                response = net.http_HEAD(url_override, headers=headers)
+                response_headers = response.get_headers(as_dict=True)
+                if 'Set-Cookie' in response_headers:
+                    headers.update({'Cookie': response_headers.get('Set-Cookie')})
+        except:
+            pass
     except:
         return {'content_type': potential_type, 'headers': headers, 'url_override': None}
 
-    response_headers = response.get_headers(as_dict=True)
-    headers.update({'Cookie': response_headers.get('Set-Cookie', '')})
 
     clength_header = response_headers.get('Content-Length', '')
     ctype_header = response_headers.get('Content-Type', potential_type)
