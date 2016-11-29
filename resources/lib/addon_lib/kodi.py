@@ -43,7 +43,7 @@ execute_builtin = xbmc.executebuiltin
 sleep = xbmc.sleep
 conditional_visibility = xbmc.getCondVisibility
 get_supported_media = xbmc.getSupportedMedia
-
+vfs = xbmcvfs
 addon = xbmcaddon.Addon()
 get_setting = addon.getSetting
 show_settings = addon.openSettings

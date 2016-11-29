@@ -18,7 +18,6 @@
 """
 
 import os
-import xbmcvfs
 import kodi
 import db_utils
 from url_dispatcher import URL_Dispatcher
@@ -49,6 +48,7 @@ MODES = __enum(
     REFRESH='refresh',
     RENAME='rename',
     CLEARCACHE='clearcache',
+    CLEARCOOKIES='clearcookies',
     YOUTUBEDL='ytdl')
 
 
@@ -58,7 +58,7 @@ def _is_cookie_file(the_file):
         return False
     else:
         try:
-            tmp = xbmcvfs.File(the_file).read()
+            tmp = kodi.vfs.File(the_file).read()
             if tmp.startswith('#LWP-Cookies-2.0'):
                 return True
             return False
@@ -72,9 +72,9 @@ def _is_cookie_file(the_file):
 
 def _create_cookie(the_file):
     try:
-        if xbmcvfs.exists(the_file):
-            xbmcvfs.delete(the_file)
-        _file = xbmcvfs.File(the_file, 'w')
+        if kodi.vfs.exists(the_file):
+            kodi.vfs.delete(the_file)
+        _file = kodi.vfs.File(the_file, 'w')
         _file.write('#LWP-Cookies-2.0\n')
         _file.close()
         return the_file

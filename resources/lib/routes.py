@@ -20,7 +20,7 @@
 import os
 from addon_lib import kodi, cache
 from addon_lib.utils import PlayHistory, M3UUtils
-from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR
+from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR, COOKIE_FILE
 from addon_lib.playback import play_this
 from urllib2 import unquote
 
@@ -125,6 +125,23 @@ def clear_cache():
             kodi.notify(msg=kodi.i18n('cache_success'), sound=False)
         else:
             kodi.notify(msg=kodi.i18n('cache_failed'), sound=False)
+
+
+@DISPATCHER.register(MODES.CLEARCOOKIES)
+def clear_cookies():
+    confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('cookies_yes_no'))
+    if confirmed:
+        try:
+            if kodi.vfs.exists(COOKIE_FILE):
+                result = kodi.vfs.delete(COOKIE_FILE)
+            else:
+                result = True
+        except:
+            result = False
+        if result:
+            kodi.notify(msg=kodi.i18n('cookies_success'), sound=False)
+        else:
+            kodi.notify(msg=kodi.i18n('cookies_failed'), sound=False)
 
 
 @DISPATCHER.register(MODES.URLRESOLVER)

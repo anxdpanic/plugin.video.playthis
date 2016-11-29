@@ -167,6 +167,18 @@ msgctxt "#30137"
 msgid "Checking for potential support"
 msgstr ""
 
+msgctxt "#30138"
+msgid "Clear cookies?"
+msgstr ""
+
+msgctxt "#30139"
+msgid "Clearing cookies successful"
+msgstr ""
+
+msgctxt "#30140"
+msgid "Clearing cookies failed"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
@@ -220,5 +232,9 @@ msgid "youtube-dl settings"
 msgstr ""
 
 msgctxt "#30713"
-msgid "Cache"
+msgid "Maintenance"
+msgstr ""
+
+msgctxt "#30714"
+msgid "Clear cookies"
 msgstr ""

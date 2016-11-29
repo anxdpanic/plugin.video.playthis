@@ -56,6 +56,9 @@ STRINGS = {
     'replaced_with': 30135,
     'using_media_type': 30136,
     'check_for_support': 30137,
+    'cookies_success': 30139,
+    'cookies_failed': 30140,
+    'cookies_yes_no': 30138,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706

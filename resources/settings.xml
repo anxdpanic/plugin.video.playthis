@@ -7,10 +7,11 @@
         <setting type="sep"/>
         <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
     </category>
-    <!-- Cache -->
+    <!-- Maintenance -->
     <category label="30713">
         <setting label="30711" type="slider" id="cache-expire-time" default="1" range="0,8" option="int"/>
         <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
+        <setting label="30714" id="clear-cookies" type="action" action="RunPlugin(plugin://$ID/?mode=clearcookies)"/>
     </category>
     <!-- M3U -->
     <category label="30708">
