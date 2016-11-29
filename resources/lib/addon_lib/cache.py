@@ -24,7 +24,7 @@ import os
 import shutil
 import kodi
 
-cache_path = kodi.translate_path(os.path.join(kodi.get_profile(), 'cache'))
+cache_path = kodi.translate_path(os.path.join('special://temp/%s/cache' % kodi.get_id()))
 try:
     if not os.path.exists(cache_path):
         os.makedirs(cache_path)
