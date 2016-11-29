@@ -187,6 +187,34 @@ msgctxt "#30142"
 msgid "Export to .strm"
 msgstr ""
 
+msgctxt "#30143"
+msgid "Thumbnail source?"
+msgstr ""
+
+msgctxt "#30144"
+msgid "Url to thumbnail"
+msgstr ""
+
+msgctxt "#30145"
+msgid "Local file thumbnail"
+msgstr ""
+
+msgctxt "#30146"
+msgid "Choose your thumbnail"
+msgstr ""
+
+msgctxt "#30147"
+msgid "Input thumbnail location"
+msgstr ""
+
+msgctxt "#30148"
+msgid "Failed to change thumbnail"
+msgstr ""
+
+msgctxt "#30149"
+msgid "Change thumbnail"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""

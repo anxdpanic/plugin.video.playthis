@@ -95,6 +95,13 @@ class PlayHistory:
             kodi.notify(msg=kodi.i18n('rename_failed'), sound=False)
         return result
 
+    def change_thumb(self, row_id, thumb):
+        execute = 'UPDATE {0!s} SET thumbnail=? WHERE id=? AND addon_id=?'.format(self.TABLE)
+        result = DATABASE.execute(execute, (unquote(thumb), row_id, self.ID))
+        if result != 1:
+            kodi.notify(msg=kodi.i18n('thumbchange_failed'), sound=False)
+        return result
+
     def get(self, include_ids=False, row_id=None):
         if row_id is None:
             execute = 'SELECT * FROM {0!s} WHERE addon_id=? ORDER BY id DESC'.format(self.TABLE)
@@ -182,16 +189,15 @@ class PlayHistory:
                                    (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
                                   (kodi.i18n('rename'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.RENAME, 'row_id': row_id, 'refresh': 'true'}))),
-                                  (kodi.i18n('refresh'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.REFRESH}))),
+                                  (kodi.i18n('change_thumb'), 'RunPlugin(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.CHANGETHUMB, 'row_id': row_id, 'refresh': 'true'}))),
+                                  (kodi.i18n('export'), 'Container.Update(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_MENU, 'row_id': row_id, 'ctype': content_type}))),
                                   (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'title': quote(label), 'refresh': 'true'}))),
-                                  (kodi.i18n('export_to_strm'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_STRM, 'row_id': row_id}))),
-                                  (kodi.i18n('export_list_m3u'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': content_type}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type})))]
+                                   (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
+                                  (kodi.i18n('refresh'), 'Container.Refresh')]
                     thumb = icon_path
                     if content_type == 'image':
                         thumb = item

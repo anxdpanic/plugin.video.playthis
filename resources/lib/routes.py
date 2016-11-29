@@ -20,7 +20,7 @@
 import os
 from addon_lib import kodi, cache
 from addon_lib.utils import PlayHistory, M3UUtils, STRMUtils
-from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR, COOKIE_FILE
+from addon_lib.constants import DISPATCHER, MODES, ADDON_DATA_DIR, COOKIE_FILE, THUMBNAILS_DIR
 from addon_lib.playback import play_this
 from urllib2 import unquote
 
@@ -66,6 +66,21 @@ def rename_row_id(row_id, refresh=True):
             kodi.refresh_container()
 
 
+@DISPATCHER.register(MODES.CHANGETHUMB, ['row_id'], ['refresh'])
+def change_thumb_by_row_id(row_id, refresh=True):
+    thumbnail = None
+    choices = [kodi.i18n('local_thumb'), kodi.i18n('url_thumb')]
+    choice = kodi.Dialog().select(kodi.i18n('thumbnail_source'), choices)
+    if choice == 0:
+        thumbnail = kodi.Dialog().browse(2, kodi.i18n('choose_thumbnail'), 'pictures', '', True, False, THUMBNAILS_DIR)
+    elif choice == 1:
+        thumbnail = kodi.get_keyboard(kodi.i18n('input_new_thumb'))
+    if thumbnail and (not thumbnail.endswith('/')) and (not thumbnail.endswith('\\')):
+        result = play_history.change_thumb(row_id, thumbnail)
+        if result and refresh:
+            kodi.refresh_container()
+
+
 @DISPATCHER.register(MODES.DELETE, ['row_id'], ['title', 'refresh'])
 def delete_row(row_id, title='', refresh=True):
     confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), '%s \'%s\'%s' % (kodi.i18n('delete_url'), unquote(title), '?'))
@@ -80,9 +95,14 @@ def play(path, player=True, history=None, thumb=''):
     play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb))
 
 
-@DISPATCHER.register(MODES.REFRESH)
-def refresh():
-    kodi.refresh_container()
+@DISPATCHER.register(MODES.EXPORT_MENU, args=['row_id', 'ctype'])
+def export_context(row_id, ctype):
+    context_items = ['RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.EXPORT_STRM, 'row_id': row_id})),
+                     'RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': ctype}))]
+    select_items = [kodi.i18n('export_to_strm'), kodi.i18n('export_list_m3u')]
+    result = kodi.Dialog().select(kodi.i18n('export'), select_items)
+    if result != -1:
+        kodi.execute_builtin(context_items[result])
 
 
 @DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list', 'ctype'])

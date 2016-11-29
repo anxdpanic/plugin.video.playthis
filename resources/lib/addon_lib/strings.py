@@ -61,8 +61,16 @@ STRINGS = {
     'cookies_yes_no': 30138,
     'strm_filename': 30141,
     'export_to_strm': 30142,
+    'thumbnail_source': 30143,
+    'url_thumb': 30144,
+    'local_thumb': 30145,
+    'choose_thumbnail': 30146,
+    'input_new_thumb': 30147,
+    'thumbchange_failed': 30148,
+    'change_thumb': 30149,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706,
-    'export_path_strm': 30715
+    'export_path_strm': 30715,
+    'export': 30708
 }
