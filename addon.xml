@@ -13,18 +13,13 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- add generalized scraping for sources as fallback if url does not resolve
-- add dash and smil support
-- add basic mimetype detection
-- add content type support (video audio image executable)
-- add attempt to identify and support quicktime atom  ** thanks @tknorris
-- increased history size limits, applies to ALL content types as use cases my still be limited to one type
-- export to M3U exports content specific list
-- delay adding to history until potentially valid source found
-- add labels/rename
-- add function caching, expire time and reset in settings
-- add youtube-dl support
-- add progress dialog
+- add 'Export to .strm'
+- add thumbnail support
+- update and improve dash support
+- update context menu layout
+- change cookie handling
+- change settings category 'Cache' -> 'Maintenance', and add 'Clear Cookies'
+- other minor adjusts, bug fixes, refactoring
         </news>
         <assets>
             <icon>icon.png</icon>
@@ -32,9 +27,9 @@
         </assets>
         <summary lang="en">Find and resolve media from a url to play or open.</summary>
         <description lang="en">
-PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use/exporting to M3U**. Supports video, audio, images and executable***.
+PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use/exporting to .m3u/.strm**. Supports video, audio, images and executable***.
 * resolves using URLResolver and youtube-dl
-** M3U only usable in Kodi w/ PlayThis installed
+** exported .m3u/.strm is only usable in Kodi w/ PlayThis installed
 *** 'executable' items are urls with potential results available through scraping
 
 Companion browser extension available on the Chrome Web Store and Mozilla's AMO Gallery

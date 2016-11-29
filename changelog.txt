@@ -1,3 +1,12 @@
+3.1.0
+- add 'Export to .strm'
+- add thumbnail support
+- update and improve dash support
+- update context menu layout
+- change cookie handling
+- change settings category 'Cache' -> 'Maintenance', and add 'Clear Cookies'
+- other minor adjusts, bug fixes, refactoring
+
 3.0.0
 - add generalized scraping for sources as fallback if url does not resolve
 - add dash and smil support
