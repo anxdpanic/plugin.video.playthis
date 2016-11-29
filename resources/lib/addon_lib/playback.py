@@ -19,6 +19,7 @@
 
 import re
 import urlparse
+import urllib
 import urllib2
 import struct
 import socket
@@ -30,12 +31,11 @@ from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
-from constants import RESOLVER_DIR
+from constants import RESOLVER_DIR, COOKIE_FILE
 
 with kodi.WorkingDialog():
     from YDStreamExtractor import _getYoutubeDLVideo
     from youtube_dl import extractor as __extractor
-
 
 socket.setdefaulttimeout(30)
 
@@ -48,17 +48,34 @@ resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolv
 cache.cache_enabled = user_cache_limit > 0
 
 
-def append_headers(headers):
-    if headers.has_key('Accept-Encoding'):
+def append_headers(headers, url=''):
+    if 'Accept-Encoding' in headers:
         del headers['Accept-Encoding']
-    if headers.has_key('Host'):
+    if 'Host' in headers:
         del headers['Host']
+    if url:
+        cookie_string = ''
+        if 'Cookie' in headers:
+            cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', headers['Cookie']))
+            del headers['Cookie']
+        cookie_jar_result = net.set_cookies(COOKIE_FILE)
+        for c in net._cj:
+            if c.domain and (c.domain.lstrip('.') in url):
+                if c.value not in cookie_string:
+                    cookie_string += '%s=%s;' % (c.name, c.value)
+        if cookie_string:
+            return __append_headers(headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
+
     return __append_headers(headers)
 
 
 def get_default_headers(url):
     parsed_url = urlparse.urlparse(url)
-    return {'User-Agent': common.FF_USER_AGENT,
+    try:
+        user_agent = common.RAND_UA
+    except:
+        user_agent = common.FF_USER_AGENT
+    return {'User-Agent': user_agent,
             'Host': parsed_url.hostname,
             'Accept-Language': 'en',
             'Accept-Encoding': 'gzip, deflate',
@@ -70,11 +87,9 @@ def __get_html_and_headers(url, headers=None):
     if headers is None:
         headers = get_default_headers(url)
     try:
+        cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_GET(url, headers=headers)
-        response_headers = response.get_headers(as_dict=True)
-        cookie = response_headers.get('Set-Cookie', '')
-        if cookie:
-            headers['Cookie'] = headers.get('Cookie', '') + cookie
+        cookie_jar_result = net.save_cookies(COOKIE_FILE)
         contents = response.content
         redirect = response.get_url()
         if ('reddit' in redirect) and ('over18' in redirect):
@@ -83,11 +98,9 @@ def __get_html_and_headers(url, headers=None):
                 {'User-Agent': common.FF_USER_AGENT, 'Content-Type': 'application/x-www-form-urlencoded'})
             data = get_hidden(contents)
             data.update({'over18': 'yes'})
+            cookie_jar_result = net.set_cookies(COOKIE_FILE)
             response = net.http_POST(response.get_url(), form_data=data, headers=post_headers)
-            response_headers = response.get_headers(as_dict=True)
-            cookie = response_headers.get('Set-Cookie', '')
-            if cookie:
-                headers['Cookie'] = headers.get('Cookie', '')
+            cookie_jar_result = net.save_cookies(COOKIE_FILE)
             contents = response.content
         log_utils.log('GET request updated headers: |{0!s}|'.format(headers), log_utils.LOGDEBUG)
         return {'contents': contents, 'headers': headers}
@@ -159,24 +172,23 @@ def __get_content_type_and_headers(url, headers=None):
     potential_type = __get_potential_type(url)
 
     try:
+        cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_HEAD(url, headers=headers)
+        cookie_jar_result = net.save_cookies(COOKIE_FILE)
         response_headers = response.get_headers(as_dict=True)
-        if 'Set-Cookie' in response_headers:
-            headers.update({'Cookie': response_headers.get('Set-Cookie')})
         try:
             redirect = response.get_url()
             if redirect != url:
                 log_utils.log('Head request following redirect to: |{0!s}|'.format(url_override), log_utils.LOGDEBUG)
                 url_override = redirect
+                cookie_jar_result = net.set_cookies(COOKIE_FILE)
                 response = net.http_HEAD(url_override, headers=headers)
+                cookie_jar_result = net.save_cookies(COOKIE_FILE)
                 response_headers = response.get_headers(as_dict=True)
-                if 'Set-Cookie' in response_headers:
-                    headers.update({'Cookie': response_headers.get('Set-Cookie')})
         except:
             pass
     except:
         return {'content_type': potential_type, 'headers': headers, 'url_override': None}
-
 
     clength_header = response_headers.get('Content-Length', '')
     ctype_header = response_headers.get('Content-Type', potential_type)
@@ -683,7 +695,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 kodi.refresh_container()
             working_dialog.update(60)
             if (not stream_url.startswith('plugin://')) and ('|' not in stream_url) and (headers is not None):
-                stream_url += append_headers(headers)
+                stream_url += append_headers(headers, stream_url)
             if len(stream_url.split('|')) > 2:
                 url_parts = stream_url.split('|')
                 stream_url = '%s|%s' % (url_parts[0], url_parts[-1])

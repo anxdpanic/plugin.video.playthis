@@ -17,6 +17,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+import xbmcvfs
 import kodi
 import db_utils
 from url_dispatcher import URL_Dispatcher
@@ -33,6 +35,7 @@ DISPATCHER = URL_Dispatcher()
 
 ADDON_DATA_DIR = kodi.translate_path('special://home/userdata/addon_data/%s/' % kodi.get_id())
 RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
+COOKIE_FILE = kodi.translate_path('special://temp/%s.lwp' % kodi.get_id())
 
 MODES = __enum(
     MAIN='main',
@@ -47,3 +50,42 @@ MODES = __enum(
     RENAME='rename',
     CLEARCACHE='clearcache',
     YOUTUBEDL='ytdl')
+
+
+def _is_cookie_file(the_file):
+    exists = os.path.exists(the_file)
+    if not exists:
+        return False
+    else:
+        try:
+            tmp = xbmcvfs.File(the_file).read()
+            if tmp.startswith('#LWP-Cookies-2.0'):
+                return True
+            return False
+        except:
+            with open(the_file, 'r') as f:
+                tmp = f.readline()
+                if tmp == '#LWP-Cookies-2.0\n':
+                    return True
+                return False
+
+
+def _create_cookie(the_file):
+    try:
+        if xbmcvfs.exists(the_file):
+            xbmcvfs.delete(the_file)
+        _file = xbmcvfs.File(the_file, 'w')
+        _file.write('#LWP-Cookies-2.0\n')
+        _file.close()
+        return the_file
+    except:
+        try:
+            with open(the_file, 'w') as _file:
+                _file.write('#LWP-Cookies-2.0\n')
+            return the_file
+        except:
+            return ''
+
+
+if not _is_cookie_file(COOKIE_FILE):
+    COOKIE_FILE = _create_cookie(COOKIE_FILE)
