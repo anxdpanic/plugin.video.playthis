@@ -425,11 +425,19 @@ def _scrape(url):
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
     _to_list(scrape_supported(url, html, '''src(?<!iframe\s)\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
 
+    title = ''
+    match = re.search('title>\s*(.+?)\s*</title', html)
+    if match:
+        title = match.group(1)
+        try:
+            title = HTMLParser().unescape(title)
+        except:
+            pass
     result_list = []
     for item in unresolved_source_list:
         if item['content_type'] != 'text':
             result_list.append(item)
-    return {'results': result_list, 'headers': result['headers']}
+    return {'results': result_list, 'title': title, 'headers': result['headers']}
 
 
 def scrape(url):
@@ -454,20 +462,21 @@ def scrape(url):
                 headers = result['headers'] if headers is None else headers
                 label = chosen['label'] if label is None else label
                 content_type = chosen['content_type'] if content_type is None else content_type
-                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'thumbnail': thumbnail, 'headers': headers}
+                return {'label': label, 'resolved_url': resolved, 'content_type': content_type, 'unresolved_url': chosen['url'], 'thumbnail': thumbnail, 'title': result['title'],
+                        'headers': headers}
             elif chosen['content_type'] == 'text':
                 ytdl_result = resolve_youtube_dl(chosen['url'])
                 if ytdl_result['resolved_url']:
                     label = chosen['label'] if ytdl_result['label'] is None else ytdl_result['label']
                     headers = result['headers'] if ytdl_result['headers'] is None else ytdl_result['headers']
                     return {'label': label, 'resolved_url': ytdl_result['resolved_url'], 'content_type': ytdl_result['content_type'], 'unresolved_url': chosen['url'],
-                            'thumbnail': ytdl_result['thumbnail'], 'headers': headers}
+                            'thumbnail': ytdl_result['thumbnail'], 'title': result['title'], 'headers': headers}
 
             thumbnail = chosen['url'] if chosen['content_type'] == 'image' else None
             return {'label': chosen['label'], 'resolved_url': chosen['url'], 'content_type': chosen['content_type'], 'unresolved_url': chosen['url'], 'thumbnail': thumbnail,
-                    'headers': result['headers']}
+                    'title': result['title'], 'headers': result['headers']}
 
-    return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'thumbnail': None, 'headers': None}
+    return {'label': None, 'resolved_url': None, 'content_type': None, 'unresolved_url': None, 'thumbnail': None, 'title': None, 'headers': None}
 
 
 def __check_smil_dash(source, headers):
@@ -612,6 +621,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             headers = scrape_result['headers']
             if scrape_result['thumbnail']:
                 source_thumbnail = scrape_result['thumbnail']
+            if scrape_result['title']:
+                label = scrape_result['title']
             if source:
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
                               .format(source), log_utils.LOGDEBUG)
@@ -643,7 +654,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, content_type, label if label else item)
+                play_history.add(history_item, content_type, label if label else item, urllib2.quote(thumbnail))
             working_dialog.update(40)
             if override_content_type and override_history:
                 history_item = stream_url
@@ -653,7 +664,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, override_content_type, source_label)
+                play_history.add(history_item, override_content_type, source_label, urllib2.quote(source_thumbnail))
             if player == 'history':
                 return
             if history_item:

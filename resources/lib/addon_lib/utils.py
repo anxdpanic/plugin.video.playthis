@@ -49,12 +49,13 @@ class PlayHistory:
             table = self.TABLE
         DATABASE.execute('VACUUM {0!s}'.format(table))
 
-    def add(self, url, content_type, label=None):
+    def add(self, url, content_type, label=None, thumb=''):
         if label is None:
             label = url
         label = unquote(label)
-        execute = 'INSERT INTO {0!s} (addon_id, url, content_type, label) VALUES (?, ?, ?, ?)'.format(self.TABLE)
-        inserted = DATABASE.execute(execute, (self.ID, str(url), str(content_type), label))
+        thumb = unquote(thumb)
+        execute = 'INSERT INTO {0!s} (addon_id, url, content_type, label, thumbnail) VALUES (?, ?, ?, ?, ?)'.format(self.TABLE)
+        inserted = DATABASE.execute(execute, (self.ID, str(url), str(content_type), label, thumb))
         if inserted == 1:
             execute = 'SELECT COUNT(*) FROM {0!s} WHERE addon_id=?'.format(self.TABLE)
             result = int(DATABASE.fetch(execute, (self.ID,))[0][0])
@@ -99,11 +100,11 @@ class PlayHistory:
         selected = DATABASE.fetch(execute, (self.ID,))
         results = []
         if selected:
-            for id_key, addon_id, query, content_type, label in selected:
+            for id_key, addon_id, query, content_type, label, thumbnail in selected:
                 if not include_ids:
-                    results.extend([(unquote(query), content_type, label)])
+                    results.extend([(unquote(query), content_type, label, unquote(thumbnail))])
                 else:
-                    results.extend([(id_key, unquote(query), content_type, label)])
+                    results.extend([(id_key, unquote(query), content_type, label, unquote(thumbnail))])
             return results
         else:
             return []
@@ -156,7 +157,7 @@ class PlayHistory:
         if self.size_limit() != 0:
             _queries = self.get(include_ids=True)
             queries = []
-            for index, (row_id, item, content_type, label) in enumerate(_queries):
+            for index, (row_id, item, content_type, label, thumbnail) in enumerate(_queries):
                 if content_type == ctype:
                     queries += [_queries[index]]
             if len(queries) > 0:
@@ -169,8 +170,8 @@ class PlayHistory:
                                  '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
                 """
-                for row_id, item, content_type, label in queries:
-                    play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item)}
+                for row_id, item, content_type, label, thumbnail in queries:
+                    play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item), 'thumb': quote(thumbnail)}
                     if ctype == 'image':
                         play_path = item
                     menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
@@ -188,13 +189,14 @@ class PlayHistory:
                     thumb = icon_path
                     if content_type == 'image':
                         thumb = item
+                    if thumbnail:
+                        thumb = thumbnail
                     info = {'title': label}
                     if content_type == 'audio':
                         info.update({'mediatype': 'song'})
-                    elif content_type == 'image':
-                        info.update({'mediatype': 'image'})
-                    else:
-                        info.update({'mediatype': 'episode'})
+                    elif content_type == 'video':
+                        info.update({'mediatype': 'video'})
+
                     kodi.create_item(play_path,
                                      label, thumb=thumb, fanart=fanart_path, is_folder=False,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
@@ -208,7 +210,7 @@ class PlayHistory:
     def create_table(self):
         DATABASE.execute('CREATE TABLE IF NOT EXISTS {0!s} (id INTEGER PRIMARY KEY AUTOINCREMENT, '
                          'addon_id, url, content_type TEXT DEFAULT "video", label TEXT DEFAULT "Unknown", '
-                         'CONSTRAINT unq UNIQUE (addon_id, url, content_type) )'.format(self.TABLE), '')
+                         'thumbnail TEXT DEFAULT "", CONSTRAINT unq UNIQUE (addon_id, url, content_type) )'.format(self.TABLE), '')
         DATABASE.execute('''CREATE TRIGGER IF NOT EXISTS default_label_url
                              AFTER INSERT ON {0!s}
                              WHEN new.label="Unknown"
@@ -217,6 +219,8 @@ class PlayHistory:
                              END
                              ;
                              '''.format(self.TABLE), '')
+        DATABASE.execute('ALTER TABLE {0!s} ADD COLUMN thumbnail TEXT DEFAULT ""'.format(self.TABLE), '')
+
         exists = DATABASE.fetch('SELECT name FROM sqlite_master WHERE type="table" AND name=?', (self.OLD_TABLE,))
         if exists:
             DATABASE.execute('INSERT INTO {0!s} (addon_id, url) SELECT addon_id, url FROM {1!s}'.format(self.TABLE, self.OLD_TABLE), '')
@@ -242,7 +246,7 @@ class M3UUtils:
         if items:
             _m3u = '#EXTM3U\n'
             m3u = _m3u
-            for item, content_type, title in items:
+            for item, content_type, title, thumb in items:
                 if content_type != ctype:
                     continue
                 if results == 'resolved':
@@ -252,18 +256,18 @@ class M3UUtils:
                 if resolved:
                     log_utils.log('M3UUtils.export adding resolved item: |{0!s}| as |{1!s}|'.format(resolved, title),
                                   log_utils.LOGDEBUG)
-                    m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, resolved)
+                    m3u += '#EXTINF:{0!s} tvg-logo="{3!s}",{1!s}\n{2!s}\n'.format('0', title, resolved, thumb)
                 else:
                     if results == 'playthis':
                         pt_url = 'plugin://plugin.video.playthis/?mode=play&player=false&history=false&path={0!s}' \
                             .format(quote(item))
                         log_utils.log('M3UUtils.export adding PlayThis item: |{0!s}| as |{1!s}|'.format(pt_url, title),
                                       log_utils.LOGDEBUG)
-                        m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, pt_url)
+                        m3u += '#EXTINF:{0!s} tvg-logo="{3!s}",{1!s}\n{2!s}\n'.format('0', title, pt_url, thumb)
                     else:
                         log_utils.log('M3UUtils.export adding unresolved item: |{0!s}| as |{1!s}|'.format(item, title),
                                       log_utils.LOGDEBUG)
-                        m3u += '#EXTINF:{0!s},{1!s}\n{2!s}\n'.format('0', title, item)
+                        m3u += '#EXTINF:{0!s} tvg-logo="{3!s}",{1!s}\n{2!s}\n'.format('0', title, item, thumb)
 
             if m3u != _m3u:
                 m3u_file = self.filename if self.filename.endswith('.m3u') else self.filename + '.m3u'

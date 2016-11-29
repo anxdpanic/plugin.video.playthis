@@ -75,9 +75,9 @@ def delete_row(row_id, title='', refresh=True):
             kodi.refresh_container()
 
 
-@DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history'])
-def play(path, player=True, history=None):
-    play_this(unquote(path), player=player, history=history)
+@DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history', 'thumbnail'])
+def play(path, player=True, history=None, thumb=''):
+    play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb))
 
 
 @DISPATCHER.register(MODES.REFRESH)
