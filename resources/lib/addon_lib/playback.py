@@ -369,7 +369,10 @@ def resolve_youtube_dl(url):
     headers = None
     thumbnail = None
     content_type = 'video'
-    source = _getYoutubeDLVideo(url, resolve_redirects=True)
+    try:
+        source = _getYoutubeDLVideo(url, resolve_redirects=True)
+    except:
+        source = None
     if source:
         stream_url = source.selectedStream()['xbmc_url']
         title = source.title
