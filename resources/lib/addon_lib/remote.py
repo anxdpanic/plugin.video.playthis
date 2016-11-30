@@ -87,7 +87,7 @@ class HttpJSONRPC:
         try:
             response = urllib2.urlopen(request)
         except urllib2.HTTPError as e:
-            error = 'JSON-RPC received HTTPError |%s| : |%s|' % (e.code, e.msg)
+            error = 'JSON-RPC received HTTPError |[Code %s] %s|' % (e.code, e.msg)
             log_utils.log(error, log_utils.LOGINFO)
             return {'error': 'HTTPError |[Code %s] %s|' % (e.code, e.msg)}
         except urllib2.URLError as e:
