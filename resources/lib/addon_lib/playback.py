@@ -518,9 +518,9 @@ def __check_smil_dash(source, headers):
 
 def play(source, player=True):
     if source['content_type'] == 'image':
-        player_open = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
+        command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
         log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
-        response = kodi.execute_jsonrpc(player_open)
+        response = kodi.execute_jsonrpc(command)
     else:
         playback_item = kodi.ListItem(label=source['info']['title'], path=source['url'])
         playback_item.setProperty('IsPlayable', 'true')
@@ -701,7 +701,6 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 stream_url = '%s|%s' % (url_parts[0], url_parts[-1])
 
             working_dialog.update(80)
-            player_stopped = kodi.stop_player()
             if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
                 log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
                 kodi.execute_builtin('RunPlugin(%s)' % stream_url)

@@ -23,4 +23,13 @@
         <setting label="30705" id="urlresolver-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=urlresolver)"/>
         <setting label="30712" id="youtube-dl-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=ytdl)"/>
     </category>
+    <!-- Remote -->
+    <category label="30716">
+        <setting label="30717" id="remote-ip" type="ipaddress" default=""/>
+        <setting label="30718" id="remote-port" type="number" default="8080"/>
+        <setting label="30719" id="remote-username" type="text" default="kodi"/>
+        <setting label="30720" id="remote-password" type="text" option="hidden" default=""/>
+        <setting label="30721" type="lsep"/>
+        <setting label="30722" type="lsep"/>
+    </category>
 </settings>

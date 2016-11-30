@@ -68,6 +68,8 @@ STRINGS = {
     'input_new_thumb': 30147,
     'thumbchange_failed': 30148,
     'change_thumb': 30149,
+    'cast_remote_playthis': 30150,
+    'cast_success': 30151,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706,

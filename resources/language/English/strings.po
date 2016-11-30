@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Addon Name: PlayThis
 # Addon id: plugin.video.playthis
 # Addon Provider: anxdpanic
@@ -215,6 +216,14 @@ msgctxt "#30149"
 msgid "Change thumbnail"
 msgstr ""
 
+msgctxt "#30150"
+msgid "Cast to remote PlayThis"
+msgstr ""
+
+msgctxt "#30151"
+msgid "Remote/Cast request successful"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""
@@ -277,4 +286,32 @@ msgstr ""
 
 msgctxt "#30715"
 msgid "STRM export path"
+msgstr ""
+
+msgctxt "#30716"
+msgid "Remote/Cast"
+msgstr ""
+
+msgctxt "#30717"
+msgid "IP address"
+msgstr ""
+
+msgctxt "#30718"
+msgid "Port"
+msgstr ""
+
+msgctxt "#30719"
+msgid "Username"
+msgstr ""
+
+msgctxt "#30720"
+msgid "Password"
+msgstr ""
+
+msgctxt "#30721"
+msgid "This requires PlayThis and the 'Allow remote control via HTTP'[CR]setting to be enabled and configured on your remote Kodi installation."
+msgstr ""
+
+msgctxt "#30722"
+msgid "[CR]Settings → Services → Webserver/Control → Allow control of Kodi via HTTP"
 msgstr ""

@@ -21,10 +21,8 @@ import os
 from addon_lib import kodi, cache
 from addon_lib.utils import PlayHistory, M3UUtils, STRMUtils
 from addon_lib.constants import DISPATCHER, MODES, COOKIE_FILE, THUMBNAILS_DIR
-from addon_lib.playback import play_this
+from addon_lib.remote import HttpJSONRPC
 from urllib2 import unquote
-
-play_history = PlayHistory()
 
 
 @DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
@@ -37,23 +35,28 @@ def main_route(content_type='executable'):
     elif content_type == 'video':
         content = 'videos'
     kodi.set_content(content)
+    play_history = PlayHistory()
     if play_history.use_directory():
         play_history.history_directory(content_type)
     else:
         playback_item = play_history.history_dialog(content_type)
         if playback_item:
+            from addon_lib.playback import play_this
             play_this(unquote(playback_item), player=True)
 
 
 @DISPATCHER.register(MODES.NEW, kwargs=['player'])
 def get_new_item(player=True):
+    play_history = PlayHistory()
     playback_item = play_history.get_input()
     if playback_item:
+        from addon_lib.playback import play_this
         play_this(unquote(playback_item), title=unquote(playback_item), player=player)
 
 
 @DISPATCHER.register(MODES.ADD, ['path'])
 def add_url(path):
+    from addon_lib.playback import play_this
     play_this(path, title=path, player='history')
 
 
@@ -61,6 +64,7 @@ def add_url(path):
 def rename_row_id(row_id, refresh=True):
     label = kodi.get_keyboard(kodi.i18n('input_new_label'))
     if label:
+        play_history = PlayHistory()
         result = play_history.rename_row_id(row_id, label)
         if result and refresh:
             kodi.refresh_container()
@@ -76,6 +80,7 @@ def change_thumb_by_row_id(row_id, refresh=True):
     elif choice == 1:
         thumbnail = kodi.get_keyboard(kodi.i18n('input_new_thumb'))
     if thumbnail and (not thumbnail.endswith('/')) and (not thumbnail.endswith('\\')):
+        play_history = PlayHistory()
         result = play_history.change_thumb(row_id, thumbnail)
         if result and refresh:
             kodi.refresh_container()
@@ -85,14 +90,44 @@ def change_thumb_by_row_id(row_id, refresh=True):
 def delete_row(row_id, title='', refresh=True):
     confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), '%s \'%s\'%s' % (kodi.i18n('delete_url'), unquote(title), '?'))
     if confirmed:
+        play_history = PlayHistory()
         result, rowcount = play_history.delete_row_id(row_id)
         if (result, rowcount) == (1, 1) and refresh:
             kodi.refresh_container()
 
 
-@DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history', 'thumbnail'])
-def play(path, player=True, history=None, thumb=''):
-    play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb))
+@DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history', 'thumb', 'title'])
+def play(path, player=True, history=None, thumb='', title=''):
+    from addon_lib.playback import play_this
+    play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb), title=unquote(title))
+
+
+@DISPATCHER.register(MODES.CASTREMOTE, ['path'], ['thumb', 'title'])
+def play(path, thumb='', title=''):
+    rpc_client = HttpJSONRPC()
+    command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.GetActivePlayers'}
+    response = rpc_client.execute_rpc(command)
+    if 'error' in response:
+        kodi.notify(kodi.get_name(), response['error'], duration=7000)
+        return
+    try:
+        player_id = response['result'][0]['playerid']
+    except IndexError:
+        player_id = None
+    if player_id == 2:  # stop picture player if active, it will block
+        command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Stop', 'params': {'playerid': player_id}}
+        response = rpc_client.execute_rpc(command)
+        if 'error' in response:
+            kodi.notify(kodi.get_name(), response['error'], duration=7000)
+            return
+    filename = kodi.get_plugin_url({'mode': MODES.PLAY, 'player': 'false', 'path': path, 'thumb': thumb, 'title': title})
+    command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': filename}}}
+    response = rpc_client.execute_rpc(command)
+    if 'error' in response:
+        kodi.notify(kodi.get_name(), response['error'], duration=7000)
+    else:
+        if 'No Response' not in response['result']:
+            kodi.notify(kodi.get_name(), kodi.i18n('cast_success'))
 
 
 @DISPATCHER.register(MODES.EXPORT_MENU, args=['row_id', 'ctype'])
@@ -133,6 +168,7 @@ def export_strm(row_id, export_path=None):
             kodi.set_setting('export_path_strm', export_path)
     if export_path:
         default_filename = ''
+        play_history = PlayHistory()
         rows = play_history.get(row_id=row_id)
         if rows:
             url, content_type, title, thumb = rows[0]
@@ -156,6 +192,7 @@ def clear_history(ctype=None):
         ltype = 'all'
     confirmed = kodi.Dialog().yesno(kodi.i18n('confirm'), kodi.i18n('clear_yes_no') % ltype)
     if confirmed:
+        play_history = PlayHistory()
         play_history.clear(ctype)
         kodi.refresh_container()
 

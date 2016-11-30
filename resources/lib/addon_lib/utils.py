@@ -21,8 +21,8 @@ import re
 from addon_lib import kodi
 from addon_lib import log_utils
 from addon_lib.constants import DATABASE, MODES
-from addon_lib.playback import resolve
 from urllib2 import quote, unquote
+from remote import HttpJSONRPC
 
 
 class PlayHistory:
@@ -198,6 +198,11 @@ class PlayHistory:
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
                                   (kodi.i18n('refresh'), 'Container.Refresh')]
+
+                    if HttpJSONRPC().has_connection_details:
+                        cast_path = {'mode': MODES.CASTREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
+                        menu_items.append((kodi.i18n('cast_remote_playthis'), 'RunPlugin(%s)' % (kodi.get_plugin_url(cast_path))))
+
                     thumb = icon_path
                     if content_type == 'image':
                         thumb = item
@@ -214,7 +219,7 @@ class PlayHistory:
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
                                      content_type=content_type, info=info)
         if not total_items:
-            menu_items = [(kodi.i18n('refresh'), 'RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.REFRESH})))]
+            menu_items = [(kodi.i18n('refresh'), 'Container.Refresh')]
             kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, kodi.i18n('new_'), thumb=icon_path,
                              fanart=fanart_path, is_folder=False, is_playable=False, menu_items=menu_items)
         kodi.end_of_directory(cache_to_disc=False)
@@ -254,6 +259,11 @@ class M3UUtils:
             return []
 
     def export(self, results='playthis', ctype='video'):
+        if results == 'resolved':
+            from addon_lib.playback import resolve
+        else:
+            def resolve(url):
+                return url
         rows = self._get()
         if rows:
             _m3u = '#EXTM3U\n'
