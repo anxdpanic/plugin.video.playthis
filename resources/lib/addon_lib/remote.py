@@ -59,7 +59,7 @@ class HttpJSONRPC:
         self.has_connection_details = self.ip_address and self.port and self.username and self.password
         self.url = 'http://%s:%s/jsonrpc' % (self.ip_address, self.port) if self.has_connection_details else None
         self.authorization = base64.b64encode(self.username + b':' + self.password) if self.has_connection_details else None
-        self.headers = {'User-Agent': '%s/%s.%s' % (kodi.get_name(), kodi.get_kodi_version().major, kodi.get_kodi_version().minor),
+        self.headers = {'User-Agent': '%s/%s' % (kodi.get_name(), kodi.get_version()),
                         'Content-Type': 'application/json'}
         if self.authorization:
             self.headers.update({'Authorization': b'Basic ' + self.authorization})
