@@ -97,12 +97,11 @@ def play(path, player=True, history=None, thumb=''):
 
 @DISPATCHER.register(MODES.EXPORT_MENU, args=['row_id', 'ctype'])
 def export_context(row_id, ctype):
-    context_items = ['RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.EXPORT_STRM, 'row_id': row_id})),
-                     'RunPlugin(%s)' % (kodi.get_plugin_url({'mode': MODES.EXPORT_M3U, 'ctype': ctype}))]
+    context_items = ['export_strm(row_id=row_id)', 'export_m3u(ctype=ctype)']
     select_items = [kodi.i18n('export_to_strm'), kodi.i18n('export_list_m3u')]
     result = kodi.Dialog().select(kodi.i18n('export'), select_items)
     if result != -1:
-        kodi.execute_builtin(context_items[result])
+        eval(context_items[result])
 
 
 @DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list', 'ctype'])
