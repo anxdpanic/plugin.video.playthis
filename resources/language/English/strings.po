@@ -224,6 +224,10 @@ msgctxt "#30151"
 msgid "Remote/Cast request successful"
 msgstr ""
 
+msgctxt "#30152"
+msgid "Manage"
+msgstr ""
+
 msgctxt "#30700"
 msgid "History"
 msgstr ""

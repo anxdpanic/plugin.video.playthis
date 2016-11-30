@@ -188,14 +188,10 @@ class PlayHistory:
                         play_path = item
                     menu_items = [(kodi.i18n('new_'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.NEW, 'player': 'true'}))),
-                                  (kodi.i18n('rename'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.RENAME, 'row_id': row_id, 'refresh': 'true'}))),
-                                  (kodi.i18n('change_thumb'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.CHANGETHUMB, 'row_id': row_id, 'refresh': 'true'}))),
+                                  (kodi.i18n('manage'), 'Container.Update(%s)' %
+                                   (kodi.get_plugin_url({'mode': MODES.MANAGE_MENU, 'row_id': row_id, 'title': quote(label)}))),
                                   (kodi.i18n('export'), 'Container.Update(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.EXPORT_MENU, 'row_id': row_id, 'ctype': content_type}))),
-                                  (kodi.i18n('delete_url'), 'RunPlugin(%s)' %
-                                   (kodi.get_plugin_url({'mode': MODES.DELETE, 'row_id': row_id, 'title': quote(label), 'refresh': 'true'}))),
                                   (kodi.i18n('clear_history'), 'RunPlugin(%s)' %
                                    (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
                                   (kodi.i18n('refresh'), 'Container.Refresh')]

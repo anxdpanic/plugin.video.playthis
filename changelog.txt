@@ -2,6 +2,7 @@
 - add 'Cast to remote PlayThis'
 - add 'Export to .strm'
 - add thumbnail support
+- performance improvement
 - update and improve dash support
 - update context menu layout
 - change cookie handling

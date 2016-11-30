@@ -70,6 +70,7 @@ STRINGS = {
     'change_thumb': 30149,
     'cast_remote_playthis': 30150,
     'cast_success': 30151,
+    'manage': 30152,
     'general': 30700,
     'history_size_limit': 30701,
     'export_path': 30706,

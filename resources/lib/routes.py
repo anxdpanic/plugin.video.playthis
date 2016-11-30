@@ -139,6 +139,15 @@ def export_context(row_id, ctype):
         eval(context_items[result])
 
 
+@DISPATCHER.register(MODES.MANAGE_MENU, args=['row_id', 'title'])
+def manage_context(row_id, title):
+    context_items = ['rename_row_id(row_id=row_id)', 'change_thumb_by_row_id(row_id=row_id)', 'delete_row(row_id=row_id, title=unquote(title))']
+    select_items = [kodi.i18n('rename'), kodi.i18n('change_thumb'), kodi.i18n('delete_url')]
+    result = kodi.Dialog().select(kodi.i18n('manage'), select_items)
+    if result != -1:
+        eval(context_items[result])
+
+
 @DISPATCHER.register(MODES.EXPORT_M3U, kwargs=['export_path', 'from_list', 'ctype'])
 def export_m3u(export_path=None, from_list='history', ctype='video'):
     if export_path is None:

@@ -53,7 +53,8 @@ MODES = __enum(
     CLEARCACHE='clearcache',
     CLEARCOOKIES='clearcookies',
     YOUTUBEDL='ytdl',
-    EXPORT_MENU='export_menu')
+    EXPORT_MENU='export_menu',
+    MANAGE_MENU='manage_menu')
 
 
 def _is_cookie_file(the_file):
