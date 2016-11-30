@@ -52,7 +52,7 @@ import log_utils
 
 class HttpJSONRPC:
     def __init__(self, ip_address=None, port=None, username=None, password=None):
-        self.ip_address = kodi.get_setting('remote-ip').strip() if ip_address is None else ip_address
+        self.ip_address = kodi.get_setting('remote-ip') if ip_address is None else ip_address
         self.port = kodi.get_setting('remote-port') if port is None else port
         self.username = kodi.get_setting('remote-username').strip() if username is None else username
         self.password = kodi.get_setting('remote-password') if password is None else password
