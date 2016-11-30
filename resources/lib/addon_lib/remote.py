@@ -119,4 +119,4 @@ class HttpJSONRPC:
         elif 'result' in response:
             return {'result': response['result']}
         else:
-            return {'error': 'JSON-RPC an unknown error occurred'}
+            return {'error': 'JSON-RPC received an unknown response'}
