@@ -32,13 +32,11 @@ from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data, append_headers
 from constants import RESOLVER_DIR, COOKIE_FILE, ICONS
-from youtube_dl import extractor as __extractor
 
 socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
 dash_supported = common.has_addon('inputstream.adaptive')
-net = common.Net()
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
@@ -50,20 +48,30 @@ def get_url_with_headers(url, headers):
         del headers['Accept-Encoding']
     if 'Host' in headers:
         del headers['Host']
-    url = url.split('|')[0]
+    parts = url.split('|')
+    url = parts[0]
+    url_headers = {}
+    if len(parts) > 1:
+        for i in re.finditer('(?:&|^)([^=]+)=(.+?)(?:&|$)', parts[-1]):
+            if (i.group(1) == 'Cookie') and ('Cookie' in headers):
+                headers['Cookie'] += urllib.unquote_plus(i.group(2))
+            else:
+                url_headers.update({i.group(1): urllib.unquote_plus(i.group(2))})
+    url_headers.update(headers)
     cookie_string = ''
-    if 'Cookie' in headers:
-        cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', headers['Cookie']))
-        del headers['Cookie']
+    if 'Cookie' in url_headers:
+        cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', url_headers['Cookie']))
+        del url_headers['Cookie']
+    net = common.Net()
     cookie_jar_result = net.set_cookies(COOKIE_FILE)
     for c in net._cj:
         if c.domain and (c.domain.lstrip('.') in url):
             if c.value not in cookie_string:
                 cookie_string += '%s=%s;' % (c.name, c.value)
     if cookie_string:
-        return url + append_headers(headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
+        return url + append_headers(url_headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
 
-    return url + append_headers(headers)
+    return url + append_headers(url_headers)
 
 
 def get_default_headers(url):
@@ -84,6 +92,7 @@ def __get_html_and_headers(url, headers=None):
     if headers is None:
         headers = get_default_headers(url)
     try:
+        net = common.Net()
         cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_GET(url, headers=headers)
         cookie_jar_result = net.save_cookies(COOKIE_FILE)
@@ -132,6 +141,7 @@ def __get_potential_type(url):
 
 @cache.cache_function(cache_limit=23)
 def __get_gen_extractors():
+    from youtube_dl import extractor as __extractor
     return __extractor.gen_extractors()
 
 
@@ -169,6 +179,7 @@ def __get_content_type_and_headers(url, headers=None):
     potential_type = __get_potential_type(url)
 
     try:
+        net = common.Net()
         cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_HEAD(url, headers=headers)
         cookie_jar_result = net.save_cookies(COOKIE_FILE)
@@ -482,8 +493,10 @@ def scrape(url):
                 content_type = None
                 headers = None
                 thumbnail = None
-                resolved = resolve(chosen['url'], title=chosen['label'])
-                if not resolved:
+                resolved = None
+                if chosen['resolver'] == 'URLResolver':
+                    resolved = resolve(chosen['url'], title=chosen['label'])
+                if chosen['resolver'] == 'youtube-dl' or not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
                     label = ytdl_result['label']
                     resolved = ytdl_result['resolved_url']
