@@ -159,16 +159,17 @@ def __get_gen_extractors_names():
 
 
 def ytdl_supported(url):
-    extractors = __get_gen_extractors()
-    for extractor in extractors:
-        if extractor.suitable(url) and extractor.IE_NAME != 'generic':
-            return True
-    return False
-
-
-def ytdl_candidate(url):
     names = __get_gen_extractors_names()
-    return any(name in url for name in names)
+    name = None
+    hostname = urlparse.urlparse(url).hostname
+    if any(((name in hostname) or (hostname in name)) for name in names):
+        name = next(name for name in names if ((name in hostname) or (hostname in name)))
+    if name:
+        extractors = __get_gen_extractors()
+        for extractor in extractors:
+            if (extractor.IE_NAME != 'generic') and (name.lower() in extractor.IE_NAME.split(':')[0].lower()) and (extractor.suitable(url)):
+                return True
+    return False
 
 
 def __get_content_type_and_headers(url, headers=None):
@@ -277,6 +278,8 @@ def scrape_supported(url, html, regex):
                     stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
 
                 host = urlparse.urlparse(stream_url).hostname
+                if host is None:
+                    continue
                 label = host
                 if (len(match) > 2) and (match[2] is not None) and (match[2].strip()) and (host not in match[2]):
                     label = match[2].strip()
@@ -326,14 +329,12 @@ def scrape_supported(url, html, regex):
                     continue
                 else:
                     if potential_type == 'text':
-                        if ytdl_candidate(stream_url):
-                            ytdl_valid = ytdl_supported(stream_url)
-                            if ytdl_valid:
-                                progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                                       '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
-                                                       '[%s]: %s' % (label, stream_url))
-                                links.append({'label': label, 'url': stream_url, 'resolver': 'youtube-dl', 'content_type': 'video'})
-                                continue
+                        if ytdl_supported(stream_url):
+                            progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                                   '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
+                                                   '[%s]: %s' % (label, stream_url))
+                            links.append({'label': label, 'url': stream_url, 'resolver': 'youtube-dl', 'content_type': 'video'})
+                            continue
                         progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                                '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
                                                '[%s]: %s' % (label, stream_url))
@@ -632,21 +633,22 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                         if progress_dialog.is_canceled():
                             break
                         progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
-                        ytdl_result = resolve_youtube_dl(item)
-                        if ytdl_result['resolved_url']:
-                            headers = ytdl_result['headers']
-                            label = ytdl_result['label'] if ytdl_result['label'] is not None else label
-                            source_thumbnail = ytdl_result['thumbnail'] if ytdl_result['thumbnail'] is not None else source_thumbnail
-                            log_utils.log('Source |{0}| found by |youtube-dl|'
-                                          .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
-                            sd_result = __check_smil_dash(ytdl_result['resolved_url'], headers)
-                            source = sd_result['url']
-                            is_dash = sd_result['is_dash']
-                            if source:
-                                progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
-                                                       '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
-                                                       '%s: %s' % (kodi.i18n('resolution_successful'), source))
-                                stream_url = source
+                        if ytdl_supported(item):
+                            ytdl_result = resolve_youtube_dl(item)
+                            if ytdl_result['resolved_url']:
+                                headers = ytdl_result['headers']
+                                label = ytdl_result['label'] if ytdl_result['label'] is not None else label
+                                source_thumbnail = ytdl_result['thumbnail'] if ytdl_result['thumbnail'] is not None else source_thumbnail
+                                log_utils.log('Source |{0}| found by |youtube-dl|'
+                                              .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
+                                sd_result = __check_smil_dash(ytdl_result['resolved_url'], headers)
+                                source = sd_result['url']
+                                is_dash = sd_result['is_dash']
+                                if source:
+                                    progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
+                                                           '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
+                                                           '%s: %s' % (kodi.i18n('resolution_successful'), source))
+                                    stream_url = source
 
                 if not progress_dialog.is_canceled():
                     progress_dialog.update(100, ' ', kodi.i18n('resolution_completed'), ' ')
