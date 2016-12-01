@@ -193,11 +193,11 @@ msgid "Thumbnail source"
 msgstr ""
 
 msgctxt "#30144"
-msgid "Url to thumbnail"
+msgid "Change thumbnail by url"
 msgstr ""
 
 msgctxt "#30145"
-msgid "Local file thumbnail"
+msgid "Change thumbnail by file"
 msgstr ""
 
 msgctxt "#30146"

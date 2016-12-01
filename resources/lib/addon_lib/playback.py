@@ -30,13 +30,9 @@ import log_utils
 import cache
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data
-from urlresolver.plugins.lib.helpers import append_headers as __append_headers
+from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data, append_headers
 from constants import RESOLVER_DIR, COOKIE_FILE
 from youtube_dl import extractor as __extractor
-
-with kodi.WorkingDialog():
-    from YDStreamExtractor import _getYoutubeDLVideo
 
 socket.setdefaulttimeout(30)
 
@@ -49,25 +45,25 @@ resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolv
 cache.cache_enabled = user_cache_limit > 0
 
 
-def append_headers(headers, url=''):
+def get_url_with_headers(url, headers):
     if 'Accept-Encoding' in headers:
         del headers['Accept-Encoding']
     if 'Host' in headers:
         del headers['Host']
-    if url:
-        cookie_string = ''
-        if 'Cookie' in headers:
-            cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', headers['Cookie']))
-            del headers['Cookie']
-        cookie_jar_result = net.set_cookies(COOKIE_FILE)
-        for c in net._cj:
-            if c.domain and (c.domain.lstrip('.') in url):
-                if c.value not in cookie_string:
-                    cookie_string += '%s=%s;' % (c.name, c.value)
-        if cookie_string:
-            return __append_headers(headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
+    url = url.split('|')[0]
+    cookie_string = ''
+    if 'Cookie' in headers:
+        cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', headers['Cookie']))
+        del headers['Cookie']
+    cookie_jar_result = net.set_cookies(COOKIE_FILE)
+    for c in net._cj:
+        if c.domain and (c.domain.lstrip('.') in url):
+            if c.value not in cookie_string:
+                cookie_string += '%s=%s;' % (c.name, c.value)
+    if cookie_string:
+        return url + append_headers(headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
 
-    return __append_headers(headers)
+    return url + append_headers(headers)
 
 
 def get_default_headers(url):
@@ -371,11 +367,13 @@ def resolve_youtube_dl(url):
     thumbnail = None
     content_type = 'video'
     try:
+        from YDStreamExtractor import _getYoutubeDLVideo
         source = _getYoutubeDLVideo(url, resolve_redirects=True)
     except:
         source = None
     if source:
-        stream_url = source.selectedStream()['xbmc_url']
+        selected_stream = source.selectedStream()
+        stream_url = selected_stream['xbmc_url']
         title = source.title
         thumbnail = source.thumbnail
         label = None if title.lower().startswith('http') else title
@@ -383,7 +381,6 @@ def resolve_youtube_dl(url):
             label = HTMLParser().unescape(label)
         except:
             pass
-        selected_stream = source.selectedStream()
         if 'ytdl_format' in selected_stream and 'formats' in selected_stream['ytdl_format']:
             formats = selected_stream['ytdl_format']['formats']
             format_id = selected_stream['formatID']
@@ -697,11 +694,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             if history_item:
                 kodi.refresh_container()
             working_dialog.update(60)
-            if (not stream_url.startswith('plugin://')) and ('|' not in stream_url) and (headers is not None):
-                stream_url += append_headers(headers, stream_url)
-            if len(stream_url.split('|')) > 2:
-                url_parts = stream_url.split('|')
-                stream_url = '%s|%s' % (url_parts[0], url_parts[-1])
+            if (not stream_url.startswith('plugin://')) and (headers is not None):
+                stream_url = get_url_with_headers(stream_url, headers)
 
             working_dialog.update(80)
             if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
