@@ -189,7 +189,7 @@ msgid "Export to .strm"
 msgstr ""
 
 msgctxt "#30143"
-msgid "Thumbnail source?"
+msgid "Thumbnail source"
 msgstr ""
 
 msgctxt "#30144"
