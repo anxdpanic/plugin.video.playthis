@@ -34,7 +34,7 @@
         </assets>
         <summary lang="en">Find and resolve media from a url to play or open.</summary>
         <description lang="en">
-PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use/exporting to .m3u/.strm**. Supports video, audio, images and executable***.
+PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use, exporting to .m3u/.strm** and casting to a remote PlayThis add-on. Supports video, audio, images and executable***.
 * resolves using URLResolver and youtube-dl
 ** exported .m3u/.strm is only usable in Kodi w/ PlayThis installed
 *** 'executable' items are urls with potential results available through scraping
