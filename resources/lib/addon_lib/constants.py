@@ -33,7 +33,7 @@ DATABASE = db_utils.SQLite(DATABASE_FILE)
 DISPATCHER = URL_Dispatcher()
 
 ADDON_DATA_DIR = kodi.translate_path('special://profile/addon_data/%s/' % kodi.get_id())
-THUMBNAILS_DIR = kodi.translate_path('special://masterprofile/Thumbnails/')
+THUMBNAILS_DIR = kodi.translate_path('special://thumbnails/')
 RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
 COOKIE_FILE = kodi.translate_path('special://temp/%s/cookies.lwp' % kodi.get_id())
 
@@ -55,6 +55,12 @@ MODES = __enum(
     YOUTUBEDL='ytdl',
     EXPORT_MENU='export_menu',
     MANAGE_MENU='manage_menu')
+
+ICONS = __enum(
+    ADDON=kodi.translate_path('special://home/addons/{0!s}/icon.png'.format(kodi.get_id())),
+    KODI=kodi.translate_path('special://xbmc/media/icon256x256.png'),
+    URLRESOLVER=kodi.translate_path('special://home/addons/script.module.urlresolver/icon.png'),
+    YOUTUBEDL=kodi.translate_path('special://home/addons/script.module.youtube.dl/icon.png'))
 
 
 def _is_cookie_file(the_file):

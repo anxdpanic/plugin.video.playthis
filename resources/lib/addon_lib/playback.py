@@ -31,7 +31,7 @@ import cache
 from HTMLParser import HTMLParser
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data, append_headers
-from constants import RESOLVER_DIR, COOKIE_FILE
+from constants import RESOLVER_DIR, COOKIE_FILE, ICONS
 from youtube_dl import extractor as __extractor
 
 socket.setdefaulttimeout(30)
@@ -404,6 +404,12 @@ def __pick_source(sources):
                 icon = ''
                 if source['content_type'] == 'image':
                     icon = source['url']
+                elif not source['resolver']:
+                    icon = ICONS.KODI
+                elif source['resolver'] == 'youtube-dl':
+                    icon = ICONS.YOUTUBEDL
+                elif source['resolver'] == 'URLResolver':
+                    icon = ICONS.URLRESOLVER
                 l_item = kodi.ListItem(label=title, label2=label2)
                 l_item.setArt({'icon': icon, 'thumb': icon})
                 listitem_sources.append(l_item)
