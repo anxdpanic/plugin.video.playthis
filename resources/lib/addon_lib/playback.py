@@ -692,7 +692,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             play_history = utils.PlayHistory()
             working_dialog.update(20)
             if history or player == 'history':
-                history_item = item
+                history_item = item.split('|')[0]
                 if '%' not in history_item:
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
@@ -703,6 +703,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 history_item = stream_url
                 if history_item.startswith('plugin://') or unresolved_source:
                     history_item = unresolved_source
+                history_item = history_item.split('|')[0]
                 if '%' not in history_item:
                     history_item = urllib2.quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
