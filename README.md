@@ -1,7 +1,7 @@
 ![PlayThis](https://raw.githubusercontent.com/anxdpanic/plugin.video.playthis/master/icon.png)
 #PlayThis
 
-The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a url to play or open. A history list is available for future use/exporting to M3U<sup>2</sup>. Supports video, audio, images and executable<sup>3</sup>.
+The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a url to play or open. A history list is available for future use, exporting to .m3u/.strm<sup>2</sup> and casting to a remote PlayThis add-on. Supports video, audio, images and executable<sup>3</sup>.
 * <sup>1</sup> resolves using URLResolver and youtube-dl
 * <sup>2</sup> M3U only usable in Kodi w/ PlayThis installed
 * <sup>3</sup> 'executable' items are urls with potential results available through scraping
@@ -17,7 +17,7 @@ The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a ur
 - Usage
     -
 
-    Enter url in dialog, choose from history, send url from web browser, add to favorites from history/M3U, curate history list and export to M3U, or create a strm.  
+    Enter url in dialog, choose from history, send url from web browser, add to favorites from history/M3U, curate history list and export to M3U, or create/export a strm.  
 
     _**example.strm**_
     ```
