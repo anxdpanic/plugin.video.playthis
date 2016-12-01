@@ -18,6 +18,7 @@
 """
 
 import re
+import sys
 import urlparse
 import urllib
 import urllib2
@@ -32,10 +33,10 @@ from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data
 from urlresolver.plugins.lib.helpers import append_headers as __append_headers
 from constants import RESOLVER_DIR, COOKIE_FILE
+from youtube_dl import extractor as __extractor
 
 with kodi.WorkingDialog():
     from YDStreamExtractor import _getYoutubeDLVideo
-    from youtube_dl import extractor as __extractor
 
 socket.setdefaulttimeout(30)
 
@@ -291,7 +292,7 @@ def scrape_supported(url, html, regex):
                 canceled = True
             break
         if canceled:
-            return []
+            sys.exit(0)
 
     progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.5)
     canceled = False
@@ -339,7 +340,7 @@ def scrape_supported(url, html, regex):
                 canceled = True
             break
         if canceled:
-            return []
+            sys.exit(0)
     return links
 
 
@@ -559,7 +560,6 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
     if item.startswith('http'):
         progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item)
-        canceled = False
         with progress_dialog:
             while not progress_dialog.is_canceled():
                 url_override = __check_for_new_url(item)
@@ -634,11 +634,11 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                 if not progress_dialog.is_canceled():
                     progress_dialog.update(100, ' ', kodi.i18n('resolution_completed'), ' ')
+                    break
                 else:
-                    canceled = True
-                break
+                    sys.exit(0)
 
-        if not stream_url and not canceled:
+        if not stream_url:
             content_type = 'executable'
             scrape_result = scrape(item)
             source = scrape_result['resolved_url']
