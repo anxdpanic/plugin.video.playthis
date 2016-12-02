@@ -255,16 +255,13 @@ def scrape_supported(url, html, regex):
     links = []
     _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss']
     sources = []
-    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.2)
-    canceled = False
-    with progress_dialog:
+    with kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.2) as progress_dialog:
         while not progress_dialog.is_canceled():
             new_iter = re.findall(regex, html, re.DOTALL)
             len_iter = len(new_iter)
             for index, match in enumerate(new_iter):
                 if progress_dialog.is_canceled():
-                    canceled = True
-                    break
+                    sys.exit(0)
                 percent = int((float(index) / float(len_iter)) * 100)
                 stream_url = match[0]
                 if stream_url == '#' or stream_url == '//' or '/' not in stream_url or not re.match('^[hruf:/].+', stream_url) or \
@@ -299,20 +296,17 @@ def scrape_supported(url, html, regex):
                 progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('added'), label), stream_url)
                 sources.append((label, stream_url))
             if progress_dialog.is_canceled():
-                canceled = True
+                sys.exit(0)
             break
-        if canceled:
+        if progress_dialog.is_canceled():
             sys.exit(0)
 
-    progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.1)
-    canceled = False
-    with progress_dialog:
+    with kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.1) as progress_dialog:
         while not progress_dialog.is_canceled():
             len_iter = len(sources)
             for index, source in enumerate(sources):
                 if progress_dialog.is_canceled():
-                    canceled = True
-                    break
+                    sys.exit(0)
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
@@ -345,9 +339,9 @@ def scrape_supported(url, html, regex):
                     links.append({'label': label, 'url': stream_url, 'resolver': None, 'content_type': potential_type})
                     continue
             if progress_dialog.is_canceled():
-                canceled = True
+                sys.exit(0)
             break
-        if canceled:
+        if progress_dialog.is_canceled():
             sys.exit(0)
     return links
 
@@ -576,8 +570,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     history_item = None
 
     if item.startswith('http'):
-        progress_dialog = kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item)
-        with progress_dialog:
+        with kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item) as progress_dialog:
             while not progress_dialog.is_canceled():
                 url_override = __check_for_new_url(item)
                 if item != url_override:
@@ -613,7 +606,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                 elif content_type == 'text':
                     if progress_dialog.is_canceled():
-                        break
+                        sys.exit(0)
                     progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: URLResolver' % kodi.i18n('attempt_resolve_with'), ' ')
                     content_type = 'video'
                     headers.update({'Referer': item})
@@ -631,7 +624,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
                     if not stream_url:
                         if progress_dialog.is_canceled():
-                            break
+                            sys.exit(0)
                         progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
                         if ytdl_supported(item):
                             ytdl_result = resolve_youtube_dl(item)
