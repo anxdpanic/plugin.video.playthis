@@ -13,6 +13,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
+- add Setting to 'Remote/Send' - 'Resolve/scrape locally'
 - minor progress dialog fixes
 - minor string updates
         </news>

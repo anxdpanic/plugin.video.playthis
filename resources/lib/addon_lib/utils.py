@@ -173,15 +173,10 @@ class PlayHistory:
                     queries += [_queries[index]]
             if len(queries) > 0:
                 total_items = len(queries)
-                """
-                kodi.create_item({'mode': MODES.NEW, 'player': 'true'}, '[B]{0!s}[/B]'.format(kodi.i18n('new_')),
-                                 thumb=icon_path, fanart=fanart_path, is_folder=False, is_playable=False,
-                                 total_items=total_items)
-                kodi.create_item({'mode': MODES.CLEARHISTORY, 'ctype': ctype},
-                                 '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
-                                 thumb=icon_path, fanart=fanart_path, total_items=total_items)
-                """
+
                 can_remote_send = HttpJSONRPC().has_connection_details
+                resolve_locally = kodi.get_setting('resolve-locally') == 'true'
+
                 for row_id, item, content_type, label, thumbnail in queries:
                     play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item), 'thumb': quote(thumbnail)}
                     if ctype == 'image':
@@ -197,7 +192,10 @@ class PlayHistory:
                                   (kodi.i18n('refresh'), 'Container.Refresh')]
 
                     if can_remote_send:
-                        send_path = {'mode': MODES.SENDREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
+                        if resolve_locally:
+                            send_path = {'mode': MODES.PLAY, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label), 'player': 'remote'}
+                        else:
+                            send_path = {'mode': MODES.SENDREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
                         menu_items.append((kodi.i18n('send_remote_playthis'), 'RunPlugin(%s)' % (kodi.get_plugin_url(send_path))))
 
                     thumb = icon_path

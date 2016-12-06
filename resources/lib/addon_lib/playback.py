@@ -29,9 +29,10 @@ import utils
 import log_utils
 import cache
 from HTMLParser import HTMLParser
+from remote import HttpJSONRPC
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data, append_headers
-from constants import RESOLVER_DIR, COOKIE_FILE, ICONS
+from constants import RESOLVER_DIR, COOKIE_FILE, ICONS, MODES
 
 socket.setdefaulttimeout(30)
 
@@ -531,26 +532,60 @@ def __check_smil_dash(source, headers):
     return {'url': source, 'is_dash': is_dash}
 
 
-def play(source, player=True):
-    if source['content_type'] == 'image':
-        command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
-        log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
-        response = kodi.execute_jsonrpc(command)
+def remote_play(source):
+    rpc_client = HttpJSONRPC()
+    command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.GetActivePlayers'}
+    response = rpc_client.execute_rpc(command)
+    if 'error' in response:
+        kodi.notify(kodi.get_name(), response['error'], duration=7000)
+        return
+    try:
+        player_id = response['result'][0]['playerid']
+    except IndexError:
+        player_id = None
+    if player_id == 2:  # stop picture player if active, it will block
+        command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Stop', 'params': {'playerid': player_id}}
+        response = rpc_client.execute_rpc(command)
+        if 'error' in response:
+            kodi.notify(kodi.get_name(), response['error'], duration=7000)
+            return
+    if source['is_dash']:
+        filename = kodi.get_plugin_url({'mode': MODES.PLAY, 'player': 'false', 'path': urllib2.quote(source['url']),
+                                        'thumb': urllib2.quote(source['art']['thumb']), 'title': urllib2.quote(source['info']['title'])})
     else:
-        playback_item = kodi.ListItem(label=source['info']['title'], path=source['url'])
-        playback_item.setProperty('IsPlayable', 'true')
-        playback_item.setArt(source['art'])
-        playback_item.addStreamInfo(source['content_type'], {})
-        if source['is_dash']:
-            playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-            playback_item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
-        playback_item.setInfo(source['content_type'], source['info'])
-        if player:
-            log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
-            kodi.Player().play(source['url'], playback_item)
+        filename = source['url']
+    command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': filename}}}
+    response = rpc_client.execute_rpc(command)
+    if 'error' in response:
+        kodi.notify(kodi.get_name(), response['error'], duration=7000)
+    else:
+        if 'No Response' not in response['result']:
+            kodi.notify(kodi.get_name(), kodi.i18n('send_success'))
+
+
+def play(source, player=True):
+    if player == 'remote':
+        remote_play(source)
+    else:
+        if source['content_type'] == 'image':
+            command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
+            log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+            response = kodi.execute_jsonrpc(command)
         else:
-            log_utils.log('Play using set_resolved_url: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
-            kodi.set_resolved_url(playback_item)
+            playback_item = kodi.ListItem(label=source['info']['title'], path=source['url'])
+            playback_item.setProperty('IsPlayable', 'true')
+            playback_item.setArt(source['art'])
+            playback_item.addStreamInfo(source['content_type'], {})
+            if source['is_dash']:
+                playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                playback_item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
+            playback_item.setInfo(source['content_type'], source['info'])
+            if player:
+                log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+                kodi.Player().play(source['url'], playback_item)
+            else:
+                log_utils.log('Play using set_resolved_url: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
+                kodi.set_resolved_url(playback_item)
 
 
 def play_this(item, title='', thumbnail='', player=True, history=None):

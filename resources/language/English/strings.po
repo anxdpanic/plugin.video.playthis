@@ -319,3 +319,7 @@ msgstr ""
 msgctxt "#30722"
 msgid "[CR]Settings → Services → Webserver/Control → Allow control of Kodi via HTTP"
 msgstr ""
+
+msgctxt "#30723"
+msgid "Resolve/scrape locally"
+msgstr ""

@@ -100,7 +100,7 @@ def play(path, player=True, history=None, thumb='', title=''):
 
 
 @DISPATCHER.register(MODES.SENDREMOTE, ['path'], ['thumb', 'title'])
-def play(path, thumb='', title=''):
+def play_remote(path, thumb='', title=''):
     rpc_client = HttpJSONRPC()
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.GetActivePlayers'}
     response = rpc_client.execute_rpc(command)
