@@ -217,11 +217,11 @@ msgid "Change thumbnail"
 msgstr ""
 
 msgctxt "#30150"
-msgid "Cast to remote PlayThis"
+msgid "Send to remote PlayThis"
 msgstr ""
 
 msgctxt "#30151"
-msgid "Remote/Cast request successful"
+msgid "Remote/Send request successful"
 msgstr ""
 
 msgctxt "#30152"
@@ -293,7 +293,7 @@ msgid "STRM export path"
 msgstr ""
 
 msgctxt "#30716"
-msgid "Remote/Cast"
+msgid "Remote/Send"
 msgstr ""
 
 msgctxt "#30717"

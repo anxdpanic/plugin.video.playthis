@@ -99,7 +99,7 @@ def play(path, player=True, history=None, thumb='', title=''):
     play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb), title=unquote(title))
 
 
-@DISPATCHER.register(MODES.CASTREMOTE, ['path'], ['thumb', 'title'])
+@DISPATCHER.register(MODES.SENDREMOTE, ['path'], ['thumb', 'title'])
 def play(path, thumb='', title=''):
     rpc_client = HttpJSONRPC()
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.GetActivePlayers'}
@@ -124,7 +124,7 @@ def play(path, thumb='', title=''):
         kodi.notify(kodi.get_name(), response['error'], duration=7000)
     else:
         if 'No Response' not in response['result']:
-            kodi.notify(kodi.get_name(), kodi.i18n('cast_success'))
+            kodi.notify(kodi.get_name(), kodi.i18n('send_success'))
 
 
 @DISPATCHER.register(MODES.EXPORT_MENU, args=['row_id', 'ctype'])

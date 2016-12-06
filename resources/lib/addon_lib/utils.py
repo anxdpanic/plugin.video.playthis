@@ -181,7 +181,7 @@ class PlayHistory:
                                  '[B]{0!s}[/B]'.format(kodi.i18n('clear_history')),
                                  thumb=icon_path, fanart=fanart_path, total_items=total_items)
                 """
-                can_remote_cast = HttpJSONRPC().has_connection_details
+                can_remote_send = HttpJSONRPC().has_connection_details
                 for row_id, item, content_type, label, thumbnail in queries:
                     play_path = {'mode': MODES.PLAY, 'player': 'false', 'history': 'false', 'path': quote(item), 'thumb': quote(thumbnail)}
                     if ctype == 'image':
@@ -196,9 +196,9 @@ class PlayHistory:
                                    (kodi.get_plugin_url({'mode': MODES.CLEARHISTORY, 'ctype': content_type}))),
                                   (kodi.i18n('refresh'), 'Container.Refresh')]
 
-                    if can_remote_cast:
-                        cast_path = {'mode': MODES.CASTREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
-                        menu_items.append((kodi.i18n('cast_remote_playthis'), 'RunPlugin(%s)' % (kodi.get_plugin_url(cast_path))))
+                    if can_remote_send:
+                        send_path = {'mode': MODES.SENDREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
+                        menu_items.append((kodi.i18n('send_remote_playthis'), 'RunPlugin(%s)' % (kodi.get_plugin_url(send_path))))
 
                     thumb = icon_path
                     if content_type == 'image':

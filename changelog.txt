@@ -1,5 +1,9 @@
+3.1.1
+- minor progress dialog fixes
+- minor string updates
+
 3.1.0
-- add 'Cast to remote PlayThis'
+- add 'Send to remote PlayThis'
 - add 'Export to .strm'
 - add thumbnail support
 - performance improvement
