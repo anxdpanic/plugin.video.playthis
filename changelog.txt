@@ -1,3 +1,6 @@
+3.2.1
+- jsonrpc now uses POST instead of GET
+
 3.2.0
 - add inputstream.rtmp and inputstream.hls
 - remove twitch from runplugin exceptions
