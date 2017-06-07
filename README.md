@@ -1,5 +1,5 @@
 ![PlayThis](https://raw.githubusercontent.com/anxdpanic/plugin.video.playthis/master/icon.png)
-#PlayThis
+# PlayThis
 
 The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a url to play or open. A history list is available for future use, exporting to .m3u/.strm<sup>2</sup> and sending to a remote PlayThis add-on. Supports video, audio, images and executable<sup>3</sup>.
 * <sup>1</sup> resolves using URLResolver and youtube-dl
