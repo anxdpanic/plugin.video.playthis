@@ -84,6 +84,8 @@ class HttpJSONRPC:
         null_response = None
         data = json.dumps(command)
         request = urllib2.Request(self.url, headers=self.headers, data=data)
+        method = 'POST'
+        request.get_method = lambda: method
         try:
             response = urllib2.urlopen(request)
         except urllib2.HTTPError as e:
