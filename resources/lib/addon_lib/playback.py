@@ -36,7 +36,7 @@ from constants import RESOLVER_DIR, COOKIE_FILE, ICONS, MODES
 
 socket.setdefaulttimeout(30)
 
-RUNPLUGIN_EXCEPTIONS = ['plugin.video.twitch']
+RUNPLUGIN_EXCEPTIONS = []
 dash_supported = common.has_addon('inputstream.adaptive')
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
