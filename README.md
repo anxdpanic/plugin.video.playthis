@@ -29,7 +29,7 @@ The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a ur
     - Download extension from [Chrome Web Store](https://chrome.google.com/webstore/detail/playthis/adddkaonokkecefokdanjpaamfajogel)
     - GitHub: [PlayThis \(Google Chrome\)](https://github.com/anxdpanic/PlayThis-Extension/tree/chrome#playthis-google-chrome)
 
-    _**Firefox 47+ Context Menu**_
+    _**Firefox 53+ Context Menu**_
 
     - Download extension from [AMO Gallery](https://addons.mozilla.org/en-US/firefox/addon/playthis/)
     - GitHub: [PlayThis \(Firefox\)](https://github.com/anxdpanic/PlayThis-Extension/tree/firefox#playthis-firefox)
