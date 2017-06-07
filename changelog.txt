@@ -1,3 +1,7 @@
+3.2.0
+- add inputstream.rtmp and inputstream.hls
+- remove twitch from runplugin exceptions
+
 3.1.1
 - add Setting to 'Remote/Send' - 'Resolve/scrape locally'
 - minor progress dialog fixes

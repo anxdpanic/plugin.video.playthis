@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.1.1"
+       version="3.2.0"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
@@ -13,9 +13,8 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- add Setting to 'Remote/Send' - 'Resolve/scrape locally'
-- minor progress dialog fixes
-- minor string updates
+- add inputstream.rtmp and inputstream.hls
+- remove twitch from runplugin exceptions
         </news>
         <assets>
             <icon>icon.png</icon>
