@@ -1,3 +1,6 @@
+3.2.2
+- resolve breaking change from urlresolver
+
 3.2.1
 - jsonrpc now uses POST instead of GET
 
