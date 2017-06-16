@@ -31,8 +31,15 @@ import cache
 from HTMLParser import HTMLParser
 from remote import HttpJSONRPC
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, add_packed_data, append_headers
+from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, append_headers
 from constants import RESOLVER_DIR, COOKIE_FILE, ICONS, MODES
+
+try:
+    from urlresolver.plugins.lib.helpers import add_packed_data
+    get_packed_data = None
+except ImportError:
+    from urlresolver.plugins.lib.helpers import get_packed_data
+    add_packed_data = None
 
 socket.setdefaulttimeout(30)
 
@@ -441,7 +448,10 @@ def __pick_source(sources):
 def _scrape(url):
     unresolved_source_list = []
     result = __get_html_and_headers(url)
-    html = add_packed_data(result['contents'])
+    if add_packed_data is not None:
+        html = add_packed_data(result['contents'])
+    else:
+        html += get_packed_data(result['contents'])
 
     def _to_list(items):
         for lstitem in items:
