@@ -451,7 +451,7 @@ def _scrape(url):
     if add_packed_data is not None:
         html = add_packed_data(result['contents'])
     else:
-        html += get_packed_data(result['contents'])
+        html = result['contents'] + get_packed_data(result['contents'])
 
     def _to_list(items):
         for lstitem in items:
