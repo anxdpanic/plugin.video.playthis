@@ -36,9 +36,11 @@ from constants import RESOLVER_DIR, COOKIE_FILE, ICONS, MODES
 
 try:
     from urlresolver.plugins.lib.helpers import add_packed_data
+
     get_packed_data = None
 except ImportError:
     from urlresolver.plugins.lib.helpers import get_packed_data
+
     add_packed_data = None
 
 socket.setdefaulttimeout(30)
@@ -358,7 +360,8 @@ def scrape_supported(url, html, regex):
 
 @cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve(url, title=''):
-    add_plugin_dirs(RESOLVER_DIR)
+    if kodi.Addon('script.module.urlresolver').getAddonInfo('version') == '3.0.32':
+        add_plugin_dirs(RESOLVER_DIR)
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
     source = HostedMediaFile(url=url, title=title, include_disabled=False)
     if not source:

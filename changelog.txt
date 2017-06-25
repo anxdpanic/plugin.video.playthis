@@ -1,3 +1,6 @@
+3.3.0.1
+- add external resolvers
+
 3.2.2
 - resolve breaking change from urlresolver
 
