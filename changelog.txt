@@ -1,3 +1,7 @@
+3.3.0.3
+- remove external resolver plugins
+- resolve requiring to back out of add-on twice
+
 3.3.0.1
 - add external resolvers
 
