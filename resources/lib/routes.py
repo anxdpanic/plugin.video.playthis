@@ -26,7 +26,9 @@ from urllib2 import unquote
 
 
 @DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
-def main_route(content_type='executable'):
+def main_route(content_type=''):
+    if not content_type:
+        return
     content = 'files'
     if content_type == 'audio':
         content = 'songs'
