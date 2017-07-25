@@ -322,7 +322,7 @@ def scrape_supported(url, html, regex):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
-                hmf = HostedMediaFile(url=stream_url)
+                hmf = HostedMediaFile(url=stream_url, include_disabled=False, include_xxx=True)
                 potential_type = __get_potential_type(stream_url)
                 is_valid = hmf.valid_url()
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
@@ -363,7 +363,7 @@ def resolve(url, title=''):
     if kodi.Addon('script.module.urlresolver').getAddonInfo('version') == '3.0.32':
         add_plugin_dirs(RESOLVER_DIR)
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
-    source = HostedMediaFile(url=url, title=title, include_disabled=False)
+    source = HostedMediaFile(url=url, title=title, include_disabled=False, include_xxx=True)
     if not source:
         log_utils.log('Not supported by URLResolver: |{0!s}|'.format(url), log_utils.LOGDEBUG)
         return None
