@@ -1,3 +1,6 @@
+3.3.0.5
+- add xxx smu resolvers
+
 3.3.0.3
 - remove external resolver plugins
 - resolve requiring to back out of add-on twice
