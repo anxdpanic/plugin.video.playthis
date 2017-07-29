@@ -1,3 +1,6 @@
+3.3.0.6
+- minor refactor of xxx
+
 3.3.0.5
 - add xxx smu resolvers
 

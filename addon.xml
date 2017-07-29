@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.3.0.5"
+       version="3.3.0.6"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.20.0"/>
-        <import addon="script.module.urlresolver" version="3.0.34"/>
+        <import addon="script.module.urlresolver" version="3.4.0"/>
         <import addon="script.module.urlresolver.xxx"/>
         <import addon="script.module.youtube.dl"/>
     </requires>
@@ -14,7 +14,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- add xxx smu resolvers
+- minor refactor of xxx
         </news>
         <assets>
             <icon>icon.png</icon>
