@@ -32,7 +32,7 @@ from HTMLParser import HTMLParser
 from remote import HttpJSONRPC
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, append_headers
-from constants import RESOLVER_DIR, COOKIE_FILE, ICONS, MODES
+from constants import RESOLVER_DIRS, COOKIE_FILE, ICONS, MODES
 
 try:
     from urlresolver.plugins.lib.helpers import add_packed_data
@@ -322,7 +322,7 @@ def scrape_supported(url, html, regex):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
-                hmf = HostedMediaFile(url=stream_url, include_disabled=False, include_xxx=True)
+                hmf = HostedMediaFile(url=stream_url, include_disabled=False)
                 potential_type = __get_potential_type(stream_url)
                 is_valid = hmf.valid_url()
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
@@ -360,10 +360,15 @@ def scrape_supported(url, html, regex):
 
 @cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve(url, title=''):
-    if kodi.Addon('script.module.urlresolver').getAddonInfo('version') == '3.0.32':
-        add_plugin_dirs(RESOLVER_DIR)
+    resolver_dirs = []
+    for plugin_path in RESOLVER_DIRS:
+        if kodi.vfs.exists(plugin_path):
+            resolver_dirs.append(plugin_path)
+    if resolver_dirs:
+        add_plugin_dirs(resolver_dirs)
+
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
-    source = HostedMediaFile(url=url, title=title, include_disabled=False, include_xxx=True)
+    source = HostedMediaFile(url=url, title=title, include_disabled=False)
     if not source:
         log_utils.log('Not supported by URLResolver: |{0!s}|'.format(url), log_utils.LOGDEBUG)
         return None

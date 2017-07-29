@@ -34,7 +34,9 @@ DISPATCHER = URL_Dispatcher()
 
 ADDON_DATA_DIR = kodi.translate_path('special://profile/addon_data/%s/' % kodi.get_id())
 THUMBNAILS_DIR = kodi.translate_path('special://thumbnails/')
-RESOLVER_DIR = kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id()))
+RESOLVER_DIRS = [kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/'.format(kodi.get_id())),
+                 kodi.translate_path('special://home/addons/script.module.urlresolver.xxx/resources/plugins/')]
+
 COOKIE_FILE = kodi.translate_path('special://temp/%s/cookies.lwp' % kodi.get_id())
 
 MODES = __enum(
