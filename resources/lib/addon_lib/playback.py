@@ -29,6 +29,7 @@ import utils
 import log_utils
 import cache
 from HTMLParser import HTMLParser
+from distutils.version import LooseVersion
 from remote import HttpJSONRPC
 from urlresolver import common, add_plugin_dirs, HostedMediaFile
 from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, append_headers
@@ -48,7 +49,10 @@ socket.setdefaulttimeout(30)
 RUNPLUGIN_EXCEPTIONS = []
 dash_supported = common.has_addon('inputstream.adaptive')
 inputstream_rtmp = common.has_addon('inputstream.rtmp')
-inputstream_hls = common.has_addon('inputstream.hls')
+adaptive_version = None
+if dash_supported:
+    adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
+hls_supported = False if adaptive_version is None else (adaptive_version >= LooseVersion('2.0.10')) # Kodi 17.4
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
@@ -597,14 +601,16 @@ def play(source, player=True):
             playback_item.setArt(source['art'])
             playback_item.addStreamInfo(source['content_type'], {})
             if source['is_dash']:
+                playback_item.setContentLookup(False)
+                playback_item.setMimeType('application/xml+dash')
                 playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
                 playback_item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
             elif (source['url'].startswith('rtmp')) and (inputstream_rtmp):
                 if kodi.addon_enabled('inputstream.rtmp'):
                     playback_item.setProperty('inputstreamaddon', 'inputstream.rtmp')
-            elif (source['url'].endswith('m3u8')) and (inputstream_hls):
-                if kodi.addon_enabled('inputstream.hls'):
-                    playback_item.setProperty('inputstreamaddon', 'inputstream.hls')
+            elif (source['url'].endswith('m3u8')) and (hls_supported):
+                    playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                    playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             playback_item.setInfo(source['content_type'], source['info'])
             if player:
                 log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
