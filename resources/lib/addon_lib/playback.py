@@ -223,7 +223,7 @@ def __get_content_type_and_headers(url, headers=None):
         log_utils.log('HEAD request returned MIME type: |{0!s}/{1!s}| and headers: |{2!s}|'
                       .format(media, subtype, response_headers), log_utils.LOGDEBUG)
         content_type = media
-        if (content_type == 'application') and (subtype == 'dash+xml'):
+        if (content_type == 'application') and ((subtype == 'dash+xml') or ((subtype == 'xml') and url.endswith('.mpd'))):
             content_type = 'mpd'
         elif (content_type == 'application') and (subtype == 'smil+xml'):
             content_type = 'smil'
