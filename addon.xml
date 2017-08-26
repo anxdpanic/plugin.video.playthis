@@ -14,7 +14,9 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- minor refactor of xxx
+- Kodi 16 + required
+- use inputstream.adaptive for hls if supported
+- expand check for dash content type
         </news>
         <assets>
             <icon>icon.png</icon>
