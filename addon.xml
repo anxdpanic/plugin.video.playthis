@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.3.0.6"
+       version="3.4.0"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
@@ -17,6 +17,7 @@
 - Kodi 16 + required
 - use inputstream.adaptive for hls if supported
 - expand check for dash content type
+- fix single source return
         </news>
         <assets>
             <icon>icon.png</icon>

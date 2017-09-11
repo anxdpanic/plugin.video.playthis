@@ -2,6 +2,7 @@
 - Kodi 16 + required
 - use inputstream.adaptive for hls if supported
 - expand check for dash content type
+- fix single source return
 
 3.3.0.6
 - minor refactor of xxx
