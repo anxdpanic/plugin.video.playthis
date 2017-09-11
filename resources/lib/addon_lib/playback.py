@@ -421,8 +421,9 @@ def resolve_youtube_dl(url):
 
 
 def __pick_source(sources):
+    log_utils.log('Sources found: {0}'.format(sources))
     if len(sources) == 1:
-        return sources[0][1]
+        return sources[0]
     elif len(sources) > 1:
         if kodi.get_kodi_version().major > 16:
             listitem_sources = []
