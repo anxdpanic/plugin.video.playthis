@@ -14,10 +14,9 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- Kodi 16 + required
-- use inputstream.adaptive for hls if supported
-- expand check for dash content type
-- fix single source return
+- update strings path
+- add debug log to failed head requests
+- add reddit resolver
         </news>
         <assets>
             <icon>icon.png</icon>

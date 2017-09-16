@@ -1,3 +1,8 @@
+3.4.1
+- update strings path
+- add debug log to failed head requests
+- add reddit resolver
+
 3.4.0
 - Kodi 16 + required
 - use inputstream.adaptive for hls if supported
