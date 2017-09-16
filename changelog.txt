@@ -1,3 +1,6 @@
+3.4.2
+- fix executable items
+
 3.4.1
 - update strings path
 - add debug log to failed head requests

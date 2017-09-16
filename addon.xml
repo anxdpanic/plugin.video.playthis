@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.4.1"
+       version="3.4.2"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
@@ -17,6 +17,7 @@
 - update strings path
 - add debug log to failed head requests
 - add reddit resolver
+- fix executable items
         </news>
         <assets>
             <icon>icon.png</icon>
