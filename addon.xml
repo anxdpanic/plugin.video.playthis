@@ -38,10 +38,10 @@ Companion browser extension available on the Chrome Web Store and Mozilla's AMO 
 
 Artwork by @konsumer420
         </description>
-        <language> </language>
+        <language></language>
         <platform>all</platform>
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
-        <forum> </forum>
+        <forum></forum>
         <website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
         <source>https://github.com/anxdpanic/plugin.video.playthis</source>
 	</extension>
