@@ -198,6 +198,7 @@ class PlayHistory:
                             send_path = {'mode': MODES.SENDREMOTE, 'path': quote(item), 'thumb': quote(thumbnail), 'title': quote(label)}
                         menu_items.append((kodi.i18n('send_remote_playthis'), 'RunPlugin(%s)' % (kodi.get_plugin_url(send_path))))
 
+                    is_folder = False
                     thumb = icon_path
                     if content_type == 'image':
                         thumb = item
@@ -208,9 +209,13 @@ class PlayHistory:
                         info.update({'mediatype': 'song'})
                     elif content_type == 'video':
                         info.update({'mediatype': 'video'})
+                    elif content_type == 'executable':
+                        is_folder = True
+                        play_path['player'] = 'true'
 
+                    log_utils.log('Creating item |{2}|: path |{0}| content type |{1}|'.format(play_path, content_type, label), log_utils.LOGDEBUG)
                     kodi.create_item(play_path,
-                                     label, thumb=thumb, fanart=fanart_path, is_folder=False,
+                                     label, thumb=thumb, fanart=fanart_path, is_folder=is_folder,
                                      is_playable=True, total_items=total_items, menu_items=menu_items,
                                      content_type=content_type, info=info)
         if not total_items:
