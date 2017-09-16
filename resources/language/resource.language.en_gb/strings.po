@@ -2,18 +2,16 @@
 # Addon Name: PlayThis
 # Addon id: plugin.video.playthis
 # Addon Provider: anxdpanic
-
 msgid ""
 msgstr ""
-
-"Project-Id-Version:\n"
+"Project-Id-Version:plugin.video.playthis\n"
 "POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Language-Team: English\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: en\n"
+"Language: en_gb\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgctxt "#30100"
