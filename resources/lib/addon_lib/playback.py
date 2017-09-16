@@ -732,7 +732,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             if source:
                 log_utils.log('Source |{0}| found by |Scraping for supported|'
                               .format(source), log_utils.LOGDEBUG)
-                if override_content_type == 'video':
+                if override_content_type == 'video' or override_content_type == 'mpd':
                     sd_result = __check_smil_dash(source, headers)
                     source = sd_result['url']
                     is_dash = sd_result['is_dash']
