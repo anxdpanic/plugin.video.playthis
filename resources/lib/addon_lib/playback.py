@@ -213,6 +213,8 @@ def __get_content_type_and_headers(url, headers=None):
         except:
             pass
     except:
+        log_utils.log('HEAD request failed: |{1!s}| media type: |{0!s}|'
+                      .format(potential_type, headers), log_utils.LOGDEBUG)
         return {'content_type': potential_type, 'headers': headers, 'url_override': None}
 
     clength_header = response_headers.get('Content-Length', '')
