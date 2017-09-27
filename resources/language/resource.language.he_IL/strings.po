@@ -1,0 +1,324 @@
+# Kodi language file
+# Addon Name: PlayThis
+# Addon id: plugin.video.playthis
+# Addon Provider: anxdpanic
+msgid ""
+msgstr ""
+"Project-Id-Version: plugin.video.playthis\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2017-09-27 16:04+0300\n"
+"Last-Translator: A. Dambledore\n"
+"Language-Team: Eng2Heb\n"
+"Language: he_IL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#30100"
+msgid "Enter URL/Path for playback"
+msgstr "הזן כתובת URL/נתיב לניגון"
+
+msgctxt "#30101"
+msgid "New ..."
+msgstr "חדש..."
+
+msgctxt "#30102"
+msgid "Clear history"
+msgstr "נקה היסטוריה"
+
+msgctxt "#30103"
+msgid "History has been cleared"
+msgstr "ההיסטוריה נוקתה"
+
+msgctxt "#30104"
+msgid "Choose item for playback"
+msgstr "בחר פריט לניגון"
+
+msgctxt "#30105"
+msgid "Failed to clear history"
+msgstr "נכשל בניקוי ההיסטוריה"
+
+msgctxt "#30106"
+msgid "Failed to delete url"
+msgstr "נכשל במחיקת כתובת url"
+
+msgctxt "#30107"
+msgid "Delete"
+msgstr "מחק"
+
+msgctxt "#30108"
+msgid "No item(s) to export"
+msgstr "אין פריטים לייצוא"
+
+msgctxt "#30109"
+msgid "Item(s) exported successfully"
+msgstr "הפריטים יוצאו בהצלחה"
+
+msgctxt "#30110"
+msgid ".m3u Filename"
+msgstr "שם קובץ .m3u"
+
+msgctxt "#30111"
+msgid "Export list to .m3u"
+msgstr "ייצוא רשימה לפורמט .m3u"
+
+msgctxt "#30112"
+msgid "Failed to export item(s)"
+msgstr "נכשל בייצוא פריטים"
+
+msgctxt "#30113"
+msgid "Choose source"
+msgstr "בחירת מקור"
+
+msgctxt "#30114"
+msgid "Unknown"
+msgstr "לא ידוע"
+
+msgctxt "#30115"
+msgid "Refresh"
+msgstr "רענן"
+
+msgctxt "#30116"
+msgid "Clear %s history?"
+msgstr "נקה %s היסטוריה?"
+
+msgctxt "#30117"
+msgid "Confirm"
+msgstr "אישור"
+
+msgctxt "#30118"
+msgid "Rename"
+msgstr "שינוי שם"
+
+msgctxt "#30119"
+msgid "Input new label"
+msgstr "הזן תווית חדשה"
+
+msgctxt "#30120"
+msgid "Rename failed"
+msgstr "שינוי השם נכשל"
+
+msgctxt "#30121"
+msgid "Function cache has been reset"
+msgstr "המטמון נוקה"
+
+msgctxt "#30122"
+msgid "Function cache reset failed"
+msgstr "נכשל בניקוי המטמון"
+
+msgctxt "#30123"
+msgid "Reset function cache?"
+msgstr "האם לנקות את המטמון?"
+
+msgctxt "#30124"
+msgid "Resolution completed"
+msgstr "הרזולוציה הושלמה"
+
+msgctxt "#30125"
+msgid "Source"
+msgstr "מקור"
+
+msgctxt "#30126"
+msgid "Resolution successful"
+msgstr "רזולוציה הסתיימה בהצלחה"
+
+msgctxt "#30127"
+msgid "Attempting to resolve with"
+msgstr "מנסה לפתור עם "
+
+msgctxt "#30128"
+msgid "Attempting to determine type"
+msgstr "מנסה לקבוע סוג"
+
+msgctxt "#30129"
+msgid "Resolving"
+msgstr "מפענח"
+
+msgctxt "#30130"
+msgid "Scraping for potentially supported media urls"
+msgstr "מבצע סקראפינג עבור כתובות אתר של מדיה נתמכת"
+
+msgctxt "#30131"
+msgid "Added"
+msgstr "נוסף"
+
+msgctxt "#30132"
+msgid "Discarded"
+msgstr "נמחק"
+
+msgctxt "#30133"
+msgid "Preparing results"
+msgstr "מכין תוצאות"
+
+msgctxt "#30134"
+msgid "Support potential"
+msgstr "תמיכה"
+
+msgctxt "#30135"
+msgid "Replaced with"
+msgstr "הוחלף ב-"
+
+msgctxt "#30136"
+msgid "Using media type"
+msgstr "משתמש בסוג המדיה"
+
+msgctxt "#30137"
+msgid "Checking for potential support"
+msgstr "בודק לקבלת תמיכה פוטנציאלית"
+
+msgctxt "#30138"
+msgid "Clear cookies?"
+msgstr "נקה קבצי עוגיות?"
+
+msgctxt "#30139"
+msgid "Clearing cookies successful"
+msgstr "ניקוי קבצי עוגיות הסתיים בהצלחה"
+
+msgctxt "#30140"
+msgid "Clearing cookies failed"
+msgstr "ניקוי קבצי עוגיות נכשל"
+
+msgctxt "#30141"
+msgid ".strm Filename"
+msgstr "שם קובץ .strm"
+
+msgctxt "#30142"
+msgid "Export to .strm"
+msgstr "ייצוא לקובץ .strm"
+
+msgctxt "#30143"
+msgid "Thumbnail source"
+msgstr "מקור לתמונות ממוזערות"
+
+msgctxt "#30144"
+msgid "Change thumbnail by url"
+msgstr "שנה תמונה הממוזערת לפי כתובת url"
+
+msgctxt "#30145"
+msgid "Change thumbnail by file"
+msgstr "שנה תמונה הממוזערת לפי קובץ"
+
+msgctxt "#30146"
+msgid "Choose your thumbnail"
+msgstr "בחר את התמונה הממוזערת"
+
+msgctxt "#30147"
+msgid "Input thumbnail location"
+msgstr "הכנס מיקום של תמונות ממוזערות"
+
+msgctxt "#30148"
+msgid "Failed to change thumbnail"
+msgstr "לא ניתן לשנות את תמונה ממוזערת"
+
+msgctxt "#30149"
+msgid "Change thumbnail"
+msgstr "שנה תמונה ממוזערת"
+
+msgctxt "#30150"
+msgid "Send to remote PlayThis"
+msgstr "לשלוח ל PlayThis מרוחק"
+
+msgctxt "#30151"
+msgid "Remote/Send request successful"
+msgstr "הבקשה לשליחה אל PlayThis מרוחק הסתיימה בהצלחה"
+
+msgctxt "#30152"
+msgid "Manage"
+msgstr "נהל"
+
+msgctxt "#30700"
+msgid "History"
+msgstr "היסטוריה"
+
+msgctxt "#30701"
+msgid "History size limit (items)"
+msgstr "מגבלת גודל להיסטוריה (פריטים)"
+
+msgctxt "#30702"
+msgid "History selection type"
+msgstr "שיטת בחירה בהיסטוריה"
+
+msgctxt "#30703"
+msgid "Dialog"
+msgstr "דו-שיח"
+
+msgctxt "#30704"
+msgid "Directory"
+msgstr "תיקייה"
+
+msgctxt "#30705"
+msgid "URLResolver settings"
+msgstr "הגדרות URLResolver"
+
+msgctxt "#30706"
+msgid "M3U export path"
+msgstr "נתיב ייצוא M3U"
+
+msgctxt "#30707"
+msgid "Add to history on play"
+msgstr "הוסף להיסטוריה בזמן ניגון"
+
+msgctxt "#30708"
+msgid "Export"
+msgstr "יצוא"
+
+msgctxt "#30709"
+msgid "Resolvers"
+msgstr "פותרן - Resolvers"
+
+msgctxt "#30710"
+msgid "Reset function cache"
+msgstr "ניקוי לפונקציית המטמון"
+
+msgctxt "#30711"
+msgid "Function cache expire time (hours)"
+msgstr "זמן תפוגה לפונקציית המטמון (בשעות)"
+
+msgctxt "#30712"
+msgid "youtube-dl settings"
+msgstr "הגדרות: youtube-dl"
+
+msgctxt "#30713"
+msgid "Maintenance"
+msgstr "תחזוקה"
+
+msgctxt "#30714"
+msgid "Clear cookies"
+msgstr "ניקוי קבצי עוגיות"
+
+msgctxt "#30715"
+msgid "STRM export path"
+msgstr "נתיב הייצוא STRM"
+
+msgctxt "#30716"
+msgid "Remote/Send"
+msgstr "רחוק/שליחה"
+
+msgctxt "#30717"
+msgid "IP address"
+msgstr "כתובת IP"
+
+msgctxt "#30718"
+msgid "Port"
+msgstr "פורט"
+
+msgctxt "#30719"
+msgid "Username"
+msgstr "שם משתמש"
+
+msgctxt "#30720"
+msgid "Password"
+msgstr "ססמה"
+
+msgctxt "#30721"
+msgid "This requires PlayThis and the 'Allow remote control via HTTP'[CR]setting to be enabled and configured on your remote Kodi installation."
+msgstr "מחייב את PlayThis ואת ההגדרה 'אפשר שליטה מרחוק באמצעות HTTP' [CR] כדי לאפשר ולהגדיר את תצורת קודי המרוחקת."
+
+msgctxt "#30722"
+msgid "[CR]Settings → Services → Webserver/Control → Allow control of Kodi via HTTP"
+msgstr "[CR] הגדרות ← שירותים ← שרותי רשת/בקרה ← אפשר שליטה של קודי דרך HTTP"
+
+msgctxt "#30723"
+msgid "Resolve/scrape locally"
+msgstr "פתור/בצע סקרייפ מקומי"
