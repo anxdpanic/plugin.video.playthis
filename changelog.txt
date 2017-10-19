@@ -1,3 +1,10 @@
+3.4.3
+- update reddit video resolver
+- fix m3u8 check missing urls with parameters
+- add shout: to direct play
+- filter .css
+- remove unused dialog
+
 3.4.2
 - fix executable items
 

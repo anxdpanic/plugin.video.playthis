@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="plugin.video.playthis"
        name="PlayThis"
-       version="3.4.2"
+       version="3.4.3"
        provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
@@ -14,10 +14,11 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- update strings path
-- add debug log to failed head requests
-- add reddit resolver
-- fix executable items
+- update reddit video resolver
+- fix m3u8 check missing urls with parameters
+- add shout: to direct play
+- filter .css
+- remove unused dialog
         </news>
         <assets>
             <icon>icon.png</icon>
