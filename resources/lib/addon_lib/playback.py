@@ -271,7 +271,7 @@ def __check_for_new_url(url):
 def scrape_supported(url, html, regex):
     parsed_url = urlparse.urlparse(url)
     links = []
-    _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss']
+    _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss', '.css']
     sources = []
     with kodi.ProgressDialog('%s...' % kodi.i18n('scraping_for_potential_urls'), '%s: %s' % (kodi.i18n('source'), url), ' ', timer=0.2) as progress_dialog:
         while not progress_dialog.is_canceled():
