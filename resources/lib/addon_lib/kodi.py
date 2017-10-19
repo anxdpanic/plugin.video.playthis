@@ -32,7 +32,6 @@ import re
 import json
 import strings
 import time
-import CustomProgressDialog
 
 __log = xbmc.log
 
@@ -385,12 +384,12 @@ class WorkingDialog(object):
 class ProgressDialog(object):
     pd = None
 
-    def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0, custom=False):
+    def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0):
         self.begin = time.time()
         self.timer = timer
         self.background = background
         self.heading = heading
-        self.custom = custom
+
         if active and not timer:
             self.pd = self.__create_dialog(line1, line2, line3)
             self.pd.update(0)
@@ -401,10 +400,7 @@ class ProgressDialog(object):
             msg = line1 + line2 + line3
             pd.create(self.heading, msg)
         else:
-            if xbmc.getCondVisibility('Window.IsVisible(progressdialog)') and self.custom:
-                pd = CustomProgressDialog.ProgressDialog()
-            else:
-                pd = xbmcgui.DialogProgress()
+            pd = xbmcgui.DialogProgress()
             pd.create(self.heading, line1, line2, line3)
         return pd
 
@@ -443,10 +439,7 @@ class CountdownDialog(object):
         self.interval = interval
         self.line3 = line3
         if active:
-            if xbmc.getCondVisibility('Window.IsVisible(progressdialog)'):
-                pd = CustomProgressDialog.ProgressDialog()
-            else:
-                pd = xbmcgui.DialogProgress()
+            pd = xbmcgui.DialogProgress()
             if not self.line3: line3 = 'Expires in: %s seconds' % (countdown)
             pd.create(self.heading, line1, line2, line3)
             pd.update(100)
