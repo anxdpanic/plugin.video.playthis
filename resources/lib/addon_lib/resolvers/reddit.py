@@ -37,14 +37,18 @@ class PlayThisRedditResolver(UrlResolver):
 
         if html:
             sources = []
-            pattern = '''src:\s*canPlayDash\s*\?\s*['"]\s*(?P<dash>[^'"]+)\s*['"]\s*:\s*['"]\s*(?P<non_dash>[^'"]+)\s*['"]'''
 
+            pattern = '''src:\s*canPlayDash\s*\?\s*['"]\s*(?P<dash>[^'"]+)\s*['"]\s*:\s*['"]\s*(?P<hls>[^'"]+)\s*['"]'''
             match = re.search(pattern=pattern, string=html)
+            if not match:
+                pattern = '''data-hls-url\s*=\s*['"]\s*(?P<hls>[^'"]+).+?data-mpd-url\s*=\s*['"]\s*(?P<dash>[^'"]+)'''
+                match = re.search(pattern=pattern, string=html)
+
             if match:
                 if self.dash_supported:
                     sources += [('Reddit', match.group('dash'))]
                 else:
-                    sources += [('Reddit', match.group('non_dash'))]
+                    sources += [('Reddit', match.group('hls'))]
 
                 if sources:
                     return helpers.pick_source(sources) + helpers.append_headers(headers)
