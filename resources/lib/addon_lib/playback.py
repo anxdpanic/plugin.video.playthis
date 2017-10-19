@@ -632,7 +632,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     content_type = 'video'
     override_content_type = None
     is_dash = False
-    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:', 'udp:', 'upnp:']
+    direct = ['rtmp:', 'rtmpe:', 'ftp:', 'ftps:', 'special:', 'plugin:', 'udp:', 'upnp:', 'shout:']
     unresolved_source = None
     label = title
     source_label = label
