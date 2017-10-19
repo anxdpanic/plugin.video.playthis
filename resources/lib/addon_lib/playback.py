@@ -611,7 +611,7 @@ def play(source, player=True):
             elif (source['url'].startswith('rtmp')) and (inputstream_rtmp):
                 if kodi.addon_enabled('inputstream.rtmp'):
                     playback_item.setProperty('inputstreamaddon', 'inputstream.rtmp')
-            elif (source['url'].endswith('m3u8')) and (hls_supported):
+            elif ('.m3u8' in source['url']) and (hls_supported):
                     playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
                     playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             playback_item.setInfo(source['content_type'], source['info'])
