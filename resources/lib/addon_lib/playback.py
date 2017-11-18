@@ -413,12 +413,25 @@ def resolve_youtube_dl(url):
             pass
         if 'ytdl_format' in selected_stream and 'formats' in selected_stream['ytdl_format']:
             formats = selected_stream['ytdl_format']['formats']
-            format_id = selected_stream['formatID']
-            format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
-            ext = formats[format_index]['ext']
-            headers = formats[format_index]['http_headers']
-            if ext:
-                content_type = __get_potential_type('.' + ext)
+            format_index = None
+            if selected_stream['ytdl_format'].get('extractor_key') == 'Facebook':  # ytdl xbmc_url is audio only for Facebook, override url
+                q_ids = ['dash_hd_src_no_ratelimit', 'dash_hd_src', 'dash_sd_src_no_ratelimit', 'dash_sd_src']
+                while len(q_ids) > 0:
+                    format_id = q_ids[0]
+                    try:
+                        format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
+                        stream_url = formats[format_index]['url']
+                        break
+                    except StopIteration:
+                        del q_ids[0]
+            else:
+                format_id = selected_stream['formatID']
+                format_index = next(index for (index, f) in enumerate(formats) if f['format_id'] == format_id)
+            if format_index:
+                ext = formats[format_index]['ext']
+                headers = formats[format_index]['http_headers']
+                if ext:
+                    content_type = __get_potential_type('.' + ext)
     return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'thumbnail': thumbnail, 'headers': headers}
 
 
@@ -639,6 +652,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     source_thumbnail = thumbnail
     history_item = None
 
+    if item.startswith('blob:http'):
+        item = item.lstrip('blob:')
     if item.startswith('http'):
         with kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item) as progress_dialog:
             while not progress_dialog.is_canceled():
