@@ -1,3 +1,6 @@
+3.4.4
+- fix Facebook videos having no audio
+
 3.4.3
 - update reddit video resolver
 - fix m3u8 check missing urls with parameters
