@@ -654,6 +654,8 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
 
     if item.startswith('blob:http'):
         item = item.lstrip('blob:')
+    if item.find(' ') > -1:
+        item = urllib.quote(item, safe="%/:=&?~#+!$,;'@()*[]")
     if item.startswith('http'):
         with kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item) as progress_dialog:
             while not progress_dialog.is_canceled():
