@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    Original Source can be found included in the original_sources/ directory
 
-    SALTS XBMC Addon
     Copyright (C) 2015 tknorris
 
     This program is free software: you can redistribute it and/or modify
