@@ -1,3 +1,6 @@
+3.5.0
+- URLResolver is now optional
+
 3.4.6
 - cosmetic
 
