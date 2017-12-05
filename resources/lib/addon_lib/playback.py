@@ -29,30 +29,27 @@ import utils
 import log_utils
 import cache
 from HTMLParser import HTMLParser
-from distutils.version import LooseVersion
+from net import Net
 from remote import HttpJSONRPC
-from urlresolver import common, add_plugin_dirs, HostedMediaFile
-from urlresolver.plugins.lib.helpers import pick_source, parse_smil_source_list, get_hidden, append_headers
-from constants import RESOLVER_DIRS, COOKIE_FILE, ICONS, MODES
+from urlresolver_helpers import pick_source, parse_smil_source_list, get_hidden, append_headers, get_packed_data
+from constants import RESOLVER_DIRS, COOKIE_FILE, ICONS, MODES, RAND_UA, FF_USER_AGENT
 
 try:
-    from urlresolver.plugins.lib.helpers import add_packed_data
+    from urlresolver import add_plugin_dirs, HostedMediaFile
 
-    get_packed_data = None
+    has_urlresolver = True
 except ImportError:
-    from urlresolver.plugins.lib.helpers import get_packed_data
-
-    add_packed_data = None
+    has_urlresolver = False
 
 socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = []
-dash_supported = common.has_addon('inputstream.adaptive')
-inputstream_rtmp = common.has_addon('inputstream.rtmp')
+dash_supported = kodi.has_addon('inputstream.adaptive')
+inputstream_rtmp = kodi.has_addon('inputstream.rtmp')
 adaptive_version = None
 if dash_supported:
     adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
-hls_supported = False if adaptive_version is None else (adaptive_version >= LooseVersion('2.0.10')) # Kodi 17.4
+hls_supported = False if adaptive_version is None else (adaptive_version >= kodi.loose_version('2.0.10'))  # Kodi 17.4
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
@@ -78,7 +75,7 @@ def get_url_with_headers(url, headers):
     if 'Cookie' in url_headers:
         cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', url_headers['Cookie']))
         del url_headers['Cookie']
-    net = common.Net()
+    net = Net()
     cookie_jar_result = net.set_cookies(COOKIE_FILE)
     for c in net._cj:
         if c.domain and (c.domain.lstrip('.') in url):
@@ -93,9 +90,9 @@ def get_url_with_headers(url, headers):
 def get_default_headers(url):
     parsed_url = urlparse.urlparse(url)
     try:
-        user_agent = common.RAND_UA
+        user_agent = RAND_UA
     except:
-        user_agent = common.FF_USER_AGENT
+        user_agent = FF_USER_AGENT
     return {'User-Agent': user_agent,
             'Host': parsed_url.hostname,
             'Accept-Language': 'en',
@@ -108,7 +105,7 @@ def __get_html_and_headers(url, headers=None):
     if headers is None:
         headers = get_default_headers(url)
     try:
-        net = common.Net()
+        net = Net()
         cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_GET(url, headers=headers)
         cookie_jar_result = net.save_cookies(COOKIE_FILE)
@@ -117,7 +114,7 @@ def __get_html_and_headers(url, headers=None):
         if ('reddit' in redirect) and ('over18' in redirect):
             post_headers = {}
             post_headers.update(
-                {'User-Agent': common.FF_USER_AGENT, 'Content-Type': 'application/x-www-form-urlencoded'})
+                {'User-Agent': FF_USER_AGENT, 'Content-Type': 'application/x-www-form-urlencoded'})
             data = get_hidden(contents)
             data.update({'over18': 'yes'})
             cookie_jar_result = net.set_cookies(COOKIE_FILE)
@@ -196,7 +193,7 @@ def __get_content_type_and_headers(url, headers=None):
     potential_type = __get_potential_type(url)
 
     try:
-        net = common.Net()
+        net = Net()
         cookie_jar_result = net.set_cookies(COOKIE_FILE)
         response = net.http_HEAD(url, headers=headers)
         cookie_jar_result = net.save_cookies(COOKIE_FILE)
@@ -265,6 +262,11 @@ def __check_for_new_url(url):
             return urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
         except:
             pass
+    if 'youtu.be' in url:
+        result = re.search('http[s]*://youtu.be/(?P<video_id>[a-zA-Z0-9_\-]{11})', url)
+        if result:
+           return 'https://www.youtube.com/watch?v=%s' % result.group('video_id')
+
     return url
 
 
@@ -328,9 +330,12 @@ def scrape_supported(url, html, regex):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
-                hmf = HostedMediaFile(url=stream_url, include_disabled=False)
+                if has_urlresolver:
+                    hmf = HostedMediaFile(url=stream_url, include_disabled=False)
+                    is_valid = hmf.valid_url()
+                else:
+                    is_valid = False
                 potential_type = __get_potential_type(stream_url)
-                is_valid = hmf.valid_url()
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
 
                 if is_valid and is_valid_type:
@@ -476,10 +481,7 @@ def __pick_source(sources):
 def _scrape(url):
     unresolved_source_list = []
     result = __get_html_and_headers(url)
-    if add_packed_data is not None:
-        html = add_packed_data(result['contents'])
-    else:
-        html = result['contents'] + get_packed_data(result['contents'])
+    html = result['contents'] + get_packed_data(result['contents'])
 
     def _to_list(items):
         for lstitem in items:
@@ -625,8 +627,8 @@ def play(source, player=True):
                 if kodi.addon_enabled('inputstream.rtmp'):
                     playback_item.setProperty('inputstreamaddon', 'inputstream.rtmp')
             elif ('.m3u8' in source['url']) and (hls_supported):
-                    playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-                    playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+                playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             playback_item.setInfo(source['content_type'], source['info'])
             if player:
                 log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
@@ -694,20 +696,23 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                 elif content_type == 'text':
                     if progress_dialog.is_canceled():
                         sys.exit(0)
-                    progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: URLResolver' % kodi.i18n('attempt_resolve_with'), ' ')
+
                     content_type = 'video'
                     headers.update({'Referer': item})
-                    source = resolve(item, title=title)
-                    if source:
-                        log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
-                        sd_result = __check_smil_dash(source, headers)
-                        source = sd_result['url']
-                        is_dash = sd_result['is_dash']
+
+                    progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: URLResolver' % kodi.i18n('attempt_resolve_with'), ' ')
+                    if has_urlresolver:
+                        source = resolve(item, title=title)
                         if source:
-                            progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
-                                                   '%s: URLResolver' % kodi.i18n('attempt_resolve_with'),
-                                                   '%s: %s' % (kodi.i18n('resolution_successful'), source))
-                            stream_url = source
+                            log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
+                            sd_result = __check_smil_dash(source, headers)
+                            source = sd_result['url']
+                            is_dash = sd_result['is_dash']
+                            if source:
+                                progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
+                                                       '%s: URLResolver' % kodi.i18n('attempt_resolve_with'),
+                                                       '%s: %s' % (kodi.i18n('resolution_successful'), source))
+                                stream_url = source
 
                     if not stream_url:
                         if progress_dialog.is_canceled():

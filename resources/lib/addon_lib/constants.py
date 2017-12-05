@@ -21,6 +21,7 @@ import os
 import kodi
 import db_utils
 from url_dispatcher import URL_Dispatcher
+from net import get_ua
 
 
 def __enum(**enums):
@@ -63,6 +64,13 @@ ICONS = __enum(
     KODI=kodi.translate_path('special://xbmc/media/icon256x256.png'),
     URLRESOLVER=kodi.translate_path('special://home/addons/script.module.urlresolver/icon.png'),
     YOUTUBEDL=kodi.translate_path('special://home/addons/script.module.youtube.dl/icon.png'))
+
+RAND_UA = get_ua()
+IE_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'
+FF_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'
+OPERA_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36 OPR/34.0.2036.50'
+IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
+ANDROID_USER_AGENT = 'Mozilla/5.0 (Linux; Android 4.4.2; Nexus 4 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.114 Mobile Safari/537.36'
 
 
 def _is_cookie_file(the_file):

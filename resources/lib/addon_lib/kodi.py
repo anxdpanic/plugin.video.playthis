@@ -244,6 +244,17 @@ def string_to_filename(string):
     return filename
 
 
+def loose_version(v):
+    filled = []
+    for point in v.split("."):
+        filled.append(point.zfill(8))
+    return tuple(filled)
+
+
+def has_addon(addon_id):
+    return xbmc.getCondVisibility('System.HasAddon(%s)' % addon_id) == 1
+
+
 def addon_enabled(addon_id):
     rpc_request = {"jsonrpc": "2.0",
                    "method": "Addons.GetAddonDetails",

@@ -75,5 +75,6 @@ STRINGS = {
     'history_size_limit': 30701,
     'export_path': 30706,
     'export_path_strm': 30715,
-    'export': 30708
+    'export': 30708,
+    'no_video_link': 30724
 }

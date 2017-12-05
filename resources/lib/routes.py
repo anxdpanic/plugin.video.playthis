@@ -236,7 +236,10 @@ def clear_cookies():
 
 @DISPATCHER.register(MODES.URLRESOLVER)
 def urlresolver_settings():
-    kodi.Addon(id='script.module.urlresolver').openSettings()
+    try:
+        kodi.Addon(id='script.module.urlresolver').openSettings()
+    except RuntimeError:
+        pass
 
 
 @DISPATCHER.register(MODES.YOUTUBEDL)

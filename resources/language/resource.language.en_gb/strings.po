@@ -321,3 +321,7 @@ msgstr ""
 msgctxt "#30723"
 msgid "Resolve/scrape locally"
 msgstr ""
+
+msgctxt "#30724"
+msgid "No Video Link Found"
+msgstr ""

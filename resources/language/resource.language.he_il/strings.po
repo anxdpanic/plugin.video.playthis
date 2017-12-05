@@ -322,3 +322,7 @@ msgstr "[CR] הגדרות ← שירותים ← שרותי רשת/בקרה ← 
 msgctxt "#30723"
 msgid "Resolve/scrape locally"
 msgstr "פתור/בצע סקרייפ מקומי"
+
+msgctxt "#30724"
+msgid "No Video Link Found"
+msgstr ""
