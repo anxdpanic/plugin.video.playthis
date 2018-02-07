@@ -325,3 +325,7 @@ msgstr ""
 msgctxt "#30724"
 msgid "No Video Link Found"
 msgstr ""
+
+msgctxt "#30725"
+msgid "ResolveURL settings"
+msgstr ""

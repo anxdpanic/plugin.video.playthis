@@ -242,6 +242,14 @@ def urlresolver_settings():
         pass
 
 
+@DISPATCHER.register(MODES.RESOLVEURL)
+def resolveurl_settings():
+    try:
+        kodi.Addon(id='script.module.resolveurl').openSettings()
+    except RuntimeError:
+        pass
+
+
 @DISPATCHER.register(MODES.YOUTUBEDL)
 def youtubedl_settings():
     kodi.Addon(id='script.module.youtube.dl').openSettings()

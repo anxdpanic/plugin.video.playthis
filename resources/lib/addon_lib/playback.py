@@ -32,14 +32,22 @@ from HTMLParser import HTMLParser
 from net import Net
 from remote import HttpJSONRPC
 from urlresolver_helpers import pick_source, parse_smil_source_list, get_hidden, append_headers, get_packed_data
-from constants import RESOLVER_DIRS, COOKIE_FILE, ICONS, MODES, RAND_UA, FF_USER_AGENT
+from constants import URLRESOLVER_DIRS, RESOLVEURL_DIRS, COOKIE_FILE, ICONS, MODES, RAND_UA, FF_USER_AGENT
+
+has_urlresolver = None
+has_resolveurl = None
 
 try:
-    from urlresolver import add_plugin_dirs, HostedMediaFile
+    from resolveurl import add_plugin_dirs, HostedMediaFile
 
-    has_urlresolver = True
+    has_resolveurl = 'ResolveURL'
 except ImportError:
-    has_urlresolver = False
+    try:
+        from urlresolver import add_plugin_dirs, HostedMediaFile
+
+        has_urlresolver = 'URLResolver'
+    except ImportError:
+        pass
 
 socket.setdefaulttimeout(30)
 
@@ -330,7 +338,7 @@ def scrape_supported(url, html, regex):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
-                if has_urlresolver:
+                if has_urlresolver or has_resolveurl:
                     hmf = HostedMediaFile(url=stream_url, include_disabled=False)
                     is_valid = hmf.valid_url()
                 else:
@@ -339,10 +347,11 @@ def scrape_supported(url, html, regex):
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
 
                 if is_valid and is_valid_type:
+                    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'URLResolver'),
+                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', resolver_name),
                                            '[%s]: %s' % (label, stream_url))
-                    links.append({'label': label, 'url': stream_url, 'resolver': 'URLResolver', 'content_type': 'video'})
+                    links.append({'label': label, 'url': stream_url, 'resolver': resolver_name, 'content_type': 'video'})
                     continue
                 else:
                     if potential_type == 'text':
@@ -372,7 +381,9 @@ def scrape_supported(url, html, regex):
 @cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve(url, title=''):
     resolver_dirs = []
-    for plugin_path in RESOLVER_DIRS:
+    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+    _resolver_dirs = RESOLVEURL_DIRS if has_resolveurl else URLRESOLVER_DIRS
+    for plugin_path in _resolver_dirs:
         if kodi.vfs.exists(plugin_path):
             resolver_dirs.append(plugin_path)
     if resolver_dirs:
@@ -381,7 +392,7 @@ def resolve(url, title=''):
     log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
     source = HostedMediaFile(url=url, title=title, include_disabled=False)
     if not source:
-        log_utils.log('Not supported by URLResolver: |{0!s}|'.format(url), log_utils.LOGDEBUG)
+        log_utils.log('Not supported by {1!s}: |{0!s}|'.format(url, resolver_name), log_utils.LOGDEBUG)
         return None
     try:
         resolved = source.resolve()
@@ -459,6 +470,8 @@ def __pick_source(sources):
                     icon = ICONS.YOUTUBEDL
                 elif source['resolver'] == 'URLResolver':
                     icon = ICONS.URLRESOLVER
+                elif source['resolver'] == 'ResolveURL':
+                    icon = ICONS.RESOLVEURL
                 l_item = kodi.ListItem(label=title, label2=label2)
                 l_item.setArt({'icon': icon, 'thumb': icon})
                 listitem_sources.append(l_item)
@@ -532,7 +545,7 @@ def scrape(url):
                 headers = None
                 thumbnail = None
                 resolved = None
-                if chosen['resolver'] == 'URLResolver':
+                if chosen['resolver'] == 'URLResolver' or chosen['resolver'] == 'ResolveURL':
                     resolved = resolve(chosen['url'], title=chosen['label'])
                 if chosen['resolver'] == 'youtube-dl' or not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
@@ -700,17 +713,18 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     content_type = 'video'
                     headers.update({'Referer': item})
 
-                    progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: URLResolver' % kodi.i18n('attempt_resolve_with'), ' ')
-                    if has_urlresolver:
+                    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+                    progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
+                    if has_urlresolver or has_resolveurl:
                         source = resolve(item, title=title)
                         if source:
-                            log_utils.log('Source |{0}| was |URLResolver supported|'.format(source), log_utils.LOGDEBUG)
+                            log_utils.log('Source |{0}| was |{1} supported|'.format(source, resolver_name), log_utils.LOGDEBUG)
                             sd_result = __check_smil_dash(source, headers)
                             source = sd_result['url']
                             is_dash = sd_result['is_dash']
                             if source:
                                 progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
-                                                       '%s: URLResolver' % kodi.i18n('attempt_resolve_with'),
+                                                       '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name),
                                                        '%s: %s' % (kodi.i18n('resolution_successful'), source))
                                 stream_url = source
 
