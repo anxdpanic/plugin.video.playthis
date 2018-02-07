@@ -147,14 +147,18 @@ def __get_qt_atom_url(url, headers):
 
 
 def __get_potential_type(url):
+    supported_music = [ext for ext in kodi.get_supported_media('music').split('|') if ext != '']
+    supported_picture = [ext for ext in kodi.get_supported_media('picture').split('|') if ext != '']
+    supported_video = [ext for ext in kodi.get_supported_media('video').split('|') if ext != '']
+
     potential_type = 'text'
     if '.mpd' in url:
         potential_type = 'mpd'
-    elif any(ext in url for ext in kodi.get_supported_media('music').split('|')):
+    elif any(ext in url for ext in supported_music):
         potential_type = 'audio'
-    elif any(ext in url for ext in kodi.get_supported_media('picture').split('|')):
+    elif any(ext in url for ext in supported_picture):
         potential_type = 'image'
-    elif any(ext in url for ext in kodi.get_supported_media('video').split('|')):
+    elif any(ext in url for ext in supported_video):
         potential_type = 'video'
 
     return potential_type
