@@ -69,7 +69,8 @@ ICONS = __enum(
     KODI=kodi.translate_path('special://xbmc/media/icon256x256.png'),
     URLRESOLVER=kodi.translate_path('special://home/addons/script.module.urlresolver/icon.png'),
     RESOLVEURL=kodi.translate_path('special://home/addons/script.module.resolveurl/icon.png'),
-    YOUTUBEDL=kodi.translate_path('special://home/addons/script.module.youtube.dl/icon.png'))
+    YOUTUBEDL=kodi.translate_path('special://home/addons/script.module.youtube.dl/icon.png'),
+    YOUTUBE=kodi.translate_path('special://home/addons/plugin.video.youtube/icon.png'))
 
 RAND_UA = get_ua()
 IE_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko'

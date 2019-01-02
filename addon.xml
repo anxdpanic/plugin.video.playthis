@@ -9,6 +9,7 @@
         <import addon="script.module.resolveurl" version="5.0.0" optional="true"/>
         <import addon="script.module.urlresolver.xxx" optional="true"/>
         <import addon="script.module.resolveurl.xxx" optional="true"/>
+        <import addon="plugin.video.youtube" optional="true"/>
         <import addon="script.module.youtube.dl"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">

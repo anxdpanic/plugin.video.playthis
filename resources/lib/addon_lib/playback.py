@@ -36,6 +36,7 @@ from constants import URLRESOLVER_DIRS, RESOLVEURL_DIRS, COOKIE_FILE, ICONS, MOD
 
 has_urlresolver = None
 has_resolveurl = None
+has_youtube = None
 
 try:
     from resolveurl import add_plugin_dirs, HostedMediaFile
@@ -49,11 +50,21 @@ except ImportError:
     except ImportError:
         pass
 
+try:
+    import youtube_resolver
+
+    has_youtube = 'YouTube'
+except ImportError:
+    pass
+
 socket.setdefaulttimeout(30)
 
 RUNPLUGIN_EXCEPTIONS = []
+
 dash_supported = kodi.has_addon('inputstream.adaptive')
 inputstream_rtmp = kodi.has_addon('inputstream.rtmp')
+has_youtube_addon = kodi.has_addon('plugin.video.youtube')
+
 adaptive_version = None
 if dash_supported:
     adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
@@ -195,6 +206,10 @@ def ytdl_supported(url):
             if (extractor.IE_NAME != 'generic') and (name.lower() in extractor.IE_NAME.split(':')[0].lower()) and (extractor.suitable(url)):
                 return True
     return False
+
+
+def yt_addon_supported(url):
+    return has_youtube_addon and re.match(r'(?:http)*s*:*[/]{0,2}(?:www\.)*youtu(?:\.be/|be\.com/(?:embed/|watch/|v/|.*?[?&/]v=))[a-zA-Z0-9_\-]{11}.*', url)
 
 
 def __get_content_type_and_headers(url, headers=None):
@@ -342,11 +357,21 @@ def scrape_supported(url, html, regex):
                 percent = int((float(index) / float(len_iter)) * 100)
                 label = source[0]
                 stream_url = source[1]
+
+                if yt_addon_supported(stream_url):
+                    resolver_name = has_youtube
+                    progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', resolver_name),
+                                           '[%s]: %s' % (label, stream_url))
+                    links.append({'label': label, 'url': stream_url, 'resolver': resolver_name, 'content_type': 'video'})
+                    continue
+
                 if has_urlresolver or has_resolveurl:
                     hmf = HostedMediaFile(url=stream_url, include_disabled=False)
                     is_valid = hmf.valid_url()
                 else:
                     is_valid = False
+
                 potential_type = __get_potential_type(stream_url)
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
 
@@ -380,6 +405,37 @@ def scrape_supported(url, html, regex):
         if progress_dialog.is_canceled():
             sys.exit(0)
     return links
+
+
+@cache.cache_function(cache_limit=resolver_cache_limit)
+def resolve_yt_addon(url):
+    label = None
+    stream_url = None
+    headers = None
+    thumbnail = None
+    content_type = 'video'
+
+    sources = youtube_resolver.resolve(url, sort=True)
+    if isinstance(sources, list):
+        src = sources[0]
+        if src.get('container') == 'mpd' and not dash_supported:
+            src = sources[1]
+
+        stream_url = src.get('url')
+
+        hdr = src.get('headers')
+        if hdr:
+            headers = urlparse.parse_qsl(hdr)
+
+        lbl = src.get('meta', {}).get('video', {}).get('title')
+        if lbl:
+            label = lbl
+
+        thmb = src.get('meta', {}).get('images', {}).get('high', src.get('meta', {}).get('images', {}).get('medium'))
+        if thmb:
+            thumbnail = thmb
+
+    return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'thumbnail': thumbnail, 'headers': headers}
 
 
 @cache.cache_function(cache_limit=resolver_cache_limit)
@@ -470,6 +526,8 @@ def __pick_source(sources):
                     icon = source['url']
                 elif not source['resolver']:
                     icon = ICONS.KODI
+                elif source['resolver'] == 'YouTube':
+                    icon = ICONS.YOUTUBE
                 elif source['resolver'] == 'youtube-dl':
                     icon = ICONS.YOUTUBEDL
                 elif source['resolver'] == 'URLResolver':
@@ -549,7 +607,14 @@ def scrape(url):
                 headers = None
                 thumbnail = None
                 resolved = None
-                if chosen['resolver'] == 'URLResolver' or chosen['resolver'] == 'ResolveURL':
+                if chosen['resolver'] == 'YouTube':
+                    yt_result = resolve_yt_addon(chosen['url'])
+                    label = yt_result['label']
+                    resolved = yt_result['resolved_url']
+                    content_type = yt_result['content_type']
+                    headers = yt_result['headers']
+                    thumbnail = yt_result['thumbnail']
+                elif chosen['resolver'] == 'URLResolver' or chosen['resolver'] == 'ResolveURL':
                     resolved = resolve(chosen['url'], title=chosen['label'])
                 if chosen['resolver'] == 'youtube-dl' or not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
@@ -717,13 +782,19 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     content_type = 'video'
                     headers.update({'Referer': item})
 
-                    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+                    resolver_name = 'YouTube'
                     progress_dialog.update(40, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
-                    if has_urlresolver or has_resolveurl:
-                        source = resolve(item, title=title)
-                        if source:
-                            log_utils.log('Source |{0}| was |{1} supported|'.format(source, resolver_name), log_utils.LOGDEBUG)
-                            sd_result = __check_smil_dash(source, headers)
+                    if yt_addon_supported(item):
+                        yt_result = resolve_yt_addon(item)
+                        if yt_result['resolved_url']:
+                            headers = yt_result['headers']
+                            label = yt_result['label'] if yt_result['label'] is not None else label
+                            source_label = label
+                            thumbnail = yt_result['thumbnail'] if yt_result['thumbnail'] is not None else thumbnail
+                            source_thumbnail = thumbnail
+                            log_utils.log('Source |{0}| found by |{1}|'
+                                          .format(yt_result['resolved_url'], resolver_name), log_utils.LOGDEBUG)
+                            sd_result = __check_smil_dash(yt_result['resolved_url'], headers)
                             source = sd_result['url']
                             is_dash = sd_result['is_dash']
                             if source:
@@ -733,23 +804,43 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                                 stream_url = source
 
                     if not stream_url:
+                        resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+                        progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
+                        if has_urlresolver or has_resolveurl:
+                            source = resolve(item, title=title)
+                            if source:
+                                log_utils.log('Source |{0}| was |{1} supported|'.format(source, resolver_name), log_utils.LOGDEBUG)
+                                sd_result = __check_smil_dash(source, headers)
+                                source = sd_result['url']
+                                is_dash = sd_result['is_dash']
+                                if source:
+                                    progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
+                                                           '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name),
+                                                           '%s: %s' % (kodi.i18n('resolution_successful'), source))
+                                    stream_url = source
+
+                    if not stream_url:
                         if progress_dialog.is_canceled():
                             sys.exit(0)
-                        progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'), ' ')
+
+                        resolver_name = 'youtube-dl'
+                        progress_dialog.update(80, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
                         if ytdl_supported(item):
                             ytdl_result = resolve_youtube_dl(item)
                             if ytdl_result['resolved_url']:
                                 headers = ytdl_result['headers']
                                 label = ytdl_result['label'] if ytdl_result['label'] is not None else label
-                                source_thumbnail = ytdl_result['thumbnail'] if ytdl_result['thumbnail'] is not None else source_thumbnail
-                                log_utils.log('Source |{0}| found by |youtube-dl|'
-                                              .format(ytdl_result['resolved_url']), log_utils.LOGDEBUG)
+                                source_label = label
+                                thumbnail = ytdl_result['thumbnail'] if ytdl_result['thumbnail'] is not None else thumbnail
+                                source_thumbnail = thumbnail
+                                log_utils.log('Source |{0}| found by |{1}|'
+                                              .format(ytdl_result['resolved_url'], resolver_name), log_utils.LOGDEBUG)
                                 sd_result = __check_smil_dash(ytdl_result['resolved_url'], headers)
                                 source = sd_result['url']
                                 is_dash = sd_result['is_dash']
                                 if source:
                                     progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
-                                                           '%s: youtube-dl' % kodi.i18n('attempt_resolve_with'),
+                                                           '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name),
                                                            '%s: %s' % (kodi.i18n('resolution_successful'), source))
                                     stream_url = source
 
