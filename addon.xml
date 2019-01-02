@@ -44,5 +44,6 @@ Artwork by @konsumer420
         <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
         <website>https://github.com/anxdpanic/plugin.video.playthis#playthis</website>
         <source>https://github.com/anxdpanic/plugin.video.playthis</source>
+        <reuselanguageinvoker>true</reuselanguageinvoker>
 	</extension>
 </addon>
