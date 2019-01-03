@@ -1,20 +1,14 @@
-'''
-    common XBMC Module
-    Copyright (C) 2011 t0mm0
+# -*- coding: utf-8 -*-
+"""
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    Copyright (C) 2011-2016 t0mm0 (common XBMC Module)
+    Copyright (C) 2016-2019 anxdpanic
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    This file is part of PlayThis (plugin.video.playthis)
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+    SPDX-License-Identifier: GPL-3.0-only
+    See LICENSES/GPL-3.0-only for more information.
+"""
 
 import random
 import gzip
