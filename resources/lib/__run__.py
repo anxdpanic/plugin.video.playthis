@@ -18,27 +18,9 @@
 """
 
 import sys
-import routes
-from addon_lib import kodi
-from addon_lib import log_utils
-from addon_lib.constants import DISPATCHER
 
-
-def main(argv=None):
-    if sys.argv:
-        argv = sys.argv
-    queries = kodi.parse_query(sys.argv[2])
-    log_utils.log('Version: |%s| Queries: |%s|' % (kodi.get_version(), queries), log_utils.LOGDEBUG)
-    log_utils.log('Args: |%s|' % argv, log_utils.LOGDEBUG)
-
-    # don't process params that don't match our url exactly
-    plugin_url = 'plugin://%s/' % (kodi.get_id())
-    if argv[0] != plugin_url:
-        return
-
-    mode = queries.get('mode', None)
-    DISPATCHER.dispatch(mode, queries)
+from addon_lib import routes
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    routes.run(sys.argv)

@@ -17,8 +17,21 @@
 """
 
 import time
-import kodi
-from xbmc import LOGDEBUG, LOGERROR, LOGFATAL, LOGINFO, LOGNONE, LOGNOTICE, LOGSEVERE, LOGWARNING
+
+from xbmc import LOGDEBUG
+from xbmc import LOGERROR
+from xbmc import LOGFATAL
+from xbmc import LOGINFO
+from xbmc import LOGNONE
+from xbmc import LOGNOTICE
+from xbmc import LOGSEVERE
+from xbmc import LOGWARNING
+
+from . import kodi
+
+
+__all__ = ['log', 'trace', 'LOGDEBUG', 'LOGERROR', 'LOGFATAL', 'LOGINFO', 'LOGNONE', 'LOGNOTICE', 'LOGSEVERE', 'LOGWARNING']
+
 
 name = kodi.get_name()
 

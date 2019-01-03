@@ -18,11 +18,23 @@
 """
 
 import os
-from addon_lib import kodi, cache
-from addon_lib.utils import PlayHistory, M3UUtils, STRMUtils
-from addon_lib.constants import DISPATCHER, MODES, COOKIE_FILE, THUMBNAILS_DIR
-from addon_lib.remote import HttpJSONRPC
-from urllib2 import unquote
+
+from six.moves.urllib_parse import unquote
+
+from . import kodi
+from . import cache
+from . import log_utils
+from .utils import PlayHistory
+from .utils import M3UUtils
+from .utils import STRMUtils
+from .constants import MODES
+from .constants import COOKIE_FILE
+from .constants import THUMBNAILS_DIR
+from .remote import HttpJSONRPC
+from .url_dispatcher import URL_Dispatcher
+
+
+DISPATCHER = URL_Dispatcher()
 
 
 @DISPATCHER.register(MODES.MAIN, kwargs=['content_type'])
@@ -43,7 +55,7 @@ def main_route(content_type=''):
     else:
         playback_item = play_history.history_dialog(content_type)
         if playback_item:
-            from addon_lib.playback import play_this
+            from .playback import play_this
             play_this(unquote(playback_item), player=True)
 
 
@@ -52,13 +64,13 @@ def get_new_item(player=True):
     play_history = PlayHistory()
     playback_item = play_history.get_input()
     if playback_item:
-        from addon_lib.playback import play_this
+        from .playback import play_this
         play_this(unquote(playback_item), title=unquote(playback_item), player=player)
 
 
 @DISPATCHER.register(MODES.ADD, ['path'])
 def add_url(path):
-    from addon_lib.playback import play_this
+    from .playback import play_this
     play_this(path, title=path, player='history')
 
 
@@ -97,7 +109,7 @@ def delete_row(row_id, title='', refresh=True):
 
 @DISPATCHER.register(MODES.PLAY, ['path'], ['player', 'history', 'thumb', 'title'])
 def play(path, player=True, history=None, thumb='', title=''):
-    from addon_lib.playback import play_this
+    from .playback import play_this
     play_this(unquote(path), player=player, history=history, thumbnail=unquote(thumb), title=unquote(title))
 
 
@@ -253,3 +265,18 @@ def resolveurl_settings():
 @DISPATCHER.register(MODES.YOUTUBEDL)
 def youtubedl_settings():
     kodi.Addon(id='script.module.youtube.dl').openSettings()
+
+
+def run(argv):
+    global DISPATCHER
+
+    queries = kodi.parse_query(argv[2])
+    log_utils.log('Version: |%s| Queries: |%s|' % (kodi.get_version(), queries), log_utils.LOGDEBUG)
+    log_utils.log('Args: |%s|' % argv, log_utils.LOGDEBUG)
+
+    # don't process params that don't match our url exactly
+    plugin_url = 'plugin://%s/' % (kodi.get_id())
+    if argv[0] != plugin_url:
+        return
+
+    DISPATCHER.dispatch(queries.get('mode', None), queries)

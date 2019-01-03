@@ -44,10 +44,15 @@
 
 import json
 import base64
-import urllib2
 import socket
-import kodi
-import log_utils
+
+from six.moves.urllib_error import HTTPError
+from six.moves.urllib_error import URLError
+from six.moves.urllib_request import Request
+from six.moves.urllib_request import urlopen
+
+from . import kodi
+from . import log_utils
 
 
 class HttpJSONRPC:
@@ -83,16 +88,16 @@ class HttpJSONRPC:
         log_utils.log('JSON-RPC request |%s|' % command, log_utils.LOGDEBUG)
         null_response = None
         data = json.dumps(command)
-        request = urllib2.Request(self.url, headers=self.headers, data=data)
+        request = Request(self.url, headers=self.headers, data=data)
         method = 'POST'
         request.get_method = lambda: method
         try:
-            response = urllib2.urlopen(request)
-        except urllib2.HTTPError as e:
+            response = urlopen(request)
+        except HTTPError as e:
             error = 'JSON-RPC received HTTPError |[Code %s] %s|' % (e.code, e.msg)
             log_utils.log(error, log_utils.LOGINFO)
             return {'error': 'HTTPError |[Code %s] %s|' % (e.code, e.msg)}
-        except urllib2.URLError as e:
+        except URLError as e:
             error = 'JSON-RPC received URLError |%s|' % e.args
             log_utils.log(error, log_utils.LOGINFO)
             return {'error': 'URLError |%s|' % e.args}

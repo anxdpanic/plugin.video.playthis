@@ -19,20 +19,36 @@
 
 import re
 import sys
-import urlparse
-import urllib
-import urllib2
 import struct
 import socket
-import kodi
-import utils
-import log_utils
-import cache
-from HTMLParser import HTMLParser
-from net import Net
-from remote import HttpJSONRPC
-from urlresolver_helpers import pick_source, parse_smil_source_list, get_hidden, append_headers, get_packed_data
-from constants import URLRESOLVER_DIRS, RESOLVEURL_DIRS, COOKIE_FILE, ICONS, MODES, RAND_UA, FF_USER_AGENT
+
+from six.moves.html_parser import HTMLParser
+from six.moves.urllib_parse import parse_qsl
+from six.moves.urllib_parse import urlparse
+from six.moves.urllib_parse import quote
+from six.moves.urllib_parse import unquote
+from six.moves.urllib_parse import quote_plus
+from six.moves.urllib_parse import unquote_plus
+
+from . import kodi
+from . import utils
+from . import log_utils
+from . import cache
+from .net import Net
+from .remote import HttpJSONRPC
+from .urlresolver_helpers import pick_source
+from .urlresolver_helpers import parse_smil_source_list
+from .urlresolver_helpers import get_hidden
+from .urlresolver_helpers import append_headers
+from .urlresolver_helpers import get_packed_data
+from .constants import URLRESOLVER_DIRS
+from .constants import RESOLVEURL_DIRS
+from .constants import COOKIE_FILE
+from .constants import ICONS
+from .constants import MODES
+from .constants import RAND_UA
+from .constants import FF_USER_AGENT
+
 
 has_urlresolver = None
 has_resolveurl = None
@@ -86,9 +102,9 @@ def get_url_with_headers(url, headers):
     if len(parts) > 1:
         for i in re.finditer(r'(?:&|^)([^=]+)=(.+?)(?:&|$)', parts[-1]):
             if (i.group(1) == 'Cookie') and ('Cookie' in headers):
-                headers['Cookie'] += urllib.unquote_plus(i.group(2))
+                headers['Cookie'] += unquote_plus(i.group(2))
             else:
-                url_headers.update({i.group(1): urllib.unquote_plus(i.group(2))})
+                url_headers.update({i.group(1): unquote_plus(i.group(2))})
     url_headers.update(headers)
     cookie_string = ''
     if 'Cookie' in url_headers:
@@ -101,13 +117,13 @@ def get_url_with_headers(url, headers):
             if c.value not in cookie_string:
                 cookie_string += '%s=%s;' % (c.name, c.value)
     if cookie_string:
-        return url + append_headers(url_headers) + '&Cookie=' + urllib.quote_plus(cookie_string)
+        return url + append_headers(url_headers) + '&Cookie=' + quote_plus(cookie_string)
 
     return url + append_headers(url_headers)
 
 
 def get_default_headers(url):
-    parsed_url = urlparse.urlparse(url)
+    parsed_url = urlparse(url)
     try:
         user_agent = RAND_UA
     except:
@@ -197,7 +213,7 @@ def __get_gen_extractors_names():
 def ytdl_supported(url):
     names = __get_gen_extractors_names()
     name = None
-    hostname = urlparse.urlparse(url).hostname
+    hostname = urlparse(url).hostname
     if any(((name in hostname) or (hostname in name)) for name in names):
         name = next(name for name in names if ((name in hostname) or (hostname in name)))
     if name:
@@ -278,15 +294,15 @@ def __get_content_type_and_headers(url, headers=None):
 def __check_for_new_url(url):
     if 'google' in url:
         try:
-            return urllib2.unquote(re.findall(r'cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
+            return unquote(re.findall(r'cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
-                return urllib2.unquote(re.findall(r'google[a-z]*\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
+                return unquote(re.findall(r'google[a-z]*\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
             except:
                 pass
     if 'reddit' in url:
         try:
-            return urllib2.unquote(re.findall(r'http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
+            return unquote(re.findall(r'http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
         except:
             pass
     if 'youtu.be' in url:
@@ -298,7 +314,7 @@ def __check_for_new_url(url):
 
 
 def scrape_supported(url, html, regex):
-    parsed_url = urlparse.urlparse(url)
+    parsed_url = urlparse(url)
     links = []
     _filter = ['.js', 'data:', 'blob:', 'tab=', 'usp=', '/pixel.', '/1x1.', 'javascript:', 'rss.', 'blank.', '.rss', '.css']
     sources = []
@@ -321,7 +337,7 @@ def scrape_supported(url, html, regex):
                 elif stream_url.startswith('/'):
                     stream_url = '%s://%s%s' % (parsed_url.scheme, parsed_url.hostname, stream_url)
 
-                host = urlparse.urlparse(stream_url).hostname
+                host = urlparse(stream_url).hostname
                 if host is None:
                     continue
                 label = host
@@ -425,7 +441,7 @@ def resolve_yt_addon(url):
 
         hdr = src.get('headers')
         if hdr:
-            headers = urlparse.parse_qsl(hdr)
+            headers = parse_qsl(hdr)
 
         lbl = src.get('meta', {}).get('video', {}).get('title')
         if lbl:
@@ -674,8 +690,8 @@ def remote_play(source):
             kodi.notify(kodi.get_name(), response['error'], duration=7000)
             return
     if source['is_dash']:
-        filename = kodi.get_plugin_url({'mode': MODES.PLAY, 'player': 'false', 'path': urllib2.quote(source['url']),
-                                        'thumb': urllib2.quote(source['art']['thumb']), 'title': urllib2.quote(source['info']['title'])})
+        filename = kodi.get_plugin_url({'mode': MODES.PLAY, 'player': 'false', 'path': quote(source['url']),
+                                        'thumb': quote(source['art']['thumb']), 'title': quote(source['info']['title'])})
     else:
         filename = source['url']
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': filename}}}
@@ -739,7 +755,7 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
     if item.startswith('blob:http'):
         item = item.lstrip('blob:')
     if item.find(' ') > -1:
-        item = urllib.quote(item, safe="%/:=&?~#+!$,;'@()*[]")
+        item = quote(item, safe="%/:=&?~#+!$,;'@()*[]")
     if item.startswith('http'):
         with kodi.ProgressDialog('%s...' % kodi.i18n('resolving'), '%s:' % kodi.i18n('attempting_determine_type'), item) as progress_dialog:
             while not progress_dialog.is_canceled():
@@ -890,10 +906,10 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
             if history or player == 'history':
                 history_item = item.split('|')[0]
                 if '%' not in history_item:
-                    history_item = urllib2.quote(history_item)
+                    history_item = quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(item, content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, content_type, label if label else item, urllib2.quote(thumbnail))
+                play_history.add(history_item, content_type, label if label else item, quote(thumbnail))
             working_dialog.update(40)
             if override_content_type and override_history:
                 history_item = stream_url
@@ -901,10 +917,10 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                     history_item = unresolved_source
                 history_item = history_item.split('|')[0]
                 if '%' not in history_item:
-                    history_item = urllib2.quote(history_item)
+                    history_item = quote(history_item)
                 log_utils.log('Adding source |{0}| to history with content_type |{1}|'
                               .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, override_content_type, source_label, urllib2.quote(source_thumbnail))
+                play_history.add(history_item, override_content_type, source_label, quote(source_thumbnail))
             if player == 'history':
                 return
             if history_item:

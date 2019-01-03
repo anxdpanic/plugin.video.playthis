@@ -18,10 +18,10 @@
 """
 
 import os
-import kodi
-import db_utils
-from url_dispatcher import URL_Dispatcher
-from net import get_ua
+
+from . import kodi
+from . import db_utils
+from .net import get_ua
 
 
 def __enum(**enums):
@@ -31,7 +31,6 @@ def __enum(**enums):
 DATABASE_VERSION = 1
 DATABASE_FILE = kodi.translate_path('special://database/{0!s}{1!s}.db'.format(kodi.get_name(), str(DATABASE_VERSION)))
 DATABASE = db_utils.SQLite(DATABASE_FILE)
-DISPATCHER = URL_Dispatcher()
 
 ADDON_DATA_DIR = kodi.translate_path('special://profile/addon_data/%s/' % kodi.get_id())
 THUMBNAILS_DIR = kodi.translate_path('special://thumbnails/')

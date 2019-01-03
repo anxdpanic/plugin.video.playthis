@@ -16,10 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
-import urllib
-import jsunpack
-import log_utils
-from kodi import i18n
+
+from six.moves.urllib_parse import quote_plus
+
+from . import jsunpack
+from . import log_utils
+from .kodi import i18n
 
 
 class ResolverError(Exception):
@@ -64,7 +66,7 @@ def pick_source(sources):
 
 
 def append_headers(headers):
-    return '|%s' % '&'.join(['%s=%s' % (key, urllib.quote_plus(headers[key])) for key in headers])
+    return '|%s' % '&'.join(['%s=%s' % (key, quote_plus(headers[key])) for key in headers])
 
 
 def get_packed_data(html):

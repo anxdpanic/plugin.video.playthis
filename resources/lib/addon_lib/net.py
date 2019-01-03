@@ -15,16 +15,21 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+
 import random
-import cookielib
 import gzip
 import re
-import StringIO
-import urllib
-import urllib2
 import socket
 import time
-import kodi
+
+from six import StringIO
+from six.moves import http_cookiejar as cookielib
+from six.moves.urllib_parse import urlencode
+from six.moves import urllib_request
+from six.moves import xrange
+
+from . import kodi
+
 
 # Set Global timeout - Useful for slow connections and Putlocker.
 socket.setdefaulttimeout(10)
@@ -165,22 +170,18 @@ class Net:
         :func:`urllib2.urlopen`.
         '''
         if self._http_debug:
-            http = urllib2.HTTPHandler(debuglevel=1)
+            http = urllib_request.HTTPHandler(debuglevel=1)
         else:
-            http = urllib2.HTTPHandler()
+            http = urllib_request.HTTPHandler()
 
         if self._proxy:
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj),
-                                          urllib2.ProxyHandler({'http':
-                                                                    self._proxy}),
-                                          urllib2.HTTPBasicAuthHandler(),
-                                          http)
-
+            opener = urllib_request.build_opener(urllib_request.HTTPCookieProcessor(self._cj),
+                                                 urllib_request.ProxyHandler({'http': self._proxy}),
+                                                 urllib_request.HTTPBasicAuthHandler(), http)
         else:
-            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self._cj),
-                                          urllib2.HTTPBasicAuthHandler(),
-                                          http)
-        urllib2.install_opener(opener)
+            opener = urllib_request.build_opener(urllib_request.HTTPCookieProcessor(self._cj),
+                                                 urllib_request.HTTPBasicAuthHandler(), http)
+            urllib_request.install_opener(opener)
 
     def http_GET(self, url, headers={}, compression=True):
         '''
@@ -239,12 +240,12 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page.
         '''
-        request = urllib2.Request(url)
+        request = urllib_request.Request(url)
         request.get_method = lambda: 'HEAD'
         request.add_header('User-Agent', self._user_agent)
         for key in headers:
             request.add_header(key, headers[key])
-        response = urllib2.urlopen(request)
+        response = urllib_request.urlopen(request)
         return HttpResponse(response)
 
     def _fetch(self, url, form_data={}, headers={}, compression=True):
@@ -268,20 +269,20 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         '''
-        req = urllib2.Request(url)
+        req = urllib_request.Request(url)
         if form_data:
             if isinstance(form_data, basestring):
                 form_data = form_data
             else:
-                form_data = urllib.urlencode(form_data, True)
-            req = urllib2.Request(url, form_data)
+                form_data = urlencode(form_data, True)
+            req = urllib_request.Request(url, form_data)
         req.add_header('User-Agent', self._user_agent)
         for key in headers:
             req.add_header(key, headers[key])
         if compression:
             req.add_header('Accept-Encoding', 'gzip')
         req.add_unredirected_header('Host', req.get_host())
-        response = urllib2.urlopen(req)
+        response = urllib_request.urlopen(req)
         return HttpResponse(response)
 
 
@@ -313,7 +314,7 @@ class HttpResponse:
         encoding = None
         try:
             if self._response.headers['content-encoding'].lower() == 'gzip':
-                html = gzip.GzipFile(fileobj=StringIO.StringIO(html)).read()
+                html = gzip.GzipFile(fileobj=StringIO(html)).read()
         except:
             pass
 

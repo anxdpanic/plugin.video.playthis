@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import log_utils
+from . import log_utils
 
 
 class URL_Dispatcher:

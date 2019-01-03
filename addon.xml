@@ -9,8 +9,9 @@
         <import addon="script.module.resolveurl" version="5.0.0" optional="true"/>
         <import addon="script.module.urlresolver.xxx" optional="true"/>
         <import addon="script.module.resolveurl.xxx" optional="true"/>
-        <import addon="plugin.video.youtube" optional="true"/>
+        <import addon="plugin.video.youtube" optional="true" version="6.2.0"/>
         <import addon="script.module.youtube.dl"/>
+        <import addon="script.module.six" version="1.11.0"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>executable video audio image</provides>

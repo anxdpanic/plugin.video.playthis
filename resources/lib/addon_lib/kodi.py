@@ -17,19 +17,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import xbmcaddon
-import xbmcplugin
-import xbmcgui
-import xbmc
-import xbmcvfs
-import urllib
-import urlparse
 import sys
 import os
 import re
 import json
 import strings
 import time
+
+from six.moves.urllib_parse import parse_qs
+from six.moves.urllib_parse import urlencode
+
+import xbmcaddon
+import xbmcplugin
+import xbmcgui
+import xbmc
+import xbmcvfs
+
 
 __log = xbmc.log
 
@@ -97,12 +100,12 @@ def get_fanart():
 
 def get_plugin_url(queries):
     try:
-        query = urllib.urlencode(queries)
+        query = urlencode(queries)
     except UnicodeEncodeError:
         for k in queries:
             if isinstance(queries[k], unicode):
                 queries[k] = queries[k].encode('utf-8')
-        query = urllib.urlencode(queries)
+        query = urlencode(queries)
 
     return sys.argv[0] + '?' + query
 
@@ -160,7 +163,7 @@ def get_playlist(list_type, new=False):
 def parse_query(query):
     q = {'mode': 'main'}
     if query.startswith('?'): query = query[1:]
-    queries = urlparse.parse_qs(query)
+    queries = parse_qs(query)
     for key in queries:
         if len(queries[key]) == 1:
             q[key] = queries[key][0]

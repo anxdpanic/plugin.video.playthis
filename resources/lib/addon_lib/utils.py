@@ -18,11 +18,15 @@
 """
 
 import re
-from addon_lib import kodi
-from addon_lib import log_utils
-from addon_lib.constants import DATABASE, MODES
-from urllib2 import quote, unquote
-from remote import HttpJSONRPC
+
+from six.moves.urllib_parse import quote
+from six.moves.urllib_parse import unquote
+
+from . import kodi
+from . import log_utils
+from .constants import DATABASE
+from .constants import MODES
+from .remote import HttpJSONRPC
 
 
 class PlayHistory:
@@ -260,7 +264,7 @@ class M3UUtils:
 
     def export(self, results='playthis', ctype='video'):
         if results == 'resolved':
-            from addon_lib.playback import resolve
+            from .playback import resolve
         else:
             def resolve(url):
                 return url

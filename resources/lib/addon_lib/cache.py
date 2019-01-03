@@ -19,11 +19,13 @@
 import functools
 import log_utils
 import time
-import cPickle as pickle
 import hashlib
 import os
 import shutil
-import kodi
+
+from six.moves import cPickle as pickle
+
+from . import kodi
 
 cache_path = kodi.translate_path(os.path.join('special://temp/%s/cache' % kodi.get_id()))
 try:
