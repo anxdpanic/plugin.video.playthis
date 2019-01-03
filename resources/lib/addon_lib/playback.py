@@ -84,7 +84,7 @@ def get_url_with_headers(url, headers):
     url = parts[0]
     url_headers = {}
     if len(parts) > 1:
-        for i in re.finditer('(?:&|^)([^=]+)=(.+?)(?:&|$)', parts[-1]):
+        for i in re.finditer(r'(?:&|^)([^=]+)=(.+?)(?:&|$)', parts[-1]):
             if (i.group(1) == 'Cookie') and ('Cookie' in headers):
                 headers['Cookie'] += urllib.unquote_plus(i.group(2))
             else:
@@ -92,7 +92,7 @@ def get_url_with_headers(url, headers):
     url_headers.update(headers)
     cookie_string = ''
     if 'Cookie' in url_headers:
-        cookie_string = ''.join(c.group(1) for c in re.finditer('(?:^|\s)(.+?=.+?;)', url_headers['Cookie']))
+        cookie_string = ''.join(c.group(1) for c in re.finditer(r'(?:^|\s)(.+?=.+?;)', url_headers['Cookie']))
         del url_headers['Cookie']
     net = Net()
     cookie_jar_result = net.set_cookies(COOKIE_FILE)
@@ -150,7 +150,7 @@ def __get_qt_atom_url(url, headers):
     log_utils.log('Attempting to get url from quicktime atom: |{0!s}|'.format(url), log_utils.LOGDEBUG)
     try:
         result = __get_html_and_headers(url, headers)
-        r = re.search('moov.*?rmra.*?rdrf.*?url (....)(.*)', result['contents'])
+        r = re.search(r'moov.*?rmra.*?rdrf.*?url (....)(.*)', result['contents'])
         l = struct.unpack("!I", r.group(1))[0]
         return {'url': r.group(2)[:l], 'headers': result['headers']}
     except:
@@ -278,19 +278,19 @@ def __get_content_type_and_headers(url, headers=None):
 def __check_for_new_url(url):
     if 'google' in url:
         try:
-            return urllib2.unquote(re.findall('cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
+            return urllib2.unquote(re.findall(r'cache:[a-zA-Z0-9_\-]+:(.+?)\+&amp;', url)[-1])
         except:
             try:
-                return urllib2.unquote(re.findall('google[a-z]*\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
+                return urllib2.unquote(re.findall(r'google[a-z]*\.[a-z]+/.*url=(.+?)[&$]', url)[-1])
             except:
                 pass
     if 'reddit' in url:
         try:
-            return urllib2.unquote(re.findall('http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
+            return urllib2.unquote(re.findall(r'http[s]?://out\.reddit\.com/.*?url=(.+?)&amp;', url)[-1])
         except:
             pass
     if 'youtu.be' in url:
-        result = re.search('http[s]*://youtu.be/(?P<video_id>[a-zA-Z0-9_\-]{11})', url)
+        result = re.search(r'http[s]*://youtu\.be/(?P<video_id>[a-zA-Z0-9_\-]{11})', url)
         if result:
            return 'https://www.youtube.com/watch?v=%s' % result.group('video_id')
 
@@ -311,7 +311,7 @@ def scrape_supported(url, html, regex):
                     sys.exit(0)
                 percent = int((float(index) / float(len_iter)) * 100)
                 stream_url = match[0]
-                if stream_url == '#' or stream_url == '//' or '/' not in stream_url or not re.match('^[hruf:/].+', stream_url) or \
+                if stream_url == '#' or stream_url == '//' or '/' not in stream_url or not re.match(r'^[hruf:/].+', stream_url) or \
                         any(item in stream_url for item in _filter) or any(stream_url == t[1] for t in links):
                     progress_dialog.update(percent, kodi.i18n('preparing_results'), '%s: %s' % (kodi.i18n('discarded'), '%s' % stream_url), ' ')
                     continue
@@ -570,18 +570,18 @@ def _scrape(url):
                             break
 
     log_utils.log('Scraping for iframes', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''iframe src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
+    _to_list(scrape_supported(url, html, r'''iframe src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
     log_utils.log('Scraping for hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''href\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
+    _to_list(scrape_supported(url, html, r'''href\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
     log_utils.log('Scraping for data-hrefs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-href-url\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
+    _to_list(scrape_supported(url, html, r'''data-href-url\s*=\s*['"]([^'"]+)[^>]+(?:(?:(?:data-title|title)\s*=\s*['"]([^'"]+))?(?:[^>]*>([^<]+))?)'''))
     log_utils.log('Scraping for data-lazy-srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''data-lazy-src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
+    _to_list(scrape_supported(url, html, r'''data-lazy-src\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
     log_utils.log('Scraping for srcs', log_utils.LOGDEBUG)
-    _to_list(scrape_supported(url, html, '''src(?<!iframe\s)\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
+    _to_list(scrape_supported(url, html, r'''src(?<!iframe\s)\s*=\s*['"]([^'"]+)(?:[^>]+(?:title|alt)\s*=\s*['"]([^'"]+))?'''))
 
     title = ''
-    match = re.search('title>\s*(.+?)\s*</title', html)
+    match = re.search(r'title>\s*(.+?)\s*</title', html)
     if match:
         title = match.group(1)
         try:
