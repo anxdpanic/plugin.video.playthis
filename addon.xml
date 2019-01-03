@@ -18,8 +18,11 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-- add optional ResolveURL
-- ResolveURL default when URLResolver and ResolveURL are present
+[add] use YouTube add-on to resolve YouTube links if the add-on is available
+[add] reuse language invoker
+[add] Python 3 compat.
+[upd] use SPDX license identifiers
+[upd] resolve inspections and cosmetics
         </news>
         <assets>
             <icon>icon.png</icon>
