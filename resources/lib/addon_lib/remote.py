@@ -38,6 +38,7 @@ import json
 import base64
 import socket
 
+from six import PY2
 from six.moves.urllib_error import HTTPError
 from six.moves.urllib_error import URLError
 from six.moves.urllib_request import Request
@@ -55,7 +56,7 @@ class HttpJSONRPC:
         self.password = kodi.get_setting('remote-password') if password is None else password
         self.has_connection_details = self.ip_address and self.port and self.username and self.password
         self.url = 'http://%s:%s/jsonrpc' % (self.ip_address, self.port) if self.has_connection_details else None
-        self.authorization = base64.b64encode(self.username + b':' + self.password) if self.has_connection_details else None
+        self.authorization = base64.b64encode(self.username.encode('utf-8') + b':' + self.password.encode('utf-8')) if self.has_connection_details else None
         self.headers = {'User-Agent': '%s/%s' % (kodi.get_name(), kodi.get_version()),
                         'Content-Type': 'application/json'}
         if self.authorization:
@@ -80,6 +81,8 @@ class HttpJSONRPC:
         log_utils.log('JSON-RPC request |%s|' % command, log_utils.LOGDEBUG)
         null_response = None
         data = json.dumps(command)
+        if not PY2:
+            data = bytes(data, encoding='utf-8')
         request = Request(self.url, headers=self.headers, data=data)
         method = 'POST'
         request.get_method = lambda: method

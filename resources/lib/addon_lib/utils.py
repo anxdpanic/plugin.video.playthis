@@ -11,6 +11,7 @@
 
 import re
 
+from six import PY2
 from six.moves.urllib_parse import quote
 from six.moves.urllib_parse import unquote
 
@@ -289,8 +290,10 @@ class M3UUtils:
 
             if m3u != _m3u:
                 log_utils.log('M3UUtils.export writing .m3u: |{0!s}|'.format(self.filename), log_utils.LOGDEBUG)
+                if not PY2:
+                    m3u = bytes(m3u, encoding='utf-8')
                 try:
-                    with open(self.filename, 'w+') as f:
+                    with open(self.filename, 'wb+') as f:
                         f.write(m3u)
                     log_utils.log('M3UUtils.export writing .m3u completed.', log_utils.LOGDEBUG)
                     kodi.notify(msg=kodi.i18n('export_success'), sound=False)
@@ -319,8 +322,10 @@ class STRMUtils:
 
             if strm:
                 log_utils.log('STRMUtils.export writing .m3u: |{0!s}|'.format(self.filename), log_utils.LOGDEBUG)
+                if not PY2:
+                    strm = bytes(strm, encoding='utf-8')
                 try:
-                    with open(self.filename, 'w+') as f:
+                    with open(self.filename, 'wb+') as f:
                         f.write(strm)
                     log_utils.log('STRMUtils.export writing .m3u completed.', log_utils.LOGDEBUG)
                     kodi.notify(msg=kodi.i18n('export_success'), sound=False)
