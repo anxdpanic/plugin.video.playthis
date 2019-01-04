@@ -379,14 +379,21 @@ def get_kodi_version():
 
 class WorkingDialog(object):
     wd = None
+    kv = get_kodi_version().major
 
     def __init__(self):
         try:
-            self.wd = xbmcgui.DialogBusy()
-            self.wd.create()
-            self.update(0)
+            if self.kv < 18:
+                self.wd = xbmcgui.DialogBusy()
+                self.wd.create()
+                self.update(0)
+            else:
+                xbmc.executebuiltin('ActivateWindow(busydialognocancel)')
         except:
-            xbmc.executebuiltin('ActivateWindow(busydialog)')
+            if self.kv < 18:
+                xbmc.executebuiltin('ActivateWindow(busydialog)')
+            else:
+                xbmc.executebuiltin('ActivateWindow(busydialognocancel)')
 
     def __enter__(self):
         return self
@@ -395,7 +402,10 @@ class WorkingDialog(object):
         if self.wd is not None:
             self.wd.close()
         else:
-            xbmc.executebuiltin('Dialog.Close(busydialog)')
+            if self.kv < 18:
+                xbmc.executebuiltin('Dialog.Close(busydialog)')
+            else:
+                xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
 
     def is_canceled(self):
         if self.wd is not None:
