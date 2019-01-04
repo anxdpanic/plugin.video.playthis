@@ -17,6 +17,7 @@ import socket
 import time
 
 from six import StringIO
+from six import string_types
 from six.moves import http_cookiejar as cookielib
 from six.moves.urllib_parse import urlencode
 from six.moves import urllib_request
@@ -265,7 +266,7 @@ class Net:
         '''
         req = urllib_request.Request(url)
         if form_data:
-            if isinstance(form_data, basestring):
+            if isinstance(form_data, string_types):
                 form_data = form_data
             else:
                 form_data = urlencode(form_data, True)
