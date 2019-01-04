@@ -12,7 +12,6 @@
 
 
 import functools
-import log_utils
 import time
 import hashlib
 import os
@@ -21,6 +20,8 @@ import shutil
 from six.moves import cPickle as pickle
 
 from . import kodi
+from . import log_utils
+
 
 cache_path = kodi.translate_path(os.path.join('special://temp/%s/cache' % kodi.get_id()))
 try:
@@ -51,7 +52,7 @@ def _get_func(name, args=None, kwargs=None, cache_limit=1):
     if os.path.exists(full_path):
         mtime = os.path.getmtime(full_path)
         if mtime >= max_age:
-            with open(full_path, 'r') as f:
+            with open(full_path, 'rb') as f:
                 pickled_result = f.read()
             # log_utils.log('Returning cached result: |%s|%s|%s| - modtime: %s max_age: %s age: %ss' % (name, args, kwargs, mtime, max_age, now - mtime), log_utils.LOGDEBUG)
             return True, pickle.loads(pickled_result)
@@ -65,14 +66,14 @@ def _save_func(name, args=None, kwargs=None, result=None):
         if kwargs is None: kwargs = {}
         pickled_result = pickle.dumps(result)
         full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))
-        with open(full_path, 'w') as f:
+        with open(full_path, 'wb') as f:
             f.write(pickled_result)
     except Exception as e:
         log_utils.log('Failure during cache write: %s' % (e), log_utils.LOGWARNING)
 
 
 def _get_filename(name, args, kwargs):
-    arg_hash = hashlib.md5(name).hexdigest() + hashlib.md5(str(args)).hexdigest() + hashlib.md5(str(kwargs)).hexdigest()
+    arg_hash = hashlib.md5(name.encode('utf-8')).hexdigest() + hashlib.md5(str(args).encode('utf-8')).hexdigest() + hashlib.md5(str(kwargs).encode('utf-8')).hexdigest()
     return arg_hash
 
 

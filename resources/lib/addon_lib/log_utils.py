@@ -32,7 +32,7 @@ name = kodi.get_name()
 
 def log(msg, level=LOGDEBUG):
     try:
-        if isinstance(msg, unicode):
+        if kodi.is_unicode(msg):
             msg = '%s (ENCODED)' % msg.encode('utf-8')
 
         kodi.__log('%s: %s' % (name, msg), level)

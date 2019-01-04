@@ -14,9 +14,13 @@ import sys
 import os
 import re
 import json
-import strings
 import time
 
+from six import PY2
+from six import PY3
+from six import string_types
+from six import text_type
+from six import with_metaclass
 from six.moves.urllib_parse import parse_qs
 from six.moves.urllib_parse import urlencode
 
@@ -25,6 +29,8 @@ import xbmcplugin
 import xbmcgui
 import xbmc
 import xbmcvfs
+
+from . import strings
 
 
 __log = xbmc.log
@@ -43,8 +49,22 @@ get_setting = addon.getSetting
 show_settings = addon.openSettings
 
 
+def decode_utf8(string, ignore=False):
+    try:
+        if not ignore:
+            return string.decode('utf-8')
+        else:
+            return string.decode('utf-8', 'ignore')
+    except AttributeError:
+        return string
+
+
+def is_unicode(string):
+    return PY2 and isinstance(string, text_type)
+
+
 def execute_jsonrpc(command):
-    if not isinstance(command, basestring):
+    if not isinstance(command, string_types):
         command = json.dumps(command)
     response = xbmc.executeJSONRPC(command)
     return json.loads(response)
@@ -55,19 +75,19 @@ def get_handle():
 
 
 def get_path():
-    return addon.getAddonInfo('path').decode('utf-8')
+    return decode_utf8(addon.getAddonInfo('path'))
 
 
 def get_profile():
-    return addon.getAddonInfo('profile').decode('utf-8')
+    return decode_utf8(addon.getAddonInfo('profile'))
 
 
 def translate_path(path):
-    return xbmc.translatePath(path).decode('utf-8')
+    return decode_utf8(xbmc.translatePath(path))
 
 
 def set_setting(id, value):
-    if not isinstance(value, basestring): value = str(value)
+    if not isinstance(value, string_types): value = str(value)
     addon.setSetting(id, value)
 
 
@@ -96,7 +116,7 @@ def get_plugin_url(queries):
         query = urlencode(queries)
     except UnicodeEncodeError:
         for k in queries:
-            if isinstance(queries[k], unicode):
+            if is_unicode(queries[k]):
                 queries[k] = queries[k].encode('utf-8')
         query = urlencode(queries)
 
@@ -226,7 +246,10 @@ def get_keyboard(heading, default=''):
 
 def i18n(string_id):
     try:
-        return addon.getLocalizedString(strings.STRINGS[string_id]).encode('utf-8', 'ignore')
+        if PY3:
+            return addon.getLocalizedString(strings.STRINGS[string_id])
+        else:
+            return addon.getLocalizedString(strings.STRINGS[string_id]).encode('utf-8', 'ignore')
     except Exception as e:
         xbmc.log('%s: Failed String Lookup: %s (%s)' % (get_name(), string_id, e), xbmc.LOGWARNING)
         return string_id
@@ -321,9 +344,8 @@ def get_kodi_version():
         def __str__(self):
             return '|%s| -> |%s|%s|%s|%s|%s|' % (self.version, self.major, self.minor, self.tag, self.tag_version, self.revision)
 
-    class KodiVersion(object):
-        __metaclass__ = MetaClass
-        version = xbmc.getInfoLabel('System.BuildVersion').decode('utf-8')
+    class KodiVersion(with_metaclass(MetaClass, object)):
+        version = decode_utf8(xbmc.getInfoLabel('System.BuildVersion'))
         match = re.search('([0-9]+)\.([0-9]+)', version)
         if match: major, minor = match.groups()
         match = re.search('-([a-zA-Z]+)([0-9]*)', version)
@@ -340,11 +362,11 @@ def get_kodi_version():
         except:
             minor = 0
         try:
-            revision = revision.decode('utf-8')
+            revision = decode_utf8(revision)
         except:
             revision = u''
         try:
-            tag = tag.decode('utf-8')
+            tag = decode_utf8(tag)
         except:
             tag = u''
         try:

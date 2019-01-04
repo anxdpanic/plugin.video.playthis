@@ -14,6 +14,7 @@ import sys
 import struct
 import socket
 
+from six import string_types
 from six.moves.html_parser import HTMLParser
 from six.moves.urllib_parse import parse_qsl
 from six.moves.urllib_parse import urlparse
@@ -76,7 +77,7 @@ has_youtube_addon = kodi.has_addon('plugin.video.youtube')
 adaptive_version = None
 if dash_supported:
     adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
-hls_supported = False if adaptive_version is None else (adaptive_version >= kodi.loose_version('2.0.10'))  # Kodi 17.4
+hls_supported = False if adaptive_version is None else (kodi.loose_version(adaptive_version) >= kodi.loose_version('2.0.10'))  # Kodi 17.4
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
@@ -196,7 +197,7 @@ def __get_gen_extractors_names():
     for extractor in extractors:
         if extractor.IE_NAME == 'generic': continue
         name = extractor.IE_NAME.lower().split(':')[0]
-        if isinstance(name, unicode):
+        if kodi.is_unicode(name):
             name = name.encode('utf-8')
         names.add(name)
     return list(names)
@@ -337,8 +338,8 @@ def scrape_supported(url, html, regex):
                     label = match[2].strip()
                 elif (len(match) > 1) and (match[1] is not None) and (match[1].strip()) and (host not in match[1]):
                     label = match[1].strip()
-                if not isinstance(label, unicode):
-                    label = label.decode('utf-8', 'ignore')
+                if not kodi.is_unicode(label):
+                    label = kodi.decode_utf8(label, ignore=True)
                 try:
                     parser = HTMLParser()
                     label = parser.unescape(label)
@@ -466,7 +467,7 @@ def resolve(url, title=''):
         resolved = source.resolve()
     except:
         resolved = None
-    if not resolved or not isinstance(resolved, basestring):
+    if not resolved or not isinstance(resolved, string_types):
         log_utils.log('Unable to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
         return None
     else:
