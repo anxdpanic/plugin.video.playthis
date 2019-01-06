@@ -110,9 +110,12 @@ def get_url_with_headers(url, headers):
             if c.value not in cookie_string:
                 cookie_string += '%s=%s;' % (c.name, c.value)
     if cookie_string:
-        return url + append_headers(url_headers) + '&Cookie=' + quote_plus(cookie_string)
-
-    return url + append_headers(url_headers)
+        sep = '&' if url_headers else ''
+        return url + append_headers(url_headers) + sep + 'Cookie=' + quote_plus(cookie_string)
+    if url_headers:
+        return url + append_headers(url_headers)
+    else:
+        return url
 
 
 def get_default_headers(url):
