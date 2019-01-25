@@ -724,7 +724,7 @@ def play(source, player=True):
                 playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
                 playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             playback_item.setInfo(source['content_type'], source['info'])
-            if player:
+            if kodi.get_handle() == -1:
                 log_utils.log('Play using Player(): |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
                 kodi.Player().play(source['url'], playback_item)
             else:
