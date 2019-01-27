@@ -12,3 +12,6 @@ notifications:
   webhooks: https://www.travisbuddy.com/
   email:
     on_failure: change
+
+travisBuddy:
+  successBuildLog: true
