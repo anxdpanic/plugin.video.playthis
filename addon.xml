@@ -7,19 +7,13 @@
         <import addon="plugin.video.youtube" version="6.2.0" optional="true"/>
         <import addon="script.module.resolveurl" version="5.0.0" optional="true"/>
         <import addon="script.module.resolveurl.xxx" version="2.0.0" optional="true"/>
-        <import addon="script.module.urlresolver" version="3.0.0" optional="true"/>
-        <import addon="script.module.urlresolver.xxx" version="1.0.0" optional="true"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>executable video audio image</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[add] use YouTube add-on to resolve YouTube links if the add-on is available
-[add] reuse language invoker
-[add] Python 3 compat.
-[upd] use SPDX license identifiers
-[upd] resolve inspections and cosmetics
+[test] do not merge
         </news>
         <assets>
             <icon>icon.png</icon>
