@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.playthis" name="PlayThis" version="4.0.0" provider-name="anxdpanic">
+<addon id="plugin.video.playthis" name="PlayThis" version="4.0.1" provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
         <import addon="script.module.six" version="1.11.0"/>
@@ -13,11 +13,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[add] use YouTube add-on to resolve YouTube links if the add-on is available
-[add] reuse language invoker
-[add] Python 3 compat.
-[upd] use SPDX license identifiers
-[upd] resolve inspections and cosmetics
+[rem] URLResolver as optional dependency
         </news>
         <assets>
             <icon>icon.png</icon>
