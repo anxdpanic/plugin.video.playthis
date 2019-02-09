@@ -247,9 +247,7 @@ msgctxt "#30704"
 msgid "Directory"
 msgstr "תיקייה"
 
-msgctxt "#30705"
-msgid "URLResolver settings"
-msgstr "הגדרות URLResolver"
+# 30705
 
 msgctxt "#30706"
 msgid "M3U export path"

@@ -238,14 +238,6 @@ def clear_cookies():
             kodi.notify(msg=kodi.i18n('cookies_failed'), sound=False)
 
 
-@DISPATCHER.register(MODES.URLRESOLVER)
-def urlresolver_settings():
-    try:
-        kodi.Addon(id='script.module.urlresolver').openSettings()
-    except RuntimeError:
-        pass
-
-
 @DISPATCHER.register(MODES.RESOLVEURL)
 def resolveurl_settings():
     try:

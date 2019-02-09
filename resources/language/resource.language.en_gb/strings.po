@@ -246,9 +246,7 @@ msgctxt "#30704"
 msgid "Directory"
 msgstr ""
 
-msgctxt "#30705"
-msgid "URLResolver settings"
-msgstr ""
+# 30705
 
 msgctxt "#30706"
 msgid "M3U export path"

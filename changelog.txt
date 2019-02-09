@@ -1,3 +1,6 @@
+4.0.1
+[rem] URLResolver as optional dependency
+
 4.0.0
 [add] use YouTube add-on to resolve YouTube links if the add-on is available
 [add] reuse language invoker
