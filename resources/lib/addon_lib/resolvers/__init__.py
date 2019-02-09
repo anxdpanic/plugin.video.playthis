@@ -9,4 +9,4 @@
     See LICENSES/GPL-3.0-only for more information.
 """
 
-__all__ = ['resolveurl', 'urlresolver']
+__all__ = ['resolveurl']

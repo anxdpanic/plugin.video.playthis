@@ -34,7 +34,6 @@ from .urlresolver_helpers import parse_smil_source_list
 from .urlresolver_helpers import get_hidden
 from .urlresolver_helpers import append_headers
 from .urlresolver_helpers import get_packed_data
-from .constants import URLRESOLVER_DIRS
 from .constants import RESOLVEURL_DIRS
 from .constants import COOKIE_FILE
 from .constants import ICONS
@@ -43,7 +42,6 @@ from .constants import RAND_UA
 from .constants import FF_USER_AGENT
 
 
-has_urlresolver = None
 has_resolveurl = None
 has_youtube = None
 
@@ -52,12 +50,7 @@ try:
 
     has_resolveurl = 'ResolveURL'
 except ImportError:
-    try:
-        from urlresolver import add_plugin_dirs, HostedMediaFile
-
-        has_urlresolver = 'URLResolver'
-    except ImportError:
-        pass
+    pass
 
 try:
     import youtube_resolver
@@ -378,7 +371,7 @@ def scrape_supported(url, html, regex):
                     links.append({'label': label, 'url': stream_url, 'resolver': resolver_name, 'content_type': 'video'})
                     continue
 
-                if has_urlresolver or has_resolveurl:
+                if has_resolveurl:
                     hmf = HostedMediaFile(url=stream_url, include_disabled=False)
                     is_valid = hmf.valid_url()
                 else:
@@ -388,7 +381,7 @@ def scrape_supported(url, html, regex):
                 is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
 
                 if is_valid and is_valid_type:
-                    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+                    resolver_name = has_resolveurl
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
                                            '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', resolver_name),
                                            '[%s]: %s' % (label, stream_url))
@@ -453,8 +446,8 @@ def resolve_yt_addon(url):
 @cache.cache_function(cache_limit=resolver_cache_limit)
 def resolve(url, title=''):
     resolver_dirs = []
-    resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
-    _resolver_dirs = RESOLVEURL_DIRS if has_resolveurl else URLRESOLVER_DIRS
+    resolver_name = has_resolveurl
+    _resolver_dirs = RESOLVEURL_DIRS
     for plugin_path in _resolver_dirs:
         if kodi.vfs.exists(plugin_path):
             resolver_dirs.append(plugin_path)
@@ -542,8 +535,7 @@ def __pick_source(sources):
                     icon = ICONS.YOUTUBE
                 elif source['resolver'] == 'youtube-dl':
                     icon = ICONS.YOUTUBEDL
-                elif source['resolver'] == 'URLResolver':
-                    icon = ICONS.URLRESOLVER
+
                 elif source['resolver'] == 'ResolveURL':
                     icon = ICONS.RESOLVEURL
                 l_item = kodi.ListItem(label=title, label2=label2)
@@ -626,7 +618,7 @@ def scrape(url):
                     content_type = yt_result['content_type']
                     headers = yt_result['headers']
                     thumbnail = yt_result['thumbnail']
-                elif chosen['resolver'] == 'URLResolver' or chosen['resolver'] == 'ResolveURL':
+                elif chosen['resolver'] == 'ResolveURL':
                     resolved = resolve(chosen['url'], title=chosen['label'])
                 if chosen['resolver'] == 'youtube-dl' or not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
@@ -816,9 +808,9 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                                 stream_url = source
 
                     if not stream_url:
-                        resolver_name = has_resolveurl if has_resolveurl else has_urlresolver
+                        resolver_name = has_resolveurl
                         progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
-                        if has_urlresolver or has_resolveurl:
+                        if has_resolveurl:
                             source = resolve(item, title=title)
                             if source:
                                 log_utils.log('Source |{0}| was |{1} supported|'.format(source, resolver_name), log_utils.LOGDEBUG)
