@@ -4,6 +4,7 @@
 ![Build Status](https://img.shields.io/travis/anxdpanic/plugin.video.playthis/master.svg)
 ![License](https://img.shields.io/badge/license-GPL--3.0--only-success.svg)
 ![Kodi Version](https://img.shields.io/badge/kodi-jarvis%2B-success.svg)
+![Contributors](https://img.shields.io/github/contributors/anxdpanic/plugin.video.playthis.svg)
 
 The PlayThis add-on will attempt to find and resolve<sup>1</sup> media from a url to play or open. A history list is available for future use, exporting to .m3u/.strm<sup>2</sup> and sending to a remote PlayThis add-on. Supports video, audio, images and executable<sup>3</sup>.
 * <sup>1</sup> resolves using ResolveURL(optional) or URLResolver(optional), and youtube-dl
