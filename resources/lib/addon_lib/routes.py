@@ -25,7 +25,6 @@ from .constants import THUMBNAILS_DIR
 from .remote import HttpJSONRPC
 from .url_dispatcher import URL_Dispatcher
 
-
 DISPATCHER = URL_Dispatcher()
 
 
@@ -236,14 +235,6 @@ def clear_cookies():
             kodi.notify(msg=kodi.i18n('cookies_success'), sound=False)
         else:
             kodi.notify(msg=kodi.i18n('cookies_failed'), sound=False)
-
-
-@DISPATCHER.register(MODES.RESOLVEURL)
-def resolveurl_settings():
-    try:
-        kodi.Addon(id='script.module.resolveurl').openSettings()
-    except RuntimeError:
-        pass
 
 
 @DISPATCHER.register(MODES.YOUTUBEDL)

@@ -27,9 +27,6 @@ DATABASE = db_utils.SQLite(DATABASE_FILE)
 ADDON_DATA_DIR = kodi.translate_path('special://profile/addon_data/%s/' % kodi.get_id())
 THUMBNAILS_DIR = kodi.translate_path('special://thumbnails/')
 
-RESOLVEURL_DIRS = [kodi.translate_path('special://home/addons/{0!s}/resources/lib/addon_lib/resolvers/resolveurl/'.format(kodi.get_id())),
-                   kodi.translate_path('special://home/addons/script.module.resolveurl.xxx/resources/plugins/')]
-
 COOKIE_FILE = kodi.translate_path('special://temp/%s/cookies.lwp' % kodi.get_id())
 
 MODES = __enum(
@@ -48,13 +45,11 @@ MODES = __enum(
     CLEARCOOKIES='clearcookies',
     YOUTUBEDL='ytdl',
     EXPORT_MENU='export_menu',
-    MANAGE_MENU='manage_menu',
-    RESOLVEURL='resolveurl')
+    MANAGE_MENU='manage_menu')
 
 ICONS = __enum(
     ADDON=kodi.translate_path('special://home/addons/{0!s}/icon.png'.format(kodi.get_id())),
     KODI=kodi.translate_path('special://xbmc/media/icon256x256.png'),
-    RESOLVEURL=kodi.translate_path('special://home/addons/script.module.resolveurl/icon.png'),
     YOUTUBEDL=kodi.translate_path('special://home/addons/script.module.youtube.dl/icon.png'),
     YOUTUBE=kodi.translate_path('special://home/addons/plugin.video.youtube/icon.png'))
 

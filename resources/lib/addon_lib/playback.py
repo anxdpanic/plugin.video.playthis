@@ -34,23 +34,13 @@ from .urlresolver_helpers import parse_smil_source_list
 from .urlresolver_helpers import get_hidden
 from .urlresolver_helpers import append_headers
 from .urlresolver_helpers import get_packed_data
-from .constants import RESOLVEURL_DIRS
 from .constants import COOKIE_FILE
 from .constants import ICONS
 from .constants import MODES
 from .constants import RAND_UA
 from .constants import FF_USER_AGENT
 
-
-has_resolveurl = None
 has_youtube = None
-
-try:
-    from resolveurl import add_plugin_dirs, HostedMediaFile
-
-    has_resolveurl = 'ResolveURL'
-except ImportError:
-    pass
 
 try:
     import youtube_resolver
@@ -297,7 +287,7 @@ def __check_for_new_url(url):
     if 'youtu.be' in url:
         result = re.search(r'http[s]*://youtu\.be/(?P<video_id>[a-zA-Z0-9_\-]{11})', url)
         if result:
-           return 'https://www.youtube.com/watch?v=%s' % result.group('video_id')
+            return 'https://www.youtube.com/watch?v=%s' % result.group('video_id')
 
     return url
 
@@ -371,39 +361,25 @@ def scrape_supported(url, html, regex):
                     links.append({'label': label, 'url': stream_url, 'resolver': resolver_name, 'content_type': 'video'})
                     continue
 
-                if has_resolveurl:
-                    hmf = HostedMediaFile(url=stream_url, include_disabled=False)
-                    is_valid = hmf.valid_url()
-                else:
-                    is_valid = False
-
                 potential_type = __get_potential_type(stream_url)
-                is_valid_type = (potential_type != 'audio') and (potential_type != 'image')
 
-                if is_valid and is_valid_type:
-                    resolver_name = has_resolveurl
+                if potential_type == 'text':
+                    if ytdl_supported(stream_url):
+                        progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                               '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
+                                               '[%s]: %s' % (label, stream_url))
+                        links.append({'label': label, 'url': stream_url, 'resolver': 'youtube-dl', 'content_type': 'video'})
+                        continue
                     progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', resolver_name),
+                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
                                            '[%s]: %s' % (label, stream_url))
-                    links.append({'label': label, 'url': stream_url, 'resolver': resolver_name, 'content_type': 'video'})
-                    continue
                 else:
-                    if potential_type == 'text':
-                        if ytdl_supported(stream_url):
-                            progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                                   '%s [%s]: %s' % (kodi.i18n('support_potential'), 'video', 'youtube-dl'),
-                                                   '[%s]: %s' % (label, stream_url))
-                            links.append({'label': label, 'url': stream_url, 'resolver': 'youtube-dl', 'content_type': 'video'})
-                            continue
-                        progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                               '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'None'),
-                                               '[%s]: %s' % (label, stream_url))
-                    else:
-                        progress_dialog.update(percent, kodi.i18n('check_for_support'),
-                                               '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'Kodi'),
-                                               '[%s]: %s' % (label, stream_url))
-                    links.append({'label': label, 'url': stream_url, 'resolver': None, 'content_type': potential_type})
-                    continue
+                    progress_dialog.update(percent, kodi.i18n('check_for_support'),
+                                           '%s [%s]: %s' % (kodi.i18n('support_potential'), potential_type, 'Kodi'),
+                                           '[%s]: %s' % (label, stream_url))
+                links.append({'label': label, 'url': stream_url, 'resolver': None, 'content_type': potential_type})
+                continue
+
             if progress_dialog.is_canceled():
                 sys.exit(0)
             break
@@ -441,33 +417,6 @@ def resolve_yt_addon(url):
             thumbnail = thmb
 
     return {'label': label, 'resolved_url': stream_url, 'content_type': content_type, 'thumbnail': thumbnail, 'headers': headers}
-
-
-@cache.cache_function(cache_limit=resolver_cache_limit)
-def resolve(url, title=''):
-    resolver_dirs = []
-    resolver_name = has_resolveurl
-    _resolver_dirs = RESOLVEURL_DIRS
-    for plugin_path in _resolver_dirs:
-        if kodi.vfs.exists(plugin_path):
-            resolver_dirs.append(plugin_path)
-    if resolver_dirs:
-        add_plugin_dirs(resolver_dirs)
-
-    log_utils.log('Attempting to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
-    source = HostedMediaFile(url=url, title=title, include_disabled=False)
-    if not source:
-        log_utils.log('Not supported by {1!s}: |{0!s}|'.format(url, resolver_name), log_utils.LOGDEBUG)
-        return None
-    try:
-        resolved = source.resolve()
-    except:
-        resolved = None
-    if not resolved or not isinstance(resolved, string_types):
-        log_utils.log('Unable to resolve: |{0!s}|'.format(url), log_utils.LOGDEBUG)
-        return None
-    else:
-        return resolved
 
 
 @cache.cache_function(cache_limit=resolver_cache_limit)
@@ -536,8 +485,6 @@ def __pick_source(sources):
                 elif source['resolver'] == 'youtube-dl':
                     icon = ICONS.YOUTUBEDL
 
-                elif source['resolver'] == 'ResolveURL':
-                    icon = ICONS.RESOLVEURL
                 l_item = kodi.ListItem(label=title, label2=label2)
                 l_item.setArt({'icon': icon, 'thumb': icon})
                 listitem_sources.append(l_item)
@@ -618,8 +565,6 @@ def scrape(url):
                     content_type = yt_result['content_type']
                     headers = yt_result['headers']
                     thumbnail = yt_result['thumbnail']
-                elif chosen['resolver'] == 'ResolveURL':
-                    resolved = resolve(chosen['url'], title=chosen['label'])
                 if chosen['resolver'] == 'youtube-dl' or not resolved:
                     ytdl_result = resolve_youtube_dl(chosen['url'])
                     label = ytdl_result['label']
@@ -806,22 +751,6 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
                                                        '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name),
                                                        '%s: %s' % (kodi.i18n('resolution_successful'), source))
                                 stream_url = source
-
-                    if not stream_url:
-                        resolver_name = has_resolveurl
-                        progress_dialog.update(60, '%s: %s' % (kodi.i18n('source'), item), '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name), ' ')
-                        if has_resolveurl:
-                            source = resolve(item, title=title)
-                            if source:
-                                log_utils.log('Source |{0}| was |{1} supported|'.format(source, resolver_name), log_utils.LOGDEBUG)
-                                sd_result = __check_smil_dash(source, headers)
-                                source = sd_result['url']
-                                is_dash = sd_result['is_dash']
-                                if source:
-                                    progress_dialog.update(98, '%s: %s' % (kodi.i18n('source'), item),
-                                                           '%s: %s' % (kodi.i18n('attempt_resolve_with'), resolver_name),
-                                                           '%s: %s' % (kodi.i18n('resolution_successful'), source))
-                                    stream_url = source
 
                     if not stream_url:
                         if progress_dialog.is_canceled():
