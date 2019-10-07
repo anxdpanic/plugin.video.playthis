@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.playthis" name="PlayThis" version="4.0.1" provider-name="anxdpanic">
+<addon id="plugin.video.playthis" name="PlayThis" version="5.0.0" provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
         <import addon="script.module.six" version="1.11.0"/>
         <import addon="script.module.youtube.dl" version="18.619.0"/>
         <import addon="plugin.video.youtube" version="6.2.0" optional="true"/>
-        <import addon="script.module.resolveurl" version="5.0.0" optional="true"/>
-        <import addon="script.module.resolveurl.xxx" version="2.0.0" optional="true"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="resources/lib/__run__.py">
         <provides>executable video audio image</provides>
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[rem] URLResolver as optional dependency
+[chg] only use youtube-dl to resolve content
         </news>
         <assets>
             <icon>icon.png</icon>
@@ -27,7 +25,7 @@
         <summary lang="en_GB">Find and resolve media from a url to play or open.</summary>
         <description lang="en_GB">
 PlayThis will attempt to find and resolve* media from a url to play or open. A history list is available for future use, exporting to .m3u/.strm** and sending to a remote PlayThis add-on. Supports video, audio, images and executable***.
-* resolves using youtube-dl and ResolveURL(optional)
+* resolves using youtube-dl
 ** exported .m3u/.strm is only usable in Kodi w/ PlayThis installed
 *** 'executable' items are urls with potential results available through scraping
 

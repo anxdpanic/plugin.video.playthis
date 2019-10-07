@@ -20,7 +20,6 @@
     </category>
     <!-- Resolvers -->
     <category label="30709">
-        <setting label="30725" id="resolveurl-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=resolveurl)" visible="System.HasAddon(script.module.resolveurl)"/>
         <setting label="30712" id="youtube-dl-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=ytdl)"/>
         <setting id="current_ua" type="text" default="" visible="false" enable="true"/>
         <setting id="last_ua_create" type="text" default="" visible="false" enable="true"/>

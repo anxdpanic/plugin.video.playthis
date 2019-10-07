@@ -1,3 +1,6 @@
+5.0.0
+[chg] only use youtube-dl to resolve content
+
 4.0.1
 [rem] URLResolver as optional dependency
 
