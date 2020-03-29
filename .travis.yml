@@ -22,4 +22,4 @@ before_script:
     cd $HOME
 
 script:
-  - kodi-addon-checker $TRAVIS_BUILD_DIR --branch=jarvis
+  - kodi-addon-checker $TRAVIS_BUILD_DIR --branch=matrix
