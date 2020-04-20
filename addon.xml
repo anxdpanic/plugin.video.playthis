@@ -11,7 +11,8 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[chg] only use youtube-dl to resolve content
+[fix] progress dialog in Kodi 19 nightlies
+[fix] handling of inputstream.adaptive not being installed
         </news>
         <assets>
             <icon>icon.png</icon>
