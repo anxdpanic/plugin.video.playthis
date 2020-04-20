@@ -59,8 +59,12 @@ has_youtube_addon = kodi.has_addon('plugin.video.youtube')
 
 adaptive_version = None
 if dash_supported:
-    adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
-hls_supported = False if adaptive_version is None else (kodi.loose_version(adaptive_version) >= kodi.loose_version('2.0.10'))  # Kodi 17.4
+    try:
+        adaptive_version = kodi.Addon('inputstream.adaptive').getAddonInfo('version')
+        hls_supported = False if adaptive_version is None else (kodi.loose_version(adaptive_version) >= kodi.loose_version('2.0.10'))  # Kodi 17.4
+    except RuntimeError:
+        dash_supported = False
+        hls_supported = False
 
 user_cache_limit = int(kodi.get_setting('cache-expire-time'))
 resolver_cache_limit = 0.11  # keep resolver caching to 10 > minutes > 5, resolved sources expire
