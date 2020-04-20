@@ -653,16 +653,19 @@ def play(source, player=True):
             playback_item.setProperty('IsPlayable', 'true')
             playback_item.setArt(source['art'])
             playback_item.addStreamInfo(source['content_type'], {})
+            inputstream_property = 'inputstream'
+            if kodi.get_kodi_version().major < 19:
+                inputstream_property += 'addon'
             if source['is_dash']:
                 playback_item.setContentLookup(False)
                 playback_item.setMimeType('application/xml+dash')
-                playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                playback_item.setProperty(inputstream_property, 'inputstream.adaptive')
                 playback_item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
             elif (source['url'].startswith('rtmp')) and (inputstream_rtmp):
                 if kodi.addon_enabled('inputstream.rtmp'):
-                    playback_item.setProperty('inputstreamaddon', 'inputstream.rtmp')
+                    playback_item.setProperty(inputstream_property, 'inputstream.rtmp')
             elif ('.m3u8' in source['url']) and (hls_supported):
-                playback_item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                playback_item.setProperty(inputstream_property, 'inputstream.adaptive')
                 playback_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             playback_item.setInfo(source['content_type'], source['info'])
             if kodi.get_handle() == -1:
