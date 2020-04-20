@@ -1,5 +1,6 @@
 5.0.1
 [fix] progress dialog in Kodi 19 nightlies
+[fix] inputstream property in Kodi 19 nightlies
 [fix] handling of inputstream.adaptive not being installed
 
 5.0.0
