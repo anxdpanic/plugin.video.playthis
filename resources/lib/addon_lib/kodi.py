@@ -438,7 +438,11 @@ class ProgressDialog(object):
             pd.create(self.heading, msg)
         else:
             pd = xbmcgui.DialogProgress()
-            pd.create(self.heading, line1, line2, line3)
+            if get_kodi_version().major <= 18:
+                pd.create(self.heading, line1, line2, line3)
+            else:
+                msg = '[CR]'.join([line1, line2, line3])
+                pd.create(self.heading, msg)
         return pd
 
     def __enter__(self):
@@ -463,7 +467,11 @@ class ProgressDialog(object):
                 msg = line1 + line2 + line3
                 self.pd.update(percent, self.heading, msg)
             else:
-                self.pd.update(percent, line1, line2, line3)
+                if get_kodi_version().major <= 18:
+                    self.pd.update(percent, line1, line2, line3)
+                else:
+                    msg = '[CR]'.join([line1, line2, line3])
+                    self.pd.update(percent, msg)
 
 
 class CountdownDialog(object):
