@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.playthis" name="PlayThis" version="5.0.1" provider-name="anxdpanic">
+<addon id="plugin.video.playthis" name="PlayThis" version="5.0.2" provider-name="anxdpanic">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
         <import addon="script.module.six" version="1.11.0"/>
@@ -11,9 +11,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[fix] progress dialog in Kodi 19 nightlies
-[fix] inputstream property in Kodi 19 nightlies
-[fix] handling of inputstream.adaptive not being installed
+[upd] Use new settings format on Kodi 19
         </news>
         <assets>
             <icon>icon.png</icon>
