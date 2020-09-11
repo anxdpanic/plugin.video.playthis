@@ -80,7 +80,6 @@
 					<default/>
 					<constraints>
 						<sources>
-							<source/>
 						</sources>
 						<allowempty>true</allowempty>
 					</constraints>
@@ -93,7 +92,6 @@
 					<default/>
 					<constraints>
 						<sources>
-							<source/>
 						</sources>
 						<allowempty>true</allowempty>
 					</constraints>
