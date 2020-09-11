@@ -17,14 +17,14 @@ from xbmc import LOGERROR
 from xbmc import LOGFATAL
 from xbmc import LOGINFO
 from xbmc import LOGNONE
-from xbmc import LOGNOTICE
-from xbmc import LOGSEVERE
 from xbmc import LOGWARNING
+
+LOGNOTICE = LOGINFO
 
 from . import kodi
 
 
-__all__ = ['log', 'trace', 'LOGDEBUG', 'LOGERROR', 'LOGFATAL', 'LOGINFO', 'LOGNONE', 'LOGNOTICE', 'LOGSEVERE', 'LOGWARNING']
+__all__ = ['log', 'trace', 'LOGDEBUG', 'LOGERROR', 'LOGFATAL', 'LOGINFO', 'LOGNONE', 'LOGNOTICE', 'LOGWARNING']
 
 
 name = kodi.get_name()

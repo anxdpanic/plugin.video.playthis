@@ -631,6 +631,8 @@ def remote_play(source):
                                         'thumb': quote(source['art']['thumb']), 'title': quote(source['info']['title'])})
     else:
         filename = source['url']
+
+    utils.wait_for_busy_dialog()
     command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': filename}}}
     response = rpc_client.execute_rpc(command)
     if 'error' in response:
@@ -644,6 +646,8 @@ def play(source, player=True):
     if player == 'remote':
         remote_play(source)
     else:
+        utils.wait_for_busy_dialog()
+
         if source['content_type'] == 'image':
             command = {'jsonrpc': '2.0', 'id': 1, 'method': 'Player.Open', 'params': {'item': {'file': source['url']}}}
             log_utils.log('Play using jsonrpc method Player.Open: |{0!s}|'.format(source['url']), log_utils.LOGDEBUG)
@@ -823,51 +827,52 @@ def play_this(item, title='', thumbnail='', player=True, history=None):
         stream_url = None
 
     if stream_url and (content_type == 'video' or content_type == 'audio' or content_type == 'image' or content_type == 'executable'):
-        working_dialog = kodi.WorkingDialog()
-        with working_dialog:
-            play_history = utils.PlayHistory()
-            working_dialog.update(20)
-            if history or player == 'history':
-                history_item = item.split('|')[0]
-                if '%' not in history_item:
-                    history_item = quote(history_item)
-                log_utils.log('Adding source |{0}| to history with content_type |{1}|'
-                              .format(item, content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, content_type, label if label else item, quote(thumbnail))
-            working_dialog.update(40)
-            if override_content_type and override_history:
-                history_item = stream_url
-                if history_item.startswith('plugin://') or unresolved_source:
-                    history_item = unresolved_source
-                history_item = history_item.split('|')[0]
-                if '%' not in history_item:
-                    history_item = quote(history_item)
-                log_utils.log('Adding source |{0}| to history with content_type |{1}|'
-                              .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
-                play_history.add(history_item, override_content_type, source_label, quote(source_thumbnail))
-            if player == 'history':
-                return
-            if history_item:
-                kodi.refresh_container()
-            working_dialog.update(60)
-            if (not stream_url.startswith('plugin://')) and (headers is not None):
-                stream_url = get_url_with_headers(stream_url, headers)
+        play_history = utils.PlayHistory()
+        if history or player == 'history':
+            history_item = item.split('|')[0]
+            if '%' not in history_item:
+                history_item = quote(history_item)
+            log_utils.log('Adding source |{0}| to history with content_type |{1}|'
+                          .format(item, content_type), log_utils.LOGDEBUG)
+            play_history.add(history_item, content_type, label if label else item, quote(thumbnail))
+        if override_content_type and override_history:
+            history_item = stream_url
+            if history_item.startswith('plugin://') or unresolved_source:
+                history_item = unresolved_source
+            history_item = history_item.split('|')[0]
+            if '%' not in history_item:
+                history_item = quote(history_item)
+            log_utils.log('Adding source |{0}| to history with content_type |{1}|'
+                          .format(unresolved_source, override_content_type), log_utils.LOGDEBUG)
+            play_history.add(history_item, override_content_type, source_label, quote(source_thumbnail))
+        if player == 'history':
+            return
+        if history_item:
+            kodi.refresh_container()
+        if (not stream_url.startswith('plugin://')) and (headers is not None):
+            stream_url = get_url_with_headers(stream_url, headers)
 
-            working_dialog.update(80)
-            if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
-                log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
-                kodi.execute_builtin('RunPlugin(%s)' % stream_url)
-            else:
-                if override_content_type:
-                    content_type = override_content_type
+        kodi.execute_builtin('Dialog.Close(busydialog)')
+        kodi.execute_builtin('Dialog.Close(busydialognocancel)')
 
-                source = {'content_type': content_type,
-                          'url': stream_url,
-                          'is_dash': is_dash,
-                          'info': {'title': source_label},
-                          'art': {'icon': source_thumbnail, 'thumb': source_thumbnail}}
+        if any(plugin_id in stream_url for plugin_id in RUNPLUGIN_EXCEPTIONS):
+            log_utils.log('Running plugin: |{0!s}|'.format(stream_url), log_utils.LOGDEBUG)
+            utils.wait_for_busy_dialog()
+            kodi.execute_builtin('RunPlugin(%s)' % stream_url)
+        else:
+            if override_content_type:
+                content_type = override_content_type
 
-                play(source, player)
+            source = {'content_type': content_type,
+                      'url': stream_url,
+                      'is_dash': is_dash,
+                      'info': {'title': source_label},
+                      'art': {'icon': source_thumbnail, 'thumb': source_thumbnail}}
+
+            play(source, player)
 
     else:
         log_utils.log('Found no potential sources: |{0!s}|'.format(item), log_utils.LOGDEBUG)
+
+    kodi.execute_builtin('Dialog.Close(busydialog)')
+    kodi.execute_builtin('Dialog.Close(busydialognocancel)')
