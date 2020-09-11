@@ -11,7 +11,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <news>
-[upd] Use new settings format on Kodi 19
+[fix] Kodi 19 not working
         </news>
         <assets>
             <icon>icon.png</icon>
