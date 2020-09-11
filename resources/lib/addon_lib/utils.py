@@ -10,6 +10,7 @@
 """
 
 import re
+import time
 
 from six import PY2
 from six.moves.urllib_parse import quote
@@ -336,3 +337,45 @@ class STRMUtils:
                     return
         log_utils.log('STRMUtils.export no item for export to .strm', log_utils.LOGDEBUG)
         kodi.notify(msg=kodi.i18n('no_items_export'), sound=False)
+
+
+def wait_for_busy_dialog():
+    """
+    Wait for busy dialogs to close, starting playback while the busy dialog is active
+    could crash Kodi 18 / 19 (pre-alpha)
+
+    Github issues:
+        https://github.com/xbmc/xbmc/issues/16756
+        https://github.com/xbmc/xbmc/pull/16450  # possible solution
+
+    TODO: remove this function when the above issue is resolved
+    """
+    monitor = kodi.Monitor()
+    start_time = time.time()
+    kodi.sleep(500)
+
+    def _abort():
+        return monitor.abortRequested()
+
+    def _busy():
+        return kodi.getCurrentWindowDialogId() in [10138, 10160]
+
+    def _wait():
+        log_utils.log('Waiting for busy dialogs to close ...', log_utils.LOGDEBUG)
+        while not _abort() and _busy():
+            if monitor.waitForAbort(1):
+                break
+
+    while not _abort():
+        if _busy():
+            _wait()
+
+        if monitor.waitForAbort(1):
+            break
+
+        if not _busy():
+            break
+
+    log_utils.log('Waited %.2f for busy dialogs to close.' %
+                  (time.time() - start_time), log_utils.LOGDEBUG)
+    return not _abort() and not _busy()

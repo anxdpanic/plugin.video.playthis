@@ -41,10 +41,12 @@ __log = xbmc.log
 
 Addon = xbmcaddon.Addon
 Dialog = xbmcgui.Dialog
+Monitor = xbmc.Monitor
 Player = xbmc.Player
 execute_builtin = xbmc.executebuiltin
 sleep = xbmc.sleep
 conditional_visibility = xbmc.getCondVisibility
+getCurrentWindowDialogId = xbmcgui.getCurrentWindowDialogId
 get_supported_media = xbmc.getSupportedMedia
 vfs = xbmcvfs
 
