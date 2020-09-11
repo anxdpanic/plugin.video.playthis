@@ -13,6 +13,7 @@
         <news>
 [fix] Kodi 19 not working
 [fix] remove LOGNOTICE AND LOGSEVERE, both removed in Kodi 19
+[fix] use xbmcvfs.translatePath when available
         </news>
         <assets>
             <icon>icon.png</icon>

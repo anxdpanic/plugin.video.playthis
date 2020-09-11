@@ -32,6 +32,10 @@ import xbmcvfs
 
 from . import strings
 
+try:
+    xbmc.translatePath = xbmcvfs.translatePath
+except AttributeError:
+    pass
 
 __log = xbmc.log
 

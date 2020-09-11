@@ -1,6 +1,7 @@
 5.0.3
 [fix] Kodi 19 not working
 [fix] remove LOGNOTICE AND LOGSEVERE, both removed in Kodi 19
+[fix] use xbmcvfs.translatePath when available
 5.0.2
 [upd] Use new settings format on Kodi 19
 
