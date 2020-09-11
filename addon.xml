@@ -12,6 +12,7 @@
     <extension point="xbmc.addon.metadata">
         <news>
 [fix] Kodi 19 not working
+[fix] remove LOGNOTICE AND LOGSEVERE, both removed in Kodi 19
         </news>
         <assets>
             <icon>icon.png</icon>
