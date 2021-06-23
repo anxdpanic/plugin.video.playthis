@@ -1,0 +1,282 @@
+From dd9d6f9efa317a19c3c78735999fc984c0fc6580 Mon Sep 17 00:00:00 2001
+From: anxdpanic <anxdpanic@gmail.com>
+Date: Sun, 29 Mar 2020 13:52:17 -0400
+Subject: [PATCH] =?UTF-8?q?=EF=BB=BFrequired=20matrix=20changes?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ addon.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/addon.xml b/addon.xml
+index 35d7d1f..001ff8d 100644
+--- a/addon.xml
++++ b/addon.xml
+@@ -3,5 +3,5 @@
+     <requires>
+-        <import addon="xbmc.python" version="2.24.0"/>
++        <import addon="xbmc.python" version="3.0.0"/>
+         <import addon="script.module.six" version="1.11.0"/>
+         <import addon="script.module.youtube.dl" version="18.619.0"/>
+         <import addon="plugin.video.youtube" version="6.2.0" optional="true"/>
+-- 
+2.26.2.windows.1
+
+From e184a589cbdb0f8ffb2ebec50266761b7fd964b9 Mon Sep 17 00:00:00 2001
+From: anxdpanic <anxdpanic@gmail.com>
+Date: Fri, 11 Sep 2020 13:49:44 -0400
+Subject: [PATCH] =?UTF-8?q?=EF=BB=BFfix=20settings=20related=20crash?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ resources/settings.xml | 236 ++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 200 insertions(+), 36 deletions(-)
+
+diff --git a/resources/settings.xml b/resources/settings.xml
+index 762a77f..8eb1569 100644
+--- a/resources/settings.xml
++++ b/resources/settings.xml
+@@ -1,37 +1,201 @@
+-<settings>
+-    <!-- History -->
+-    <category label="30700">
+-        <setting label="30702" id="history-list-type" type="enum" lvalues="30703|30704" default="1"/>
+-        <setting label="30701" type="slider" id="history-size-limit" default="150" range="0,500" option="int"/>
+-        <setting label="30707" id="history-add-on-play" type="bool" default="true"/>
+-        <setting type="sep"/>
+-        <setting label="30102" id="clear-history" type="action" action="RunPlugin(plugin://$ID/?mode=clearhistory)"/>
+-    </category>
+-    <!-- Maintenance -->
+-    <category label="30713">
+-        <setting label="30711" type="slider" id="cache-expire-time" default="1" range="0,8" option="int"/>
+-        <setting label="30710" id="clear-cache" type="action" action="RunPlugin(plugin://$ID/?mode=clearcache)"/>
+-        <setting label="30714" id="clear-cookies" type="action" action="RunPlugin(plugin://$ID/?mode=clearcookies)"/>
+-    </category>
+-    <!-- Export -->
+-    <category label="30708">
+-        <setting label="30706" id="export_path" type="folder" source="" option="writeable"/>
+-        <setting label="30715" id="export_path_strm" type="folder" source="" option="writeable"/>
+-    </category>
+-    <!-- Resolvers -->
+-    <category label="30709">
+-        <setting label="30712" id="youtube-dl-settings" type="action" option="close" action="RunPlugin(plugin://$ID/?mode=ytdl)"/>
+-        <setting id="current_ua" type="text" default="" visible="false" enable="true"/>
+-        <setting id="last_ua_create" type="text" default="" visible="false" enable="true"/>
+-    </category>
+-    <!-- Remote -->
+-    <category label="30716">
+-        <setting label="30717" id="remote-ip" type="ipaddress" default=""/>
+-        <setting label="30718" id="remote-port" type="number" default="8080"/>
+-        <setting label="30719" id="remote-username" type="text" default="kodi"/>
+-        <setting label="30720" id="remote-password" type="text" option="hidden" default=""/>
+-        <setting label="30723" id="resolve-locally" type="bool" default="true"/>
+-        <setting label="30721" type="lsep"/>
+-        <setting label="30722" type="lsep"/>
+-    </category>
++<?xml version="1.0" ?>
++<settings version="1">
++	<section id="plugin.video.playthis">
++		<category help="" id="history" label="30700">
++			<group id="1">
++				<setting help="" id="history-list-type" label="30702" type="integer">
++					<level>0</level>
++					<default>1</default>
++					<constraints>
++						<options>
++							<option label="30703">0</option>
++							<option label="30704">1</option>
++						</options>
++					</constraints>
++					<control format="string" type="spinner"/>
++				</setting>
++				<setting help="" id="history-size-limit" label="30701" type="integer">
++					<level>0</level>
++					<default>150</default>
++					<constraints>
++						<minimum>0</minimum>
++						<maximum>500</maximum>
++					</constraints>
++					<control format="integer" type="slider">
++						<popup>false</popup>
++					</control>
++				</setting>
++				<setting help="" id="history-add-on-play" label="30707" type="boolean">
++					<level>0</level>
++					<default>true</default>
++					<control type="toggle"/>
++				</setting>
++			</group>
++			<group id="2">
++				<setting help="" id="clear-history" label="30102" type="action">
++					<level>0</level>
++					<data>RunPlugin(plugin://plugin.video.playthis/?mode=clearhistory)</data>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="action" type="button"/>
++				</setting>
++			</group>
++		</category>
++		<category help="" id="maintenance" label="30713">
++			<group id="1">
++				<setting help="" id="cache-expire-time" label="30711" type="integer">
++					<level>0</level>
++					<default>1</default>
++					<constraints>
++						<minimum>0</minimum>
++						<maximum>8</maximum>
++					</constraints>
++					<control format="integer" type="slider">
++						<popup>false</popup>
++					</control>
++				</setting>
++				<setting help="" id="clear-cache" label="30710" type="action">
++					<level>0</level>
++					<data>RunPlugin(plugin://plugin.video.playthis/?mode=clearcache)</data>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="action" type="button"/>
++				</setting>
++				<setting help="" id="clear-cookies" label="30714" type="action">
++					<level>0</level>
++					<data>RunPlugin(plugin://plugin.video.playthis/?mode=clearcookies)</data>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="action" type="button"/>
++				</setting>
++			</group>
++		</category>
++		<category help="" id="export" label="30708">
++			<group id="1">
++				<setting help="" id="export_path" label="30706" type="path">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<sources>
++						</sources>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="path" type="button">
++						<heading>30706</heading>
++					</control>
++				</setting>
++				<setting help="" id="export_path_strm" label="30715" type="path">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<sources>
++						</sources>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="path" type="button">
++						<heading>30715</heading>
++					</control>
++				</setting>
++			</group>
++		</category>
++		<category help="" id="resolvers" label="30709">
++			<group id="1">
++				<setting help="" id="youtube-dl-settings" label="30712" type="action">
++					<level>0</level>
++					<data>RunPlugin(plugin://plugin.video.playthis/?mode=ytdl)</data>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="action" type="button">
++						<close>true</close>
++					</control>
++				</setting>
++				<setting help="" id="current_ua" type="string">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<dependencies>
++						<dependency type="enable">
++							<condition name="InfoBool" on="property">true</condition>
++						</dependency>
++						<dependency type="visible">
++							<condition name="InfoBool" on="property">false</condition>
++						</dependency>
++					</dependencies>
++					<control format="string" type="edit">
++						<heading/>
++					</control>
++				</setting>
++				<setting help="" id="last_ua_create" type="string">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<dependencies>
++						<dependency type="enable">
++							<condition name="InfoBool" on="property">true</condition>
++						</dependency>
++						<dependency type="visible">
++							<condition name="InfoBool" on="property">false</condition>
++						</dependency>
++					</dependencies>
++					<control format="string" type="edit">
++						<heading/>
++					</control>
++				</setting>
++			</group>
++		</category>
++		<category help="" id="remote/send" label="30716">
++			<group id="1">
++				<setting help="" id="remote-ip" label="30717" type="string">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="ip" type="edit">
++						<heading>30717</heading>
++					</control>
++				</setting>
++				<setting help="" id="remote-port" label="30718" type="integer">
++					<level>0</level>
++					<default>8080</default>
++					<control format="integer" type="edit">
++						<heading>30718</heading>
++					</control>
++				</setting>
++				<setting help="" id="remote-username" label="30719" type="string">
++					<level>0</level>
++					<default>kodi</default>
++					<control format="string" type="edit">
++						<heading>30719</heading>
++					</control>
++				</setting>
++				<setting help="" id="remote-password" label="30720" type="string">
++					<level>0</level>
++					<default/>
++					<constraints>
++						<allowempty>true</allowempty>
++					</constraints>
++					<control format="string" type="edit">
++						<heading>30720</heading>
++						<hidden>true</hidden>
++					</control>
++				</setting>
++				<setting help="" id="resolve-locally" label="30723" type="boolean">
++					<level>0</level>
++					<default>true</default>
++					<control type="toggle"/>
++				</setting>
++			</group>
++			<group id="2" label="30721"/>
++			<group id="3" label="30722"/>
++		</category>
++	</section>
+ </settings>
+-- 
+2.26.2.windows.1
